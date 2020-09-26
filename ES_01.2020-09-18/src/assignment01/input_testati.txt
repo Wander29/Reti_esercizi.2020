@@ -1,0 +1,33 @@
+Set the ACCURACY (i.e.  |PI - computatedPI| ), must be IN (0,1)
+0.00001
+Set the MAX TIME you can wait [ms], must be > 0
+1000
+PI value computated: [3.141582653789716], satisfying Accuracy, exiting
+CORRECT EXITING
+
+Set the ACCURACY (i.e.  |PI - computatedPI| ), must be IN (0,1)
+0.000000000001
+Set the MAX TIME you can wait [ms], must be > 0
+100
+PI value computated: [3.141592632341435], not satisfying Accuracy
+CORRECT EXITING
+
+Set the ACCURACY (i.e.  |PI - computatedPI| ), must be IN (0,1)
+0.5
+Set the MAX TIME you can wait [ms], must be > 0
+10
+PI value computated: [2.666666666666667], satisfying Accuracy, exiting
+CORRECT EXITING
+
+Set the ACCURACY (i.e.  |PI - computatedPI| ), must be IN (0,1)
+12
+Set the ACCURACY (i.e.  |PI - computatedPI| ), must be IN (0,1)
+-43
+Set the ACCURACY (i.e.  |PI - computatedPI| ), must be IN (0,1)
+0.001
+Set the MAX TIME you can wait [ms], must be > 0
+-10
+Set the MAX TIME you can wait [ms], must be > 0
+100
+PI value computated: [3.140592653839794], satisfying Accuracy, exiting
+CORRECT EXITING

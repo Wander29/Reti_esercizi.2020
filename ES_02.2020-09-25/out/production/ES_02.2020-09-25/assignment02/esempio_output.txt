@@ -1,0 +1,251 @@
+Inserisci la dimensione della coda della 2° sala [K]
+3
+Inserisci il numero di clienti [C]
+20
+[CLIENTE 7] in sala d'attesa
+[CLIENTE 2] sta per essere servito
+[CLIENTE 3] sta per essere servito
+[CLIENTE 0] sta per essere servito
+[CLIENTE 1] sta per essere servito
+[CLIENTE 8] in sala d'attesa
+[CLIENTE 9] in sala d'attesa
+[CLIENTE 10] in sala d'attesa
+[CLIENTE 11] in sala d'attesa
+[CLIENTE 12] in sala d'attesa
+[CLIENTE 13] in sala d'attesa
+[CLIENTE 14] in sala d'attesa
+[CLIENTE 15] in sala d'attesa
+[CLIENTE 16] in sala d'attesa
+[CLIENTE 17] in sala d'attesa
+[CLIENTE 18] in sala d'attesa
+[CLIENTE 19] in sala d'attesa
+[CLIENTE 2] è stato servito
+[CLIENTE 3] è stato servito
+[CLIENTE 4] sta per essere servito
+[CLIENTE 5] sta per essere servito
+[CLIENTE 4] è stato servito
+[CLIENTE 1] è stato servito
+[CLIENTE 5] è stato servito
+[CLIENTE 0] è stato servito
+[CLIENTE 6] sta per essere servito
+[CLIENTE 6] è stato servito
+[CLIENTE 7] sta per essere servito
+[CLIENTE 7] è stato servito
+[CLIENTE 7] passa dalla sala d'attesa AGLI UFFICI..
+[CLIENTE 8] passa dalla sala d'attesa AGLI UFFICI..
+[CLIENTE 8] sta per essere servito
+[CLIENTE 9] passa dalla sala d'attesa AGLI UFFICI..
+[CLIENTE 8] è stato servito
+[CLIENTE 10] passa dalla sala d'attesa AGLI UFFICI..
+[CLIENTE 9] sta per essere servito
+[CLIENTE 11] sta per essere servito
+[CLIENTE 10] sta per essere servito
+[CLIENTE 11] passa dalla sala d'attesa AGLI UFFICI..
+[CLIENTE 10] è stato servito
+[CLIENTE 11] è stato servito
+[CLIENTE 9] è stato servito
+[CLIENTE 12] sta per essere servito
+[CLIENTE 12] passa dalla sala d'attesa AGLI UFFICI..
+[CLIENTE 12] è stato servito
+[CLIENTE 13] passa dalla sala d'attesa AGLI UFFICI..
+[CLIENTE 13] sta per essere servito
+[CLIENTE 13] è stato servito
+[CLIENTE 14] sta per essere servito
+[CLIENTE 14] passa dalla sala d'attesa AGLI UFFICI..
+[CLIENTE 14] è stato servito
+[CLIENTE 15] passa dalla sala d'attesa AGLI UFFICI..
+[CLIENTE 15] sta per essere servito
+[CLIENTE 16] sta per essere servito
+[CLIENTE 16] passa dalla sala d'attesa AGLI UFFICI..
+[CLIENTE 16] è stato servito
+[CLIENTE 17] passa dalla sala d'attesa AGLI UFFICI..
+[CLIENTE 15] è stato servito
+[CLIENTE 18] sta per essere servito
+[CLIENTE 18] passa dalla sala d'attesa AGLI UFFICI..
+[CLIENTE 17] sta per essere servito
+[CLIENTE 19] sta per essere servito
+[CLIENTE 19] passa dalla sala d'attesa AGLI UFFICI..
+[CLIENTE 18] è stato servito
+[CLIENTE 19] è stato servito
+[CLIENTE 17] è stato servito
+TERMINAZIONE CORRETTA
+
+------------------------------------------------------
+
+Inserisci la dimensione della coda della 2° sala [K]
+10
+Inserisci il numero di clienti [C]
+50
+[CLIENTE 2] sta per essere servito
+[CLIENTE 3] sta per essere servito
+[CLIENTE 1] sta per essere servito
+[CLIENTE 14] in sala d'attesa
+[CLIENTE 0] sta per essere servito
+[CLIENTE 15] in sala d'attesa
+[CLIENTE 2] è stato servito
+[CLIENTE 16] in sala d'attesa
+[CLIENTE 3] è stato servito
+[CLIENTE 4] sta per essere servito
+[CLIENTE 5] sta per essere servito
+[CLIENTE 17] in sala d'attesa
+[CLIENTE 1] è stato servito
+[CLIENTE 18] in sala d'attesa
+[CLIENTE 5] è stato servito
+[CLIENTE 0] è stato servito
+[CLIENTE 4] è stato servito
+[CLIENTE 7] sta per essere servito
+[CLIENTE 19] in sala d'attesa
+[CLIENTE 6] sta per essere servito
+[CLIENTE 20] in sala d'attesa
+[CLIENTE 7] è stato servito
+[CLIENTE 8] sta per essere servito
+[CLIENTE 9] sta per essere servito
+[CLIENTE 8] è stato servito
+[CLIENTE 9] è stato servito
+[CLIENTE 11] sta per essere servito
+[CLIENTE 10] sta per essere servito
+[CLIENTE 21] in sala d'attesa
+[CLIENTE 6] è stato servito
+[CLIENTE 10] è stato servito
+[CLIENTE 22] in sala d'attesa
+[CLIENTE 11] è stato servito
+[CLIENTE 12] sta per essere servito
+[CLIENTE 23] in sala d'attesa
+[CLIENTE 13] sta per essere servito
+[CLIENTE 24] in sala d'attesa
+[CLIENTE 12] è stato servito
+[CLIENTE 13] è stato servito
+[CLIENTE 25] in sala d'attesa
+[CLIENTE 26] in sala d'attesa
+[CLIENTE 27] in sala d'attesa
+[CLIENTE 28] in sala d'attesa
+[CLIENTE 29] in sala d'attesa
+[CLIENTE 30] in sala d'attesa
+[CLIENTE 31] in sala d'attesa
+[CLIENTE 32] in sala d'attesa
+[CLIENTE 33] in sala d'attesa
+[CLIENTE 34] in sala d'attesa
+[CLIENTE 35] in sala d'attesa
+[CLIENTE 36] in sala d'attesa
+[CLIENTE 37] in sala d'attesa
+[CLIENTE 38] in sala d'attesa
+[CLIENTE 39] in sala d'attesa
+[CLIENTE 40] in sala d'attesa
+[CLIENTE 41] in sala d'attesa
+[CLIENTE 42] in sala d'attesa
+[CLIENTE 43] in sala d'attesa
+[CLIENTE 44] in sala d'attesa
+[CLIENTE 45] in sala d'attesa
+[CLIENTE 46] in sala d'attesa
+[CLIENTE 47] in sala d'attesa
+[CLIENTE 48] in sala d'attesa
+[CLIENTE 49] in sala d'attesa
+[CLIENTE 14] sta per essere servito
+[CLIENTE 14] è stato servito
+[CLIENTE 14] passa dalla sala d'attesa AGLI UFFICI..
+[CLIENTE 15] passa dalla sala d'attesa AGLI UFFICI..
+[CLIENTE 15] sta per essere servito
+[CLIENTE 16] passa dalla sala d'attesa AGLI UFFICI..
+[CLIENTE 15] è stato servito
+[CLIENTE 16] sta per essere servito
+[CLIENTE 17] passa dalla sala d'attesa AGLI UFFICI..
+[CLIENTE 16] è stato servito
+[CLIENTE 17] sta per essere servito
+[CLIENTE 18] sta per essere servito
+[CLIENTE 18] passa dalla sala d'attesa AGLI UFFICI..
+[CLIENTE 18] è stato servito
+[CLIENTE 17] è stato servito
+[CLIENTE 19] sta per essere servito
+[CLIENTE 19] passa dalla sala d'attesa AGLI UFFICI..
+[CLIENTE 19] è stato servito
+[CLIENTE 20] passa dalla sala d'attesa AGLI UFFICI..
+[CLIENTE 20] sta per essere servito
+[CLIENTE 21] sta per essere servito
+[CLIENTE 21] passa dalla sala d'attesa AGLI UFFICI..
+[CLIENTE 21] è stato servito
+[CLIENTE 20] è stato servito
+[CLIENTE 22] sta per essere servito
+[CLIENTE 22] passa dalla sala d'attesa AGLI UFFICI..
+[CLIENTE 22] è stato servito
+[CLIENTE 23] sta per essere servito
+[CLIENTE 23] passa dalla sala d'attesa AGLI UFFICI..
+[CLIENTE 23] è stato servito
+[CLIENTE 24] passa dalla sala d'attesa AGLI UFFICI..
+[CLIENTE 24] sta per essere servito
+[CLIENTE 25] passa dalla sala d'attesa AGLI UFFICI..
+[CLIENTE 25] sta per essere servito
+[CLIENTE 24] è stato servito
+[CLIENTE 26] sta per essere servito
+[CLIENTE 25] è stato servito
+[CLIENTE 26] passa dalla sala d'attesa AGLI UFFICI..
+[CLIENTE 26] è stato servito
+[CLIENTE 27] sta per essere servito
+[CLIENTE 27] passa dalla sala d'attesa AGLI UFFICI..
+[CLIENTE 27] è stato servito
+[CLIENTE 28] passa dalla sala d'attesa AGLI UFFICI..
+[CLIENTE 28] sta per essere servito
+[CLIENTE 29] passa dalla sala d'attesa AGLI UFFICI..
+[CLIENTE 29] sta per essere servito
+[CLIENTE 30] passa dalla sala d'attesa AGLI UFFICI..
+[CLIENTE 30] sta per essere servito
+[CLIENTE 28] è stato servito
+[CLIENTE 30] è stato servito
+[CLIENTE 31] sta per essere servito
+[CLIENTE 31] passa dalla sala d'attesa AGLI UFFICI..
+[CLIENTE 29] è stato servito
+[CLIENTE 32] passa dalla sala d'attesa AGLI UFFICI..
+[CLIENTE 32] sta per essere servito
+[CLIENTE 33] passa dalla sala d'attesa AGLI UFFICI..
+[CLIENTE 31] è stato servito
+[CLIENTE 34] sta per essere servito
+[CLIENTE 34] passa dalla sala d'attesa AGLI UFFICI..
+[CLIENTE 33] sta per essere servito
+[CLIENTE 32] è stato servito
+[CLIENTE 33] è stato servito
+[CLIENTE 35] passa dalla sala d'attesa AGLI UFFICI..
+[CLIENTE 35] sta per essere servito
+[CLIENTE 34] è stato servito
+[CLIENTE 36] passa dalla sala d'attesa AGLI UFFICI..
+[CLIENTE 36] sta per essere servito
+[CLIENTE 35] è stato servito
+[CLIENTE 36] è stato servito
+[CLIENTE 37] sta per essere servito
+[CLIENTE 37] passa dalla sala d'attesa AGLI UFFICI..
+[CLIENTE 37] è stato servito
+[CLIENTE 38] passa dalla sala d'attesa AGLI UFFICI..
+[CLIENTE 38] sta per essere servito
+[CLIENTE 39] passa dalla sala d'attesa AGLI UFFICI..
+[CLIENTE 38] è stato servito
+[CLIENTE 40] passa dalla sala d'attesa AGLI UFFICI..
+[CLIENTE 39] sta per essere servito
+[CLIENTE 41] passa dalla sala d'attesa AGLI UFFICI..
+[CLIENTE 40] sta per essere servito
+[CLIENTE 41] sta per essere servito
+[CLIENTE 42] passa dalla sala d'attesa AGLI UFFICI..
+[CLIENTE 39] è stato servito
+[CLIENTE 43] passa dalla sala d'attesa AGLI UFFICI..
+[CLIENTE 41] è stato servito
+[CLIENTE 40] è stato servito
+[CLIENTE 42] sta per essere servito
+[CLIENTE 44] sta per essere servito
+[CLIENTE 44] passa dalla sala d'attesa AGLI UFFICI..
+[CLIENTE 43] sta per essere servito
+[CLIENTE 45] passa dalla sala d'attesa AGLI UFFICI..
+[CLIENTE 44] è stato servito
+[CLIENTE 42] è stato servito
+[CLIENTE 46] passa dalla sala d'attesa AGLI UFFICI..
+[CLIENTE 45] sta per essere servito
+[CLIENTE 47] passa dalla sala d'attesa AGLI UFFICI..
+[CLIENTE 47] sta per essere servito
+[CLIENTE 43] è stato servito
+[CLIENTE 47] è stato servito
+[CLIENTE 48] passa dalla sala d'attesa AGLI UFFICI..
+[CLIENTE 45] è stato servito
+[CLIENTE 49] sta per essere servito
+[CLIENTE 46] sta per essere servito
+[CLIENTE 49] è stato servito
+[CLIENTE 49] passa dalla sala d'attesa AGLI UFFICI..
+[CLIENTE 48] sta per essere servito
+[CLIENTE 46] è stato servito
+[CLIENTE 48] è stato servito
+TERMINAZIONE CORRETTA
