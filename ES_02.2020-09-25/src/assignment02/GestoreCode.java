@@ -11,18 +11,22 @@ import java.util.concurrent.ThreadPoolExecutor;
 
 public class GestoreCode extends Thread {
     private final BlockingQueue bq;
-    private final ArrayBlockingQueue bq_tpe;
     private final ThreadPoolExecutor tpe;
+    private final ArrayBlockingQueue bq_tpe; // ricavato dal ThreadPoolExecutor
 
     private static final int ATTESA_ITERAZIONE = 300;
 
     /*
     * É un thread demone avente il compito di gestire le due code dell'ufficio postale
      */
-    public GestoreCode(BlockingQueue bq, ArrayBlockingQueue bq_tpe, ThreadPoolExecutor tpe) {
+    public GestoreCode(BlockingQueue bq, ThreadPoolExecutor tpe) {
         this.bq = bq;
-        this.bq_tpe = bq_tpe;
         this.tpe = tpe;
+        /* prendo la coda del threadPool
+         * (avrei voluto usare l'ArrayBlockingQueue come in sola lettura dato che viene
+         *   gestito dall'executor ma non saprei come fare)
+         */
+        this.bq_tpe = (ArrayBlockingQueue) this.tpe.getQueue();
     }
 
     @Override

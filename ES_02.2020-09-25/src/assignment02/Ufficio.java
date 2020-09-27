@@ -12,20 +12,16 @@ public class Ufficio {
 
     private final ThreadPoolExecutor sportelli;
     private LinkedBlockingQueue coda;
-    private final ArrayBlockingQueue abq;
 
     private final GestoreCode gc;
 
     public Ufficio(int dim_coda) {
-        this.abq = new ArrayBlockingQueue<Runnable>(dim_coda);
         this.sportelli = new ThreadPoolExecutor(n_sportelli, n_sportelli, 0L,
-                TimeUnit.MILLISECONDS, abq);
+                TimeUnit.MILLISECONDS, new ArrayBlockingQueue<Runnable>(dim_coda));
         this.coda = new LinkedBlockingQueue(); // sala d'attesa illimitata
 
-        /* attivazione thread Demone che gestirà le code
-        * (avrei voluto passare l'ArrayBlockingQueue come in sola lettura dato che viene
-        *   gestito dall'executor ma non saprei come fare) */
-        this.gc = new GestoreCode(this.coda, this.abq, this.sportelli);
+        /* attivazione thread Demone che gestirà le code */
+        this.gc = new GestoreCode(this.coda, this.sportelli);
         this.gc.setDaemon(true);
         this.gc.start();
     }

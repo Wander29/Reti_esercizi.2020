@@ -3,6 +3,7 @@ package assignment02;
 /**
  *  @author     LUDOVICO VENTURI 578033
  *  @date       2020/09/25
+ *  @version    1.1
  */
 
 /*********************************************
@@ -17,6 +18,10 @@ package assignment02;
  *      - la coda dell'executor non sia vuota   E
  *      - che ci siano clienti in sala d'attesa
  *  In questo modo i clienti vengono eseguiti in ordine di arrivo
+ *
+ *  VERSIONE 1.2
+ *  ho simulato un flusso continuo di clienti, usando la classe CreaFlusso
+ *  Per far eseguire il codice dell'assignment, decommentare la parte "1.0" e commentare la parte "1.1"
  */
 
 /*
@@ -58,12 +63,15 @@ public class MainClass {
             k = sc.nextInt();
         } while (k < 1 || k > 100);
 
+        Ufficio uff = new Ufficio(k);
         /*
         cliente viene creato, va in attesa nella prima sala
             SE la seconda sala ha spazio viene servito
             altrimenti aspetta in una coda secondaria
          */
-        Ufficio uff = new Ufficio(k);
+        /* ********************************************
+         * VERSIONE 1.0
+         * ********************************************/
         /*
         int c;
         do {
@@ -72,10 +80,14 @@ public class MainClass {
         } while (c < 1 || c > 9999);
 
         for(int i = 0; i < c; i++) {
+        // l'ingresso nella prima sala viene 'simulato' ed eventualmente trascurato
             uff.serviCliente(new Cliente(i));
         }
         */
 
+        /* ********************************************
+         * VERSIONE 1.1
+         * ********************************************/
         CreaFlusso cl = new CreaFlusso(uff);
         cl.start();
         try {
