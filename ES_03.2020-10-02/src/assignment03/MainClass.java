@@ -34,12 +34,83 @@ Il programma deve terminare quando tutti gli utenti hanno completato i loro acce
     // priorityQueue -> può essere un modo, daie, però
 
 
+import java.util.InputMismatchException;
+import java.util.Scanner;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ThreadPoolExecutor;
+import java.util.concurrent.TimeUnit;
+
 public class MainClass {
 
 	private static final int NUM_PC = 20;
 	
 	public static void main(String[] args) {
 		Laboratorio lab = new Laboratorio(NUM_PC);
+
+	/* generazione Utenti */
+		int i;
+		Scanner sc = new Scanner(System.in);
+
+		/* professori */
+		int n_prof = 0; /* conterrà il numero dei professori che vogliono accedere al laboratorio */
+		do {
+			System.out.println("Quanti Professori? in [1, 20]");
+			try {
+				n_prof = sc.nextInt();
+			} catch (InputMismatchException e) {
+				System.out.println("ERRORE lettura input, riprovare");
+			}
+		} while(n_prof < 1 || n_prof > 20);
+
+		/* tesisti */
+		int n_tesi = 0;
+		do {
+			System.out.println("Quanti Tesisti? in [1, 50]");
+			try {
+				n_tesi = sc.nextInt();
+			} catch (InputMismatchException e) {
+				System.out.println("ERRORE lettura input, riprovare");
+			}
+		} while(n_tesi < 1 || n_tesi > 50);
+
+		/* studenti */
+		int n_stud = 0;
+		do {
+			System.out.println("Quanti Studenti? in [1, 500]");
+			try {
+				n_stud = sc.nextInt();
+			} catch (InputMismatchException e) {
+				System.out.println("ERRORE lettura input, riprovare");
+			}
+		} while(n_stud < 1 || n_stud > 500);
+
+
+	/* attivazione Thread */
+		ThreadPoolExecutor tpe = (ThreadPoolExecutor)
+					Executors.newFixedThreadPool(n_prof + n_tesi + n_stud);
+
+		for(i = 0; i < n_prof; i++) {
+			tpe.execute(new Professore(lab));
+		}
+
+		for(i = 0; i < n_tesi; i++) {
+			tpe.execute(new Tesista(lab));
+		}
+
+		for(i = 0; i < n_stud; i++) {
+			tpe.execute(new Studente(lab));
+		}
+
+	/* attesa terminazione Thread */
+		tpe.shutdown();
+		while(!tpe.isTerminated()) {
+			try {
+				tpe.awaitTermination(2, TimeUnit.SECONDS);
+			} catch (InterruptedException e) {
+				System.out.println("[MAIN] TPE.await interrotta");
+				return;
+			}
+		}
 		
 	}
 
