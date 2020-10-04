@@ -1,5 +1,6 @@
 package assignment03;
 
+
 /*
 Il laboratorio di Informatica del Polo Marzotto è utilizzato da tre tipi di utenti
 studenti, tesisti e professori ed ogni utente deve fare una richiesta al tutor per accedere al laboratorio.
@@ -26,11 +27,28 @@ Il programma deve terminare quando tutti gli utenti hanno completato i loro acce
 
 */
 
-public class MainClass {
 
     // attento a setPriority
     // un solo professore per volta, non più prof insieme
 
     // priorityQueue -> può essere un modo, daie, però
 
+
+public class MainClass {
+
+	private static final int NUM_PC = 20;
+	
+	public static void main(String[] args) {
+		Laboratorio lab = new Laboratorio(NUM_PC);
+		
+	}
+
 }
+
+
+
+
+
+
+
+
