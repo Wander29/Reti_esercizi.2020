@@ -32,16 +32,16 @@ public class Tutor {
 	}
 
 /* Prenotazioni */
-	public boolean book(Professore p) {
+	public void book(Professore p) {
 		mtx.lock();
 
 		waitingProf++;
-		while(waitingProf > 1 || !lab.isEmpty()) {
+		while(!lab.isEmpty()) {
 			try {
 				condProf.await();
 			} catch (InterruptedException e) {
 				System.out.println("[TUTOR-PROF] Sleep interrotta");
-				return false;
+				return;
 			}
 		}
 		waitingProf--;
@@ -49,64 +49,52 @@ public class Tutor {
 		lab.book(p);
 
 		mtx.unlock();
-		return true;
 	}
 	
-	public boolean book(Tesista t) {
-		
+	public void book(Tesista t) {
 		mtx.lock();
+
 		waitingTesi++;
-		
-		while(waitingProf > 0 || waitingTesi > 1 || lab.isTesiPCBusy()) {
+		while(waitingProf > 0 || lab.isTesiPCBusy()) {
 			try {
 				condTesi.await();
 			} catch (InterruptedException e) {
 				System.out.println("[TUTOR-TESI] Sleep interrotta");
-				return false;
+				return;
 			}
 		}
+		waitingTesi--;
 
 		lab.book(t);
 		
 		mtx.unlock();
-		return true;
 	}
 	
-	public boolean book(Studente s) {
+	public int book(Studente s) {
 		mtx.lock();
 		
 		waitingStud++;
-		while(waitingProf > 0 || waitingStud > 1 || lab.isFull()) {
+		int index;
+		while( 		(index = lab.findAvailable()) == -1
+				|| 	waitingProf > 0
+				|| (index == lab.getTesi_pcIndex() && lab.computersAvailable() == 1) ) {
 			try {
 				condStud.await();
 			} catch (InterruptedException e) {
 				System.out.println("[TUTOR-STUD] Sleep interrotta");
-				return false;
+				return -1;
 			}
 		}
 		waitingStud--;
 
-	/* scelta (casuale) del pc da occupare, se ci sono tesisti in attesa prende ugualmente il pc_tesi
-	* 	si presume che venendo riattivati prima questi ultimi siano in grado di occupare il posto prima degli
-	* 	studenti
-* 	Altre soluzioni avrebbero introdotto possibile Starvation degli studenti o attesa della fine dell'uso
-* 		dei tesisti, cosa contraria alle specicfiche (studenti e tesisti dovrebbero convivere nel lab) */
-
-		/*
-		int pc_scelto;
-		do {
-			pc_scelto = (int) Math.random() * this.lab_size;
-		} while(pc[pc_scelto] == StatoPC.BUSY || (waitingTesi > 0 && pc_scelto == tesi_pc));
-		n_free_pc--;
-		*/
-		lab.book(s);
+		lab.book(s, index);
 
 		mtx.unlock();
-		return true;
+		return index;
 	}
 
 /* Rilasci delle postazioni */
-	public boolean leave(Professore p) {
+	public void leave(Professore p) {
 		mtx.lock();
 		lab.leave(p);
 
@@ -122,44 +110,39 @@ public class Tutor {
 		}
 
 		mtx.unlock();
-		return true;
 	}
 
-	public boolean leave(Tesista t) {
+	public void leave(Tesista t) {
 		mtx.lock();
 		lab.leave(t);
 
 		if(waitingProf != 0) {
 			condProf.signal();
-		} else {
-			if(waitingTesi != 0) {
-				condTesi.signal();
-			}
-			if(waitingStud != 0) {
-				condStud.signal();
-			}
+		}
+		else if(waitingTesi != 0) {
+			condTesi.signal();
+		}
+		else {
+			condStud.signal();
 		}
 
 		mtx.unlock();
-		return true;
 	}
 
-	public boolean leave(Studente s) {
+	public void leave(Studente s, int index) {
 		mtx.lock();
-		lab.leave(s);
+		lab.leave(s, index);
 
 		if(waitingProf != 0) {
 			condProf.signal();
-		} else {
-			if(waitingTesi != 0) {
-				condTesi.signal();
-			}
-			if(waitingStud != 0) {
-				condStud.signal();
-			}
+		}
+		else if(index == lab.getTesi_pcIndex() && waitingTesi != 0) {
+			condTesi.signal();
+		}
+		else {
+			condStud.signal();
 		}
 
 		mtx.unlock();
-		return true;
 	}
 }	

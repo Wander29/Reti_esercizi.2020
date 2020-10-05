@@ -1,40 +1,32 @@
 package assignment03;
 
-public class Studente extends Utente implements Runnable {
+import java.util.concurrent.ThreadLocalRandom;
+
+public class Studente extends Utente {
+
+    private int index;
 
     public Studente(Tutor l) {
-        this.k = (int) Math.random() * MAX_EXEC;
-        this.tutor = l;
+        super(l);
     }
 
-    public void run() {
-        for(int i = 0; i < k; i++) {
-            /* accesso al laboratorio, chiamata eventualemente bloccante */
-            if(!tutor.book(this)) {
-                System.out.println("[STUDENTE] Book error");
-                return;
-            }
+    @Override
+    protected void joinLab() throws InterruptedException {
+        index = tutor.book(this);
+    }
 
-            /* utilizzo del laboratorio */
-            try {
-                System.out.println("[STUDENTE] Sto per usare un pc!");
-                Thread.sleep((int) Math.random() * 2000);
-            } catch (InterruptedException e) {
-                System.out.println("[STUDENTE] Sleep interrotta");
-                return;
-            }
+    @Override
+    protected void useLab() throws InterruptedException {
+        Thread.sleep(ThreadLocalRandom.current().nextInt(200));
+    }
 
-            /* rilascio del laboratorio e attesa del prossimo utilizzo */
-            if(!tutor.leave(this)) {
-                System.out.println("[STUDENTE] Leave error");
-                return;
-            }
-            try {
-                Thread.sleep((int) Math.random() * 3000);
-            } catch (InterruptedException e) {
-                System.out.println("[STUDENTE] Sleep interrotta");
-                return;
-            }
-        }
+    @Override
+    protected void leaveLab() {
+        tutor.leave(this, index);
+    }
+
+    @Override
+    protected void printUserInLine() {
+        System.out.print("[STUD " + Thread.currentThread().getName() + "]");
     }
 }

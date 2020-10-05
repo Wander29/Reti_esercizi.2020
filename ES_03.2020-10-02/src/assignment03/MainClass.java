@@ -1,6 +1,5 @@
 package assignment03;
 
-
 /*
 Il laboratorio di Informatica del Polo Marzotto è utilizzato da tre tipi di utenti
 studenti, tesisti e professori ed ogni utente deve fare una richiesta al tutor per accedere al laboratorio.

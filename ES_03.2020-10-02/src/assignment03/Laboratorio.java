@@ -1,7 +1,6 @@
 package assignment03;
 
-import java.util.ArrayList;
-
+import java.util.concurrent.ThreadLocalRandom;
 /*
     Il Laboratorio implementa le gestione effettiva delle postazioni, senza pensare alla concorrenza
  */
@@ -11,73 +10,82 @@ public class Laboratorio {
      * @REQUIRES esecuzione in mutua esclusione, garantita dal chiamante
      */
 
+    // costanti per favorire la human readability
+    private static final boolean AVAILABLE = true;
+    private static final boolean NOT_AVAILABLE = false;
     private final int LAB_SIZE = 20;
 
-    private ArrayList<Utente> postazioni;
+    // postazione[i] = TRUE se la postazione è libera, FALSE altrimenti
+    // l'array è final poichè il riferimento all'array non voglio che cambi una volta inizializzato dal costruttore
+    private final Boolean postazioni[];
     private final int tesi_pc;
 
     public Laboratorio() {
-        postazioni = new ArrayList<>(20);
-        postazioni.ensureCapacity(20);
-        tesi_pc = (int) (Math.random() * LAB_SIZE);
+        postazioni = new Boolean[LAB_SIZE];
+        for(int i = 0; i < LAB_SIZE; i++) {
+            postazioni[i] = AVAILABLE;
+        }
+        tesi_pc = ThreadLocalRandom.current().nextInt(LAB_SIZE);
     }
 
     public void book(Professore p) {
         for(int i = 0; i < LAB_SIZE; i++) {
-            postazioni.add(i, (Utente) p);
+            postazioni[i] = NOT_AVAILABLE;
         }
     }
 
     public void book(Tesista t) {
-        postazioni.add(tesi_pc, (Utente) t);
+        postazioni[tesi_pc] = NOT_AVAILABLE;
     }
 
-    /* potrebbe anche occupare il pc_tesi */
-    public void book(Studente s) {
-        postazioni.add((Utente) s);
-// DEGBUG
-        if(postazioni.indexOf(s) == tesi_pc) {
-            System.out.println("STUDENTE OCCUPA PC TESI!");
-        }
+    public void book(Studente s, int index) {
+        postazioni[index] = NOT_AVAILABLE;
     }
 
     public void leave(Professore p) {
         for(int i = 0; i < LAB_SIZE; i++) {
-            postazioni.remove(i);
+            postazioni[i] = AVAILABLE;
         }
-        assert(remainingSize() == LAB_SIZE);
     }
 
     public void leave(Tesista t) {
-        postazioni.remove(tesi_pc);
+        postazioni[tesi_pc] = AVAILABLE;
     }
 
-    public void leave(Studente s) {
-        postazioni.remove(s);
+    public void leave(Studente s, int index) {
+        postazioni[index] = AVAILABLE;
     }
 
-    public int remainingSize() {
-        return LAB_SIZE - postazioni.size();
+    public int findAvailable() {
+        for(int i = 0; i < LAB_SIZE; i++) {
+            if(postazioni[i] == AVAILABLE)
+                return i;
+        }
+        return -1;
+    }
+
+    public int getTesi_pcIndex() {
+        return tesi_pc;
     }
 
     public boolean isEmpty() {
-        if(0 == postazioni.size())
+        if(computersAvailable() == LAB_SIZE)
             return true;
         else
             return false;
     }
 
-    public boolean isFull() {
-        if(LAB_SIZE == postazioni.size())
-            return true;
-        else
-            return false;
+    public int computersAvailable() {
+        int cnt = 0;
+        for(int i = 0; i < LAB_SIZE; i++) {
+            if(postazioni[i] == AVAILABLE)
+                cnt++;
+        }
+        return cnt;
     }
 
     public boolean isTesiPCBusy() {
-        if(postazioni.get(tesi_pc) != null)
-            return true;
-        else
-            return false;
+        if(postazioni[tesi_pc] == NOT_AVAILABLE)    return true;
+        else    return false;
     }
 }
