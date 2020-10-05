@@ -20,6 +20,7 @@ public class MainClass {
         // Counter cnt = new CounterReentrant();
         Counter cnt = new CounterRW();
 
+
         ThreadPoolExecutor tpe = (ThreadPoolExecutor) Executors.newCachedThreadPool();
         // ThreadPoolExecutor tpe = (ThreadPoolExecutor) Executors.newFixedThreadPool(10);
 

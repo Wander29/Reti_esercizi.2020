@@ -1,23 +1,32 @@
-package assignment03;
+package assignment03_v2;
 
 public class Studente extends Utente implements Runnable {
 
-    public Studente(Tutor l) {
+    private final int k; /* numero accessi al laboratorio */
+
+    public Studente() {
+        this.setPriority(STUD_PRIORITY);
         this.k = (int) Math.random() * MAX_EXEC;
-        this.tutor = l;
     }
 
+    @Override
+    public void joinLab() {
+
+    }
+
+    @Override
+    public void exitLab() {
+
+    }
+
+    @Override
     public void run() {
         for(int i = 0; i < k; i++) {
             /* accesso al laboratorio, chiamata eventualemente bloccante */
-            if(!tutor.book(this)) {
-                System.out.println("[STUDENTE] Book error");
-                return;
-            }
+            joinLab();
 
             /* utilizzo del laboratorio */
             try {
-                System.out.println("[STUDENTE] Sto per usare un pc!");
                 Thread.sleep((int) Math.random() * 2000);
             } catch (InterruptedException e) {
                 System.out.println("[STUDENTE] Sleep interrotta");
@@ -25,10 +34,8 @@ public class Studente extends Utente implements Runnable {
             }
 
             /* rilascio del laboratorio e attesa del prossimo utilizzo */
-            if(!tutor.leave(this)) {
-                System.out.println("[STUDENTE] Leave error");
-                return;
-            }
+            exitLab();
+
             try {
                 Thread.sleep((int) Math.random() * 3000);
             } catch (InterruptedException e) {

@@ -26,8 +26,6 @@ Il tutor deve coordinare gli accessi al laboratorio.
 Il programma deve terminare quando tutti gli utenti hanno completato i loro accessi al laboratorio.
 
 */
-
-
     // attento a setPriority
     // un solo professore per volta, non più prof insieme
 
@@ -41,11 +39,10 @@ import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 
 public class MainClass {
-
-	private static final int NUM_PC = 20;
 	
 	public static void main(String[] args) {
-		Laboratorio lab = new Laboratorio(NUM_PC);
+		Laboratorio lab = new Laboratorio();
+		Tutor tutor = new Tutor(lab);
 
 	/* generazione Utenti */
 		int i;
@@ -90,22 +87,22 @@ public class MainClass {
 					Executors.newFixedThreadPool(n_prof + n_tesi + n_stud);
 
 		for(i = 0; i < n_prof; i++) {
-			tpe.execute(new Professore(lab));
+			tpe.execute(new Professore(tutor));
 		}
 
 		for(i = 0; i < n_tesi; i++) {
-			tpe.execute(new Tesista(lab));
+			tpe.execute(new Tesista(tutor));
 		}
 
 		for(i = 0; i < n_stud; i++) {
-			tpe.execute(new Studente(lab));
+			tpe.execute(new Studente(tutor));
 		}
 
-	/* attesa terminazione Thread */
+		/* attesa terminazione Thread */
 		tpe.shutdown();
 		while(!tpe.isTerminated()) {
 			try {
-				tpe.awaitTermination(2, TimeUnit.SECONDS);
+				tpe.awaitTermination(3, TimeUnit.SECONDS);
 			} catch (InterruptedException e) {
 				System.out.println("[MAIN] TPE.await interrotta");
 				return;

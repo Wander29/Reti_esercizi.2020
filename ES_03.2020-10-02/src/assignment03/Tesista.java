@@ -1,25 +1,23 @@
 package assignment03;
 
-public class Tesista implements Runnable {
-    private final int k; /* numero esecuzioni */
-    private final int MAX_EXEC = 20;
-    private final Laboratorio lab;
+public class Tesista extends Utente implements Runnable {
 
-    public Tesista(Laboratorio l) {
+    public Tesista(Tutor l) {
         this.k = (int) Math.random() * MAX_EXEC;
-        this.lab = l;
+        this.tutor = l;
     }
 
     public void run() {
         for(int i = 0; i < k; i++) {
             /* accesso al laboratorio, chiamata eventualemente bloccante */
-            if(!lab.bookTesi()) {
+            if(!tutor.book(this)) {
                 System.out.println("[TESISTA] Book error");
                 return;
             }
 
             /* utilizzo del laboratorio */
             try {
+                System.out.println("[TESISTA] Sto per usare il mio pc da tesista!");
                 Thread.sleep((int) Math.random() * 2000);
             } catch (InterruptedException e) {
                 System.out.println("[TESISTA] Sleep interrotta");
@@ -27,7 +25,7 @@ public class Tesista implements Runnable {
             }
 
             /* rilascio del laboratorio e attesa del prossimo utilizzo */
-            if(!lab.leaveTesi()) {
+            if(!tutor.leave(this)) {
                 System.out.println("[TESISTA] Leave error");
                 return;
             }
