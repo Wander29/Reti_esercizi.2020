@@ -3,7 +3,7 @@ package assignment03;
 import java.util.concurrent.ThreadLocalRandom;
 
 public abstract class Utente implements Runnable {
-    protected final int MAX_EXEC = 3;
+    protected final int MAX_EXEC = 10;
     protected Tutor tutor;
 
     public Utente(Tutor t) {
@@ -13,8 +13,8 @@ public abstract class Utente implements Runnable {
     @Override
     public void run() {
         int i = 0;
-        // int k = ThreadLocalRandom.current().nextInt(MAX_EXEC) + 1;
-        int k = 1;
+        int k = ThreadLocalRandom.current().nextInt(MAX_EXEC) + 1;
+        // int k = 1;
         while (i < k) {
             try {
                 joinLab();
