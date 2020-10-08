@@ -1,12 +1,24 @@
 package assignment03;
 
+/**
+ * @author		LUDOVICO VENTURI 578033
+ * @date		2020/10/08
+ * @versione	1.0
+ */
+
 import java.util.concurrent.ThreadLocalRandom;
 
+/**
+ * UTENTE: Classe astratta che implementa RUN ed impone una certa interfaccia
+ */
+
 public abstract class Utente implements Runnable {
-    protected final int MAX_EXEC = 10;
+    protected final int MAX_EXEC = 10; // numero massimo accessi al lab da parte di un utente
     protected Tutor tutor;
 
-    public Utente(Tutor t) {
+    private static final boolean DEBUG = false;
+
+    public Utente(Tutor t) { // costruttore comune a tutti gli utenti
         this.tutor = t;
     }
 
@@ -14,35 +26,46 @@ public abstract class Utente implements Runnable {
     public void run() {
         int i = 0;
         int k = ThreadLocalRandom.current().nextInt(MAX_EXEC) + 1;
-        // int k = 1;
+
         while (i < k) {
             try {
+                // prova ad accedere al laboratorio
                 joinLab();
-                printUserInLine();
-                System.out.println(" sto per usare il lab!");
+                if(DEBUG) {
+                    printUserInLine();
+                    System.out.println(" sto per usare il lab!");
+                    System.out.flush();
+                }
 
+                // accede al laboratorio
                 useLab();
 
-                printUserInLine();
-                System.out.println(" sto per uscire");
-
+                // uscita dal laboratorio
+                if(DEBUG) {
+                    printUserInLine();
+                    System.out.println(" sto per uscire");
+                    System.out.flush();
+                }
                 leaveLab();
+
+                // attesa prossimo turno
+                i++;
+                waitNextTurn();
             } catch (InterruptedException ex) {
-                System.out.println("[UTENTE] Attesa interrotta");
+                System.out.println("[UTENTE " + Thread.currentThread().getName() + "] Attesa interrotta");
                 return;
             }
-            i++;
-            try {
-                Thread.sleep(ThreadLocalRandom.current().nextInt(200));
-            } catch (InterruptedException e) {
-                System.out.println("[UTENTE] Sleep di attesa per il prossimo accesso interrotta");
-            }
         }
+        printUserInLine();
+        System.out.println(" sto per Terminare");
+        System.out.flush();
     }
 
     protected abstract void joinLab() throws InterruptedException;
 
     protected abstract void useLab() throws InterruptedException;
+
+    protected abstract void waitNextTurn() throws InterruptedException;
 
     protected abstract void leaveLab();
 
