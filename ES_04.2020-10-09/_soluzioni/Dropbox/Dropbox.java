@@ -1,5 +1,3 @@
-package com.es1;
-
 import java.util.concurrent.ThreadLocalRandom;
 
 /**
@@ -23,12 +21,12 @@ import java.util.concurrent.ThreadLocalRandom;
  */
 
 /**
- * Dropbox modella un bounded buffer di dimensione 1
+ * Dopbox modella un bounded buffer di dimensione 1
  * @author Samuel Fabrizi
  * @version 1.1
  */
 
-public class Dropbox {
+class Dropbox {
 	/**
 		full è uguale a true se il buffer è pieno, false altrimenti
 	 */
@@ -44,7 +42,7 @@ public class Dropbox {
 	 * 			se e == True il numero contenuto è pari, altrimenti è dispari
 	 * @return numero consumato
 	 */
-	public int take(boolean e) throws InterruptedException {
+	public int take(boolean e) {
 		/* La seguente espressione equivale a:
 		 * if (e == true) {
 		 * 		s = "Pari"
@@ -77,7 +75,7 @@ public class Dropbox {
 	 * Attende che il buffer sia vuoto, poi inserisce n all'interno di esso
 	 * @param n intero da inserire nel buffer
 	 */
-	public void put(int n) throws InterruptedException {
+	public void put(int n) {
 		while (full) {
 			try {
 				Thread.sleep(100);
