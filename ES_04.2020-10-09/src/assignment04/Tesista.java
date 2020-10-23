@@ -2,7 +2,7 @@ package assignment04;
 
 /**
  * @author		LUDOVICO VENTURI 578033
- * @date		2020/10/10
+ * @date		2020/10/23
  * @versione	1.1
  */
 
@@ -10,15 +10,18 @@ import java.util.concurrent.ThreadLocalRandom;
 
 public class Tesista extends Utente {
     private final int pc_tesi_personal;
+    private final long matricola;
+    private final TutorTesi tutor;
 
-    public Tesista(Tutor l) {
-        super(l);
-        pc_tesi_personal = this.tutor.identifyPcTesista();
+    public Tesista(TutorTesi l) {
+        this.tutor = l;
+        this.pc_tesi_personal = this.tutor.identifyPc();
+        this.matricola = ThreadLocalRandom.current().nextLong(100000, 700000);
     }
 
     @Override
     protected void joinLab() throws InterruptedException {
-        tutor.book(this, pc_tesi_personal);
+        this.tutor.occupy(this.matricola, this.pc_tesi_personal);
     }
 
     @Override
@@ -33,7 +36,7 @@ public class Tesista extends Utente {
 
     @Override
     protected void leaveLab() {
-        tutor.leave(this, pc_tesi_personal);
+        this.tutor.release(pc_tesi_personal);
     }
 
     @Override

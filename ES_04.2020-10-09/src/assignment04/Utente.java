@@ -2,7 +2,7 @@ package assignment04;
 
 /**
  * @author		LUDOVICO VENTURI 578033
- * @date		2020/10/10
+ * @date		2020/10/23
  * @versione	1.1
  */
 
@@ -14,19 +14,14 @@ import java.util.concurrent.ThreadLocalRandom;
 
 public abstract class Utente implements Runnable {
     protected final int MAX_EXEC = 10; // numero massimo accessi al lab da parte di un utente
-    protected Tutor tutor;
 
-    private static final boolean DEBUG = false;
-
-    public Utente(Tutor t) { // costruttore comune a tutti gli utenti
-        this.tutor = t;
-    }
+    private static final boolean DEBUG = true;
 
     @Override
     public void run() {
         int i = 0;
-        int k = ThreadLocalRandom.current().nextInt(1, MAX_EXEC);
-        // int k = 1;
+        int k = ThreadLocalRandom.current().nextInt(2, MAX_EXEC);
+        //int k = 1;
 
         while (i < k) {
             try {
@@ -34,7 +29,7 @@ public abstract class Utente implements Runnable {
                 joinLab();
                 if(DEBUG) {
                     printUserInLine();
-                    System.out.println(" sto per usare il lab! [");
+                    System.out.println(" sto per usare il lab!");
                     System.out.flush();
                 }
 
@@ -58,7 +53,7 @@ public abstract class Utente implements Runnable {
             }
         }
         printUserInLine();
-        System.out.println(" sto per Terminare");
+        System.out.println(" sto per Terminare!");
         System.out.flush();
     }
 

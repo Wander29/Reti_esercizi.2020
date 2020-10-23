@@ -1,0 +1,28 @@
+### INPUT
+assignment05.MainClass dir-test/ 5
+
+### OUTPUT
+[PROD] scoperta DIR[dir2-2-1]
+[PROD] scoperta DIR[dir2-2]
+[CONS Thread-4] DIR[dir2-2]: FILE file2-2-a.txt
+[CONS Thread-1] DIR[dir2-2-1]: FILE file2-2-1w.txt
+[CONS Thread-1] DIR[dir2-2-1]: FILE file2-2-1b.txt
+[CONS Thread-1] DIR[dir2-2-1]: FILE file2-2-1a.txt
+[PROD] scoperta DIR[dir2-1]
+[PROD] scoperta DIR[dir2]
+[CONS Thread-3] DIR[dir2-1]: FILE file2-1-a.txt
+[CONS Thread-1] DIR[dir2]: FILE file2a.txt
+[PROD] scoperta DIR[dir1-1]
+[PROD] scoperta DIR[dir1]
+[PROD] termino
+[CONS Thread-2] DIR[dir1-1]: FILE easter-cat.dat
+[CONS Thread-1] DIR[dir1]: FILE file1-1.txt
+[CONS Thread-1] DIR[dir1]: FILE file1-2.txt
+[CONS Thread-4] sto per terminare
+[CONS Thread-3] sto per terminare
+[CONS Thread-5] sto per terminare
+[CONS Thread-1] sto per terminare
+[CONS Thread-2] sto per terminare
+TERMINAZIONE CORRETTA!
+
+Process finished with exit code 0

@@ -2,7 +2,7 @@ package assignment04;
 
 /**
  * @author		LUDOVICO VENTURI 578033
- * @date		2020/10/10
+ * @date		2020/10/23
  * @versione	1.1
  */
 
@@ -10,13 +10,15 @@ import java.util.concurrent.ThreadLocalRandom;
 
 public class Professore extends Utente {
 
-    public Professore(Tutor l) {
-        super(l);
+    private final TutorProf tutor;
+
+    public Professore(TutorProf l) {
+        this.tutor = l;
     }
 
     @Override
     protected void joinLab() throws InterruptedException {
-        tutor.book(this); // passa sè stesso per trovare il metodo giusto tramite overload e dynamic dispatch
+        tutor.occupy();
     }
 
     @Override
@@ -26,12 +28,12 @@ public class Professore extends Utente {
 
     @Override
     protected void waitNextTurn() throws InterruptedException {
-        Thread.sleep(ThreadLocalRandom.current().nextInt(200));
+        Thread.sleep(ThreadLocalRandom.current().nextInt(600));
     }
 
     @Override
     protected void leaveLab() {
-        tutor.leave(this);
+        this.tutor.release();
     }
 
     @Override

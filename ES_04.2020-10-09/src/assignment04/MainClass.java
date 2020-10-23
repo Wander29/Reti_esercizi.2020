@@ -2,7 +2,7 @@ package assignment04;
 
 /**
  * @author		LUDOVICO VENTURI 578033
- * @date		2020/10/10
+ * @date		2020/10/23
  * @versione	1.1
  */
 
@@ -71,15 +71,21 @@ import java.util.concurrent.TimeUnit;
  *  	questa struttura dati.
  *
  *  	Tutor gestisce la concorrenza degli accessi al laboratorio, è un oggetto
- *  	i cui metodi sono tutti sezione critiche, usate da tutti i thread utente
-
+ *  	i cui metodi sono tutti sezione critiche
+ *
+ *  	Ogni tipologia di utente deve poter accedere solamente ai metodi relativi al
+ *  	suo livello, per realizzare tale vincolo uso 3 classi Tutor che «wrappano»
+ *  	il Tutor vero e proprio
  */
 
 public class MainClass {
 	
 	public static void main(String[] args) {
 		Laboratorio lab = new Laboratorio(); // laboratorio in sè
-		Tutor tutor = new Tutor(lab);	// gestore del laboratorio
+		Tutor2 tutor = new Tutor2(lab);	// gestore del laboratorio
+		TutorStud tutorStudente 	= new TutorStud(tutor);
+		TutorProf tutorProfessore 	= new TutorProf(tutor);
+		TutorTesi tutorTesista 		= new TutorTesi(tutor);
 
 	/* generazione Utenti */
 		int i;
@@ -121,6 +127,7 @@ public class MainClass {
 		if(n_prof + n_tesi + n_stud == 0)	return;
 
 		/* attivazione Thread
+
 	* 	realizzati tramite un threadPoolExecutor di dimensione fissa pari al numero di utenti
 	* 	in modo da farli eseguire tutti contemporaneamente
 	* */
@@ -128,11 +135,11 @@ public class MainClass {
 					Executors.newFixedThreadPool(n_prof + n_tesi + n_stud);
 		tpe.prestartAllCoreThreads();
 
-		for(i = 0; i < n_prof; i++) { tpe.execute(new Professore(tutor)); }
+		for(i = 0; i < n_prof; i++) { tpe.execute(new Professore(tutorProfessore)); }
 
-		for(i = 0; i < n_tesi; i++) { tpe.execute(new Tesista(tutor)); }
+		for(i = 0; i < n_tesi; i++) { tpe.execute(new Tesista(tutorTesista)); }
 
-		for(i = 0; i < n_stud; i++) { tpe.execute(new Studente(tutor)); }
+		for(i = 0; i < n_stud; i++) { tpe.execute(new Studente(tutorStudente)); }
 
 		/* attesa terminazione Thread */
 		tpe.shutdown();

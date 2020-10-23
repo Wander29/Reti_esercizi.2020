@@ -1,0 +1,142 @@
+Quanti Professori? in [0, 20]
+2
+Quanti Tesisti? in [0, 50]
+5
+Quanti Studenti? in [0, 500]
+5
+
+
+[PROF pool-1-thread-1] sto per usare il lab!
+[PROF pool-1-thread-1] sto per uscire
+[PROF pool-1-thread-2] sto per usare il lab!
+[PROF pool-1-thread-2] sto per uscire
+[STUD pool-1-thread-10][STUD pool-1-thread-9] sto per usare il lab!
+[STUD pool-1-thread-12] sto per usare il lab!
+[STUD pool-1-thread-8] sto per usare il lab!
+ sto per usare il lab!
+[STUD pool-1-thread-11] sto per usare il lab!
+[STUD pool-1-thread-10] sto per uscire
+[TESI pool-1-thread-5 PC [9] ] sto per usare il lab!
+[TESI pool-1-thread-6 PC [5] ] sto per usare il lab!
+[TESI pool-1-thread-7 PC [8] ] sto per usare il lab!
+[TESI pool-1-thread-3 PC [3] ] sto per usare il lab!
+[TESI pool-1-thread-4 PC [11] ] sto per usare il lab!
+[TESI pool-1-thread-5 PC [9] ] sto per uscire
+[TESI pool-1-thread-4 PC [11] ] sto per uscire
+[TESI pool-1-thread-6 PC [5] ] sto per uscire
+[TESI pool-1-thread-4 PC [11] ] sto per usare il lab!
+[TESI pool-1-thread-4 PC [11] ] sto per uscire
+[STUD pool-1-thread-8] sto per uscire
+[STUD pool-1-thread-8] sto per usare il lab!
+[TESI pool-1-thread-3 PC [3] ] sto per uscire
+[TESI pool-1-thread-5 PC [9] ] sto per usare il lab!
+[TESI pool-1-thread-6 PC [5] ] sto per usare il lab!
+[TESI pool-1-thread-4 PC [11] ] sto per usare il lab!
+[STUD pool-1-thread-10] sto per usare il lab!
+[STUD pool-1-thread-8] sto per uscire
+[TESI pool-1-thread-5 PC [9] ] sto per uscire
+[STUD pool-1-thread-9] sto per uscire
+[STUD pool-1-thread-11] sto per uscire
+[TESI pool-1-thread-7 PC [8] ] sto per uscire
+[STUD pool-1-thread-12] sto per uscire
+[TESI pool-1-thread-5 PC [9] ] sto per Terminare!
+[STUD pool-1-thread-10] sto per uscire
+[TESI pool-1-thread-4 PC [11] ] sto per uscire
+[TESI pool-1-thread-6 PC [5] ] sto per uscire
+[TESI pool-1-thread-3 PC [3] ] sto per usare il lab!
+[STUD pool-1-thread-8] sto per usare il lab!
+[STUD pool-1-thread-11] sto per usare il lab!
+[STUD pool-1-thread-9] sto per usare il lab!
+[STUD pool-1-thread-9] sto per uscire
+[TESI pool-1-thread-7 PC [8] ] sto per usare il lab!
+[STUD pool-1-thread-9] sto per usare il lab!
+[TESI pool-1-thread-7 PC [8] ] sto per uscire
+[TESI pool-1-thread-6 PC [5] ] sto per usare il lab!
+[STUD pool-1-thread-10] sto per usare il lab!
+[STUD pool-1-thread-12] sto per usare il lab!
+[TESI pool-1-thread-4 PC [11] ] sto per usare il lab!
+[STUD pool-1-thread-8] sto per uscire
+[TESI pool-1-thread-3 PC [3] ] sto per uscire
+[STUD pool-1-thread-11] sto per uscire
+[STUD pool-1-thread-8] sto per Terminare!
+[STUD pool-1-thread-10] sto per uscire
+[TESI pool-1-thread-6 PC [5] ] sto per uscire
+[STUD pool-1-thread-9] sto per uscire
+[TESI pool-1-thread-4 PC [11] ] sto per uscire
+[STUD pool-1-thread-12] sto per uscire
+[PROF pool-1-thread-1] sto per usare il lab!
+[PROF pool-1-thread-1] sto per uscire
+[PROF pool-1-thread-2] sto per usare il lab!
+[TESI pool-1-thread-4 PC [11] ] sto per Terminare!
+[STUD pool-1-thread-12] sto per Terminare!
+[PROF pool-1-thread-2] sto per uscire
+[TESI pool-1-thread-6 PC [5] ] sto per usare il lab!
+[STUD pool-1-thread-10][STUD pool-1-thread-11] sto per usare il lab!
+[STUD pool-1-thread-9] sto per usare il lab!
+ sto per usare il lab!
+[TESI pool-1-thread-7 PC [8] ] sto per usare il lab!
+[TESI pool-1-thread-3 PC [3] ] sto per usare il lab!
+[TESI pool-1-thread-7 PC [8] ] sto per uscire
+[STUD pool-1-thread-10] sto per uscire
+[STUD pool-1-thread-11] sto per uscire
+[STUD pool-1-thread-11] sto per usare il lab!
+[STUD pool-1-thread-10] sto per usare il lab!
+[TESI pool-1-thread-3 PC [3] ] sto per uscire
+[TESI pool-1-thread-7 PC [8] ] sto per usare il lab!
+[TESI pool-1-thread-6 PC [5] ] sto per uscire
+[STUD pool-1-thread-9] sto per uscire
+[STUD pool-1-thread-10] sto per uscire
+[STUD pool-1-thread-11] sto per uscire
+[PROF pool-1-thread-1] sto per Terminare!
+[TESI pool-1-thread-7 PC [8] ] sto per uscire
+[PROF pool-1-thread-2] sto per usare il lab!
+[PROF pool-1-thread-2] sto per uscire
+[STUD pool-1-thread-9] sto per usare il lab!
+[STUD pool-1-thread-11][STUD pool-1-thread-10] sto per usare il lab!
+[TESI pool-1-thread-6 PC [5] ] sto per usare il lab!
+ sto per usare il lab!
+[TESI pool-1-thread-6 PC [5] ] sto per uscire
+[TESI pool-1-thread-7 PC [8] ] sto per usare il lab!
+[TESI pool-1-thread-3 PC [3] ] sto per usare il lab!
+[TESI pool-1-thread-7 PC [8] ] sto per uscire
+[TESI pool-1-thread-3 PC [3] ] sto per uscire
+[TESI pool-1-thread-3 PC [3] ] sto per usare il lab!
+[STUD pool-1-thread-10] sto per uscire
+[STUD pool-1-thread-11] sto per uscire
+[TESI pool-1-thread-6 PC [5] ] sto per Terminare!
+[TESI pool-1-thread-7 PC [8] ] sto per usare il lab!
+[STUD pool-1-thread-9] sto per uscire
+[STUD pool-1-thread-10] sto per usare il lab!
+[STUD pool-1-thread-11] sto per usare il lab!
+[STUD pool-1-thread-11] sto per uscire
+[TESI pool-1-thread-7 PC [8] ] sto per uscire
+[STUD pool-1-thread-9] sto per usare il lab!
+[STUD pool-1-thread-10] sto per uscire
+[TESI pool-1-thread-3 PC [3] ] sto per uscire
+[TESI pool-1-thread-7 PC [8] ] sto per usare il lab!
+[TESI pool-1-thread-3 PC [3] ] sto per usare il lab!
+[TESI pool-1-thread-7 PC [8] ] sto per uscire
+[TESI pool-1-thread-7 PC [8] ] sto per Terminare!
+[TESI pool-1-thread-3 PC [3] ] sto per uscire
+[STUD pool-1-thread-9] sto per uscire
+[PROF pool-1-thread-2] sto per usare il lab!
+[PROF pool-1-thread-2] sto per uscire
+[STUD pool-1-thread-11] sto per usare il lab!
+[TESI pool-1-thread-3 PC [3] ][STUD pool-1-thread-10] sto per usare il lab!
+ sto per usare il lab!
+[STUD pool-1-thread-9] sto per usare il lab!
+[TESI pool-1-thread-3 PC [3] ] sto per uscire
+[TESI pool-1-thread-3 PC [3] ] sto per usare il lab!
+[STUD pool-1-thread-11] sto per uscire
+[STUD pool-1-thread-9] sto per uscire
+[STUD pool-1-thread-10] sto per uscire
+[STUD pool-1-thread-11] sto per Terminare!
+[TESI pool-1-thread-3 PC [3] ] sto per uscire
+[STUD pool-1-thread-9] sto per Terminare!
+[STUD pool-1-thread-10] sto per usare il lab!
+[TESI pool-1-thread-3 PC [3] ] sto per Terminare!
+[STUD pool-1-thread-10] sto per uscire
+[PROF pool-1-thread-2] sto per Terminare!
+[STUD pool-1-thread-10] sto per Terminare!
+
+Process finished with exit code 0

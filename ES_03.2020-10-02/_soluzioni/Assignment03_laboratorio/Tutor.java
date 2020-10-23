@@ -103,7 +103,7 @@ public class Tutor {
                 tesistiAwaiting[id_pc].await();
             }
             lab.occupyComputer(id_pc);
-        }
+        }z
         catch (InterruptedException e) {
             e.printStackTrace();
         }

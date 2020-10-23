@@ -2,7 +2,7 @@ package assignment04;
 
 /**
  * @author		LUDOVICO VENTURI 578033
- * @date		2020/10/10
+ * @date		2020/10/23
  * @versione	1.1
  */
 
@@ -10,15 +10,16 @@ import java.util.concurrent.ThreadLocalRandom;
 
 public class Studente extends Utente {
 
-    private int index;
+    private final TutorStud tutor;
+    private int pc_taken;
 
-    public Studente(Tutor l) {
-        super(l);
+    public Studente(TutorStud l) {
+        this.tutor = l;
     }
 
     @Override
     protected void joinLab() throws InterruptedException {
-        index = tutor.book(this);
+        this.pc_taken = this.tutor.occupy();
     }
 
     @Override
@@ -33,12 +34,11 @@ public class Studente extends Utente {
 
     @Override
     protected void leaveLab() {
-        tutor.leave(this, index);
+        this.tutor.release(this.pc_taken);
     }
 
     @Override
     protected void printUserInLine() {
-        System.out.print("[STUD " + Thread.currentThread().getName() + " PC [" +
-                this.index + "] ]");
+        System.out.print("[STUD " + Thread.currentThread().getName() + "]");
     }
 }
