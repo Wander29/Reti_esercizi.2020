@@ -39,6 +39,8 @@ public class Produttore extends SlaveForDir implements Runnable {
      */
     public void discoverDirectory(File dir) {
         if(dir.isDirectory()) {
+            System.out.println("[PROD] scoperta DIR[" + dir.getAbsolutePath() + "]");
+            this.coda.pushSync(dir.getAbsolutePath());
            for(File f : dir.listFiles()) {
                if(f != null && f.exists() && f.isDirectory()) {
                    // per cercare di aumentare la concorrenza sulla coda
@@ -48,8 +50,6 @@ public class Produttore extends SlaveForDir implements Runnable {
                        e.printStackTrace();
                    }
                    discoverDirectory(f);
-                   System.out.println("[PROD] scoperta DIR[" + f.getName() + "]");
-                   this.coda.pushSync(f.getAbsolutePath());
                }
            }
         }
