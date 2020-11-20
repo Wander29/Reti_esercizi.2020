@@ -7,6 +7,18 @@ package ass07;
  */
 
 public class HTTPResponse {
+
+    public enum STATUS_CODE {
+        OK(200),
+        NOT_FOUND(404);
+
+        private final int code;
+
+        STATUS_CODE(int val) {
+            this.code = val;
+        }
+    }
+
     private StringBuilder sbuilder; // usata per costruire l'header
     private String header;          //
 
@@ -32,15 +44,15 @@ public class HTTPResponse {
 
     /**
      * setta lo Status Code da mandare nella Response
-     * @param code
+     * @param sc
      */
-    public void setStatusCode(int code) {
+    public void setStatusCode(STATUS_CODE sc) {
         StringBuilder sbTMP = new StringBuilder();
-        switch(code) {
-            case 200:
+        switch(sc) {
+            case OK:
                 sbTMP.append("200 OK\r\n");
                 break;
-            case 404:
+            case NOT_FOUND:
                 sbTMP.append("404 Not Found\r\n");
                 break;
             default:

@@ -34,7 +34,6 @@ public class ServerHTTP {
 
             while(true) {
                 Socket cliente = servSock.accept();
-                System.out.println("NUOVO SOCKET!");
                 tpe.execute(new ClientHandler(cliente));
             }
         } catch (IOException e) {
