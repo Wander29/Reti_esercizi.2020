@@ -48,7 +48,9 @@ public class ASyncUDPSv {
                             SelectionKey key = (SelectionKey) selectedKeys.next();
                             selectedKeys.remove(); // rimuove
 
-                            if (!key.isValid()) { continue; }
+                            if (!key.isValid()) {
+                                continue;
+                            }
                             if (key.isReadable()) {
                                 read(key);
                                 key.interestOps(SelectionKey.OP_WRITE);
@@ -59,10 +61,11 @@ public class ASyncUDPSv {
                         } catch (IOException e) {
                             System.out.println(e);
                         }
-
-                    } catch (IOException e) { System.out.println(e)); }
+                    }
+                } catch (IOException e) {
+                    System.out.println(e);
                 }
-            } catch (IOException e) {System.out.println(e));}
+            }
         } catch (IOException e) {
 
         }

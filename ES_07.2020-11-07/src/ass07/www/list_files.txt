@@ -1,0 +1,5 @@
+.:
+images	index.html  list_files.txt
+
+./images:
+cat_in_motorcycle.jpg  cat.jpg	cat_jumping.jpg  cat_zen.gif
