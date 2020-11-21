@@ -1,5 +1,11 @@
 package Ass09;
 
+/**
+ * @author      LUDOVICO VENTURI 578033
+ * @date        2020/11/21
+ * @version     1.0
+ */
+
 import java.io.IOException;
 import java.io.UnsupportedEncodingException;
 import java.net.*;
@@ -30,6 +36,9 @@ import java.util.StringTokenizer;
  */
 
 public class ClientPing extends Thread {
+    /**
+     * classe wrapper per le statistiche
+     */
     class RTTStats {
         long min = Long.MAX_VALUE;
         long max = 0;
@@ -41,16 +50,18 @@ public class ClientPing extends Thread {
         double avg = 0;
     }
 
-    private final static int SERV_PORT = 9999;
-    private final static int TIMEOUT_SOCKET = 2000;
+    private final static int TIMEOUT_SOCKET = 2000; // ms
 
-    private final static int BUF_SIZE = 256;
-    private final static int NUM_PINGS = 10;
-    private final static String PING = "PING";
+    private final static int BUF_SIZE = 256;        // dimensione buffer invio & ricezione UDP
+    private final static int NUM_PINGS = 10;        // iterazioni di invio
+    private final static String PING = "PING";      // stringa da inviare
 
+    private final InetAddress serverAddress;
+    private final int serverPort;
 
-    public ClientPing() {
-
+    public ClientPing(InetAddress server, int servPort) {
+        this.serverAddress = server;
+        this.serverPort = servPort;
     }
 
     public void run() {
@@ -71,13 +82,14 @@ public class ClientPing extends Thread {
             stat.num_sent_packets = 0;
             stat.num_received_packets = 0;
 
+            // invio 10 messaggi
             for (int i = 0; i < NUM_PINGS; i++) {
                 // elaborazione messaggio da inviare
-                sentData = computeMsgoToSend(i);
+                sentData = computeMsgToSend(i);
                 sendBuffer = sentData.getBytes();
 
                 // invio messaggio
-                sendPacket = new DatagramPacket(sendBuffer, sendBuffer.length, InetAddress.getLocalHost(), SERV_PORT);
+                sendPacket = new DatagramPacket(sendBuffer, sendBuffer.length, this.serverAddress, this.serverPort);
                 clientSock.send(sendPacket);
                 stat.num_sent_packets++;
 
@@ -111,26 +123,30 @@ public class ClientPing extends Thread {
                 received = false;
             }
 
-            /**
-             * ---- PING Statistics ----
-             * 10 packets transmitted, 7 packets received, 30% packet loss
-             * round-trip (ms) min/avg/max = 63/190.29/290
-             */
+            // print PING Statistics, at the end
             printStats(stat);
 
-        } catch (SocketException socketException) {
-            socketException.printStackTrace();
-        } catch (UnsupportedEncodingException e) {
-            e.printStackTrace();
-        } catch (IOException e) {
-            e.printStackTrace();
-        } catch (CorruptedUDPDataException e) {
+        }
+        catch (BindException e1) {
+                System.out.printf("every port is in use!\n");
+        }
+        catch (SocketException | UnsupportedEncodingException | CorruptedUDPDataException e) {
+            e.printStackTrace();}
+        catch (IOException e) {
             e.printStackTrace();
         }
 
         System.out.print("[CLIENT] bye!");
     }
 
+    /**
+     * stampa le statistiche UNIX del PING, es:
+     * * ---- PING Statistics ----
+     * 10 packets transmitted, 7 packets received, 30% packet loss
+     * round-trip (ms) min/avg/max = 63/190.29/290
+     *
+     * @param stat      wrapper per le statistiche
+     */
     private void printStats(RTTStats stat) {
         System.out.println("\n            ---------- Ping Statistics ----------");
         double lossPercentage = 100 - (stat.num_received_packets * 100 / stat.num_sent_packets);
@@ -143,16 +159,32 @@ public class ClientPing extends Thread {
                 stat.min, stat.avg, stat.max);
     }
 
-    private String computeMsgoToSend(int i) {
+    /**
+     * costruisce la stringa che verrà inviata nel datagramma come DATA
+     * "PING i currentTimeMillis"
+     * @param seq_num   numero di sequenza del messaggio PING
+     * @return stringa da inviare come data
+     */
+    private String computeMsgToSend(int seq_num) {
         StringBuilder sbuilder = new StringBuilder(PING);
         sbuilder.append(" ");
-        sbuilder.append(i);
+        sbuilder.append(seq_num);
         sbuilder.append(" ");
         sbuilder.append(System.currentTimeMillis());
 
         return sbuilder.toString();
     }
 
+    /**
+     * costruisce la stringa di Output per poterla stampare, es:
+     * PING 0 1605952731059 RTT: *
+     * PING 1 1605952733065 RTT: 64 ms
+     *
+     * @param data      stringa del campo DATA del pacchetto ricevuto
+     * @param rtt       valore rtt per quel messaggio -> usato sse received == true
+     * @param received  indica se la risposta è stata ricevuta o no
+     * @return stringa contenente l'output da stampare
+     */
     private String buildOutput(String data, long rtt, boolean received) {
         StringBuilder sbuilder = new StringBuilder(data);
 
@@ -164,10 +196,17 @@ public class ClientPing extends Thread {
             sbuilder.append("*");
         }
 
-
         return sbuilder.toString();
     }
 
+    /**
+     * calcola RTT leggendo tempo dal Data del pacchetto
+     * @param data      stringa del campo DATA del pacchetto ricevuto, ci si aspetta sia di questo formato:
+     *
+     * @param stat      wrapper delle statistiche
+     * @return rtt (long) per quel messaggio
+     * @throws CorruptedUDPDataException se non riesce a leggere 3 token
+     */
     private long computeRTT(String data, RTTStats stat) throws CorruptedUDPDataException {
         long end = System.currentTimeMillis();
 
@@ -182,12 +221,9 @@ public class ClientPing extends Thread {
         long start = Long.parseLong(timeStart);
         long rtt = end - start;
 
-        if(stat.min > rtt) {
-            stat.min = rtt;
-        }
-        else if(stat.max < rtt) {
-            stat.max = rtt;
-        }
+        if(stat.min > rtt)          stat.min = rtt;
+        else if(stat.max < rtt)     stat.max = rtt;
+
         stat.sum += rtt;
 
         return rtt;

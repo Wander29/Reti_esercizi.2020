@@ -1,6 +1,17 @@
 package Ass09;
 
 /**
+ * @author      LUDOVICO VENTURI 578033
+ * @date        2020/11/21
+ * @version     1.0
+ */
+
+import org.apache.commons.cli.*;
+
+import java.net.InetAddress;
+import java.net.UnknownHostException;
+
+/**
  * INPUT
  * [#]  accetta un argomento da linea di comando: la porta, che è quella su cui è
  *      attivo il server.
@@ -18,8 +29,41 @@ package Ass09;
 
 public class MainServer {
     public static void main(String args[]) {
+        // aggiunta opzioni accettate
+        Options opts = new Options();
 
-        ServerPing server = new ServerPing(9999);
-        server.start();
+        // Option(String opt, String longOpt, boolean hasArg, String description)
+        // -p --port <server port>
+        Option optPorta = new Option("p", "port", true, "service port");
+        optPorta.setRequired(true);
+        opts.addOption(optPorta);
+
+        // parsing degli args
+        CommandLineParser parser = new DefaultParser();
+        HelpFormatter formatter = new HelpFormatter();
+
+        CommandLine cmd = null;
+        try {
+            cmd = parser.parse(opts, args);
+
+            InetAddress serverAddress = InetAddress.getLocalHost();
+            int serverPort = Integer.parseInt(cmd.getOptionValue("port"));
+
+            ServerPing server = new ServerPing(serverPort);
+            server.start();
+
+            server.join(30 * 1000);
+        }
+        catch (InterruptedException i ) {
+            System.out.println("[MainServer] join interrotta");
+        }
+        catch (ParseException | NumberFormatException p) {
+            System.out.println("ERR --port -p <service port>\n");
+            formatter.printHelp("java MainServer", opts);
+            System.exit(1);
+        }
+        catch (UnknownHostException u) {
+            System.out.println("localhost non disponibile, aia");
+        }
     }
 }
