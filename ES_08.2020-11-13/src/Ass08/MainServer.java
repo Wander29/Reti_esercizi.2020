@@ -1,4 +1,11 @@
 package Ass08;
+/**
+ * @author              VENTURI LUDOVICO 578033
+ * @date                2020/11/22
+ * @version             1.0
+ */
+
+import org.apache.commons.cli.*;
 
 /**
  * scrivere un programma echo server usando :
@@ -17,9 +24,35 @@ package Ass08;
 
 public class MainServer {
     public static void main(String args[]) {
-        int port = 9999;
+        // controlla gli argomenti da linea di comando: necessaria la porta
+        Options opts = new Options();
+        int serverPort;
 
-        ServerEcho server = new ServerEcho(port);
-        server.start();
+        //  -p --port <server port>
+        Option optPort = new Option("p", "port", true, "service port");
+        optPort.setRequired(true);
+        opts.addOption(optPort);
+
+        CommandLineParser parser = new DefaultParser();
+        HelpFormatter formatter = new HelpFormatter();
+
+        CommandLine cmd = null;
+        try {
+            // parsa gli argomenti
+            cmd = parser.parse(opts, args);
+            serverPort = Integer.parseInt(cmd.getOptionValue("p"));
+
+            // creazione server ed esecuzione su 1 thread
+            ServerEcho server = new ServerEcho(serverPort);
+            server.start();
+
+            server.join(20 * 1000);
+        }
+        catch (ParseException | NumberFormatException e) {
+            formatter.printHelp("java MainServer", opts);
+        }
+        catch (InterruptedException e) {
+            e.printStackTrace();
+        }
     }
 }

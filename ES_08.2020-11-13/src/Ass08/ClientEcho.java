@@ -1,5 +1,11 @@
 package Ass08;
 
+/**
+ * @author              VENTURI LUDOVICO 578033
+ * @date                2020/11/22
+ * @version             1.0
+ */
+
 import java.io.IOException;
 import java.net.InetAddress;
 import java.net.InetSocketAddress;
@@ -22,16 +28,16 @@ import java.util.Set;
 
 public class ClientEcho extends Thread {
     private final static int BUF_SIZE = 256;
-    private final static int NUM_ITERAZIONI = 3;
 
+    private final static int NUM_ITERAZIONI = 3;
     private final static String EXIT_STRING = "EXIT_029";
 
     private static int SERV_PORT;
     private static InetAddress SERV_ADDRESS;
 
-    public ClientEcho(int p, String servName) throws UnknownHostException {
+    public ClientEcho(int p, InetAddress servAddr) {
         this.SERV_PORT = p;
-        this.SERV_ADDRESS = InetAddress.getByName(servName);
+        this.SERV_ADDRESS = servAddr;
     }
 
     public void run() {
@@ -43,8 +49,6 @@ public class ClientEcho extends Thread {
          *
          *  una volta connesso scrive 3 messaggi, si aspetta 3 risposte
          *  prima di mandare il messaggio successivo attende l'arrivo del precedente
-         *
-         *
          */
 
         try(
@@ -57,7 +61,7 @@ public class ClientEcho extends Thread {
             Selector sel = Selector.open();
             clientCh.register(sel, SelectionKey.OP_CONNECT);
 
-            int iterazioni = 0;
+            int iterazioni = 0; // necessario per la terminazione
 
 outer_loop:
             while(true) {
@@ -102,11 +106,11 @@ outer_loop:
     }
 
     /**
-     * saluta il server per terminare
+     * saluta il server per terminare, inviano il codice di uscita già definito
      * Chiude il socketChannel
-     * elimina la key
+     * elimina la key dal selector
      *
-     * @param key
+     * @param key       chiave su cui è associato un canale scrivibile
      * @throws IOException
      */
     private void sayByeToServer(SelectionKey key) throws IOException {
@@ -127,8 +131,8 @@ outer_loop:
     }
 
     /**
-     *
-     * @param key
+     * registra il canale associato alla chiave key con interessa alla WRITE, associando il bytebuffer
+     * @param key       chiave SelectionKey di un selector
      * @throws ClosedChannelException
      */
     private void registerWritable(SelectionKey key) throws ClosedChannelException {
@@ -140,18 +144,20 @@ outer_loop:
     }
 
     /**
-     *
-     * @param key
+     * legge la risposta del server e la stampa
+     * @param key       chiave cui è associato il canale di comunicazione col Server ed è Readable
      * @throws IOException
      */
     private void readAnswer(SelectionKey key) throws IOException {
         SocketChannel clientCh = (SocketChannel) key.channel();
         ByteBuffer buf = (ByteBuffer) key.attachment();
 
+        // leggo tutta la risposta
         while(clientCh.read(buf) > 0);
         buf.flip();
-        StringBuilder sbuilder = new StringBuilder();
 
+        // la ricostruisco byte x byte
+        StringBuilder sbuilder = new StringBuilder();
         while(buf.hasRemaining())
             sbuilder.append((char) buf.get());
 
@@ -159,8 +165,9 @@ outer_loop:
     }
 
     /**
-     *
-     * @param key
+     * scrive sul canale il contenuto del buffer e registra il canale per la lettura
+     * @requires        buffer associato già in modalità scrittura
+     * @param key       chiave con canale associato leggibile senza interruzioni
      * @throws IOException
      */
     private void writeAndRegisterReadable(SelectionKey key) throws IOException {
@@ -181,8 +188,10 @@ outer_loop:
     }
 
     /**
+     * si connette al server
+     * registra il canale per la scrittura
      *
-     * @param key
+     * @param key       chiave con canale associato sul quale si può fare connect() correttamente
      * @param add
      * @throws IOException
      * @throws InterruptedException

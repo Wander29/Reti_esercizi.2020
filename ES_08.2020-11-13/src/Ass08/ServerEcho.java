@@ -1,6 +1,12 @@
 package Ass08;
 
 /**
+ * @author              VENTURI LUDOVICO 578033
+ * @date                2020/11/22
+ * @version             1.0
+ */
+
+/**
  * scrivere un programma echo server usando :
  *  * - la libreria java NIO e, in particolare
  *  * - il Selector e
@@ -10,25 +16,21 @@ package Ass08;
  *      rispedisce (eventualmente aggiungendo "echoed by server" al messaggio ricevuto).
  */
 
-import javax.naming.CommunicationException;
 import java.io.IOException;
 import java.net.InetSocketAddress;
 import java.net.ServerSocket;
 import java.nio.ByteBuffer;
-import java.nio.channels.SelectionKey;
-import java.nio.channels.Selector;
-import java.nio.channels.ServerSocketChannel;
-import java.nio.channels.SocketChannel;
+import java.nio.channels.*;
 import java.util.Iterator;
 import java.util.Set;
 import java.util.concurrent.TimeoutException;
 
 public class ServerEcho extends Thread {
     private final int SERV_PORT;
+    // private final static int TIMEOUT_SELECT = 5000; //ms
+
     private final static int BUF_SIZE = 256;
     private final static String EXIT_STRING = "EXIT_029";
-
-    private final static int TIMEOUT_SELECT = 5000; //ms
 
     private final static String ECHO_STRING = "echoed by server [Ludo]: ";
     private final static byte[] ECHO_BYTES = ECHO_STRING.getBytes();
@@ -40,7 +42,7 @@ public class ServerEcho extends Thread {
     public void run() {
         /**
          *  crea un serversocket channel e selettore
-         *  si mette in attesa sulla select x la accept
+         *  si mette in attesa sulla select per la accept
          *  quando isAcceptable
          *      -> registra socketChannel per la comunicazione
      *      quando isReadable
@@ -59,13 +61,15 @@ public class ServerEcho extends Thread {
 
             // selettore, in attesa della accept sul canale serverSocketChannel
             Selector sel = Selector.open();
-            SelectionKey myKey;
             ssCh.register(sel, SelectionKey.OP_ACCEPT);
-outer_loop:
+
+outer_loop: // label per identificare i 2 loop. Con un successivo «break outer_loop» salto a dopo i cicli
             while(true) {
+                // bloccante
                 if(sel.select() == 0)
                     continue;
 
+                // controllo chiavi selezionate
                 Set<SelectionKey> selectedSet = sel.selectedKeys();
                 Iterator<SelectionKey> it = selectedSet.iterator();
 
@@ -80,9 +84,11 @@ outer_loop:
                     if(key.isReadable()) {
                         try {
                             readMessageAndRegisterWritable(key);
-                        } catch (CommunicationException e) {
+                        } catch (TerminationException e) {
                             key.cancel();
                             break outer_loop;
+                            // break;
+                                // per avere un comportamento while(true) usare «break;»
                         }
                     }
                     if(key.isWritable()) {
@@ -100,8 +106,9 @@ outer_loop:
     }
 
     /**
-     * scrive il messaggio già presente nel buffer associato alla key sul canale che è Writable
-     *
+     * scrive il messaggio già presente nel buffer associato alla key sul canale Writable
+     * lascia il buffer in modalità lettura
+     * @requires        il buffer associato alla comunicazione deve essere già in modalità LETTURA
      * @param key       chiave con associato un canale Writable ed un ByteBuffer
      * @throws IOException
      */
@@ -123,12 +130,13 @@ outer_loop:
      *
      * @param key       chiave con associato un canale Readable ed un ByteBuffer
      * @throws IOException
+     * @throws TerminationException  quando il client comunica il codice di terminazione
      */
-    private void readMessageAndRegisterWritable(SelectionKey key) throws IOException, CommunicationException {
+    private void readMessageAndRegisterWritable(SelectionKey key) throws IOException, TerminationException {
         SocketChannel clientCh = (SocketChannel) key.channel();
         ByteBuffer buf = (ByteBuffer) key.attachment();
 
-        // read non-bloccante
+        // read non-bloccante => scrittura sul buffer (1)
         int numBytesRead = 0;
         int totBytesRead = 0;
         while( (numBytesRead = clientCh.read(buf)) > 0)
@@ -141,20 +149,19 @@ outer_loop:
 
         buf.flip();
 
-        // aggiunta header al msg
-        //StringBuilder sbuilder = new StringBuilder(ECHO_STRING);
+        // aggiunta header al msg, costruisco la stringa da inviare
         StringBuilder sbuilder = new StringBuilder();
 
-        while(buf.hasRemaining()) {
+        // (2) lettura dal buffer
+        while(buf.hasRemaining())
             sbuilder.append((char) buf.get());
-        }
 
         String receivedString = sbuilder.toString();
         System.out.println("\n[Server received] " + receivedString);
 
-        if(receivedString.equals(EXIT_STRING)) {
-            throw new CommunicationException();
-        }
+        // controllo Terminazione
+        if(receivedString.equals(EXIT_STRING))
+            throw new TerminationException();
 
         String answerToSend = ECHO_STRING + " " + receivedString;
         System.out.println("[Server is sending] " + answerToSend);
@@ -162,6 +169,7 @@ outer_loop:
         // scrittura sul buffer
         byte[] answerInBytes = answerToSend.getBytes();
         buf.clear();
+        // (3) scrittura sul buffer
         buf.put(answerInBytes);
         buf.flip();
 
@@ -171,9 +179,10 @@ outer_loop:
     /**
      * prende una chiave con associato un canale pronto per la accept
      * crea un socket per questa comunicazione
-     * lo registra come da leggere sullo stesso selettore
+     * lo registra come da leggere sullo stesso selettore collegando un ByteBuffer
      *
-     * @param key       chiave con associato un canale pronto
+     * @param key       chiave con associato un canale pronto per la accept()
+     * @throws IOException
      */
     private void connectAndRegisterReadable(SelectionKey key) throws IOException {
         ServerSocketChannel serverCh = (ServerSocketChannel) key.channel();
