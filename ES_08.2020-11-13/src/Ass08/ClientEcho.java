@@ -7,6 +7,7 @@ package Ass08;
  */
 
 import java.io.IOException;
+import java.net.BindException;
 import java.net.InetAddress;
 import java.net.InetSocketAddress;
 import java.net.UnknownHostException;
@@ -27,10 +28,8 @@ import java.util.Set;
  */
 
 public class ClientEcho extends Thread {
-    private final static int BUF_SIZE = 256;
-
+    private final static int BUF_SIZE       = 256;
     private final static int NUM_ITERAZIONI = 3;
-    private final static String EXIT_STRING = "EXIT_029";
 
     private static int SERV_PORT;
     private static InetAddress SERV_ADDRESS;
@@ -51,9 +50,8 @@ public class ClientEcho extends Thread {
          *  prima di mandare il messaggio successivo attende l'arrivo del precedente
          */
 
-        try(
-                SocketChannel clientCh = SocketChannel.open();
-        ) {
+        try( SocketChannel clientCh = SocketChannel.open(); ) {
+            // setto il canale di comunicazione non bloccante
             clientCh.configureBlocking(false);
             InetSocketAddress serverAddress = new InetSocketAddress(this.SERV_ADDRESS, this.SERV_PORT);
 
@@ -85,22 +83,19 @@ outer_loop:
                     if(key.isReadable()) {
                         this.readAnswer(key);
 
-                        if( ++iterazioni < NUM_ITERAZIONI)
+                        if( ++iterazioni < NUM_ITERAZIONI )
                             registerWritable(key);
                         else {
                             sayByeToServer(key);
-                            break outer_loop;
+                            break outer_loop; // esce dai cicli, la label li wrappa
                         }
                     }
                 }
             }
-
-
-        } catch (IOException e) {
-            e.printStackTrace();
-        } catch (InterruptedException e) {
-            e.printStackTrace();
         }
+        catch (BindException be)            { System.err.println("Porta occupata, Exiting"); }
+        catch (IOException e)               { System.err.println("IOException, Exiting"); }
+        catch (InterruptedException e)      { System.err.println("Sleep interrotta! Exiting"); }
 
         System.out.println("[CLIENT] Correct exiting");
     }
@@ -118,13 +113,12 @@ outer_loop:
         ByteBuffer buf = (ByteBuffer) key.attachment();
         buf.clear();
 
-        System.out.println("\n[Client is exiting, sending] " + EXIT_STRING);
-        buf.put(EXIT_STRING.getBytes());
+        System.out.println("\n[Client is exiting, sending] " + CSProtocol.EXIT_STRING());
+        buf.put(CSProtocol.EXIT_STRING().getBytes());
         buf.flip();
 
-        while(buf.hasRemaining()) {
+        while(buf.hasRemaining())
             clientCh.write(buf);
-        }
 
         clientCh.close();
         key.cancel();

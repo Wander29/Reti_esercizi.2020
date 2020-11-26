@@ -17,6 +17,7 @@ package Ass08;
  */
 
 import java.io.IOException;
+import java.net.BindException;
 import java.net.InetSocketAddress;
 import java.net.ServerSocket;
 import java.nio.ByteBuffer;
@@ -26,14 +27,13 @@ import java.util.Set;
 import java.util.concurrent.TimeoutException;
 
 public class ServerEcho extends Thread {
-    private final int SERV_PORT;
     // private final static int TIMEOUT_SELECT = 5000; //ms
 
     private final static int BUF_SIZE = 256;
-    private final static String EXIT_STRING = "EXIT_029";
-
     private final static String ECHO_STRING = "echoed by server [Ludo]: ";
     private final static byte[] ECHO_BYTES = ECHO_STRING.getBytes();
+
+    private final int SERV_PORT;
 
     public ServerEcho(int p) {
         this.SERV_PORT = p;
@@ -51,9 +51,7 @@ public class ServerEcho extends Thread {
          *      -> scrive la risposta
          */
 
-        try (
-                ServerSocketChannel ssCh = ServerSocketChannel.open();
-        ) {
+        try ( ServerSocketChannel ssCh = ServerSocketChannel.open(); ) {
             // canale creato, lo setto NON_BLOCKING assegnandogli la porta
             ServerSocket ss = ssCh.socket();
             ss.bind(new InetSocketAddress(this.SERV_PORT));
@@ -78,29 +76,33 @@ outer_loop: // label per identificare i 2 loop. Con un successivo «break outer_
                     it.remove(); // chiave da rimuovere dal selectedSet (gestione esplicita)
 
                     if(key.isAcceptable()) {
-                        connectAndRegisterReadable(key);
+                        try { connectAndRegisterReadable(key); }
+                        catch (IOException e) { System.err.println("errore durante la connessione col client"); }
+
                         System.out.println("Connessione con 1 client stabilita!");
                     }
                     if(key.isReadable()) {
-                        try {
-                            readMessageAndRegisterWritable(key);
-                        } catch (TerminationException e) {
+                        try { readMessageAndRegisterWritable(key); }
+                        catch (TerminationException e) {
                             key.cancel();
-                            break outer_loop;
-                            // break;
+                            System.out.println("Connessione con 1 client terminata!");
+                            //break outer_loop;
+                            break;
                                 // per avere un comportamento while(true) usare «break;»
                         }
+                        catch (IOException e) { System.err.println("errore durante la lettura"); }
                     }
                     if(key.isWritable()) {
-                        writeMessageAndRegisterReadable(key);
+                        try { writeMessageAndRegisterReadable(key); }
+                        catch (IOException e) { System.err.println("errore durante la scrittura"); }
                     }
                 }
             }
 
         }
-        catch (IOException e) {
-            System.out.println("IOException, exiting..");
-        }
+        catch (ClosedChannelException cce)  { System.err.println("Canale chiuso, Exiting"); }
+        catch (BindException be)            { System.err.println("Porta occupata, Exiting"); }
+        catch (IOException e)               { System.err.println("IOException, Exiting"); }
 
         System.out.println("[SERVER] Correct exiting");
     }
@@ -159,14 +161,13 @@ outer_loop: // label per identificare i 2 loop. Con un successivo «break outer_
         String receivedString = sbuilder.toString();
         System.out.println("\n[Server received] " + receivedString);
 
-        // controllo Terminazione
-        if(receivedString.equals(EXIT_STRING))
+        // controllo Terminazione, secondo il protocollo
+        if(receivedString.equals(CSProtocol.EXIT_STRING()))
             throw new TerminationException();
 
         String answerToSend = ECHO_STRING + " " + receivedString;
         System.out.println("[Server is sending] " + answerToSend);
 
-        // scrittura sul buffer
         byte[] answerInBytes = answerToSend.getBytes();
         buf.clear();
         // (3) scrittura sul buffer

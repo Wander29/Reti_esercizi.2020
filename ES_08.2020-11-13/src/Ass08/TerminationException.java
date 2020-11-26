@@ -7,6 +7,6 @@ package Ass08;
  */
 
 public class TerminationException extends Exception {
-    public TerminationException(String s) { super(s); }
-    public TerminationException() { super(); }
+    public TerminationException(String s)   { super(s); }
+    public TerminationException()           { super();  }
 }

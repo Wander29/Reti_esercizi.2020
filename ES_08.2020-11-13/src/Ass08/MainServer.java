@@ -46,7 +46,8 @@ public class MainServer {
             ServerEcho server = new ServerEcho(serverPort);
             server.start();
 
-            server.join(20 * 1000);
+            // server.join(20 * 1000);
+            server.join(CSProtocol.TIMEOUT_JOIN_SERVER());
         }
         catch (ParseException | NumberFormatException e) {
             formatter.printHelp("java MainServer", opts);

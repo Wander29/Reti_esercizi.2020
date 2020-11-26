@@ -47,7 +47,8 @@ public class MainClient {
             // creazione ed esecuzione Client
             ClientEcho client = new ClientEcho(serverPort, serverAddress);
             client.start();
-            client.join(20 * 1000);
+
+            client.join(CSProtocol.TIMEOUT_JOIN_SERVER());
 
             /*
             ThreadPoolExecutor tpe = (ThreadPoolExecutor) Executors.newFixedThreadPool(20);
@@ -61,13 +62,11 @@ public class MainClient {
             */
         }
         catch (ParseException | NumberFormatException e) {
-            formatter.printHelp("java MainServer", opts);
-        }
+            formatter.printHelp("java MainServer", opts); }
         catch (UnknownHostException e) {
             System.out.println("Nessun server di nome: " + servName);
-            System.exit(1);
-        } catch (InterruptedException e) {
-            e.printStackTrace();
-        }
+            System.exit(1); }
+        catch (InterruptedException e) {
+            e.printStackTrace(); }
     }
 }
