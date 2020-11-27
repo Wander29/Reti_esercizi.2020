@@ -17,17 +17,18 @@ public class UDPTimeServer extends Thread {
     private static final int BUF_SIZE = 1024;
 
     private final int port;
-    private final String group_name;
+    private InetAddress multicast_address;
 
-    public UDPTimeServer(int port, String name) {
+    public UDPTimeServer(int port, String name) throws UnknownHostException, IllegalArgumentException {
         this.port = port;
-        this.group_name = name;
+        this.multicast_address = InetAddress.getByName(name);
+
+        if(!this.multicast_address.isMulticastAddress())
+            throw new IllegalArgumentException();
     }
 
     public void run() {
         try (DatagramSocket ds = new DatagramSocket()) {
-            InetAddress multicast_address = InetAddress.getByName(this.group_name);
-
             // data e orario
             DateFormat df = new SimpleDateFormat("yyyy/MM/dd HH:mm:ss");
             Date dateObj;
@@ -51,11 +52,11 @@ public class UDPTimeServer extends Thread {
                 ds.send(dp_to_send);
 
                 // attende un tempo random
-                Thread.sleep(ThreadLocalRandom.current().nextInt(300, 1200));
+                try { Thread.sleep(ThreadLocalRandom.current().nextInt(300, 1200)); }
+                catch (InterruptedException ie)   { System.err.println("Sleep interrotta --#Let's go#"); }
             }
         }
         catch (BindException be)          { System.err.println("porte occupate --#Exiting#"); }
-        catch (InterruptedException ie)   { System.err.println("Indirizzo sconosciuto --#Exiting#"); }
         catch (UnknownHostException ue)   { System.err.println("Indirizzo sconosciuto --#Exiting#"); }
         catch (IOException e)             { System.err.println("IOException --#Exiting#"); }
     }

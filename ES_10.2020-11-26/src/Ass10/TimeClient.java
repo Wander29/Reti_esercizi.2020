@@ -8,11 +8,14 @@ public class TimeClient extends Thread {
     private static final int NUM_ITERAZIONI = 10;
 
     private final int port;
-    private final String group_name;
+    private InetAddress multicast_address;
 
-    public TimeClient(int port, String name) {
+    public TimeClient(int port, String name) throws UnknownHostException, IllegalArgumentException {
         this.port = port;
-        this.group_name = name;
+        this.multicast_address = InetAddress.getByName(name);
+
+        if(!this.multicast_address.isMulticastAddress())
+            throw new IllegalArgumentException();
     }
 
     public void run() {
@@ -30,11 +33,8 @@ public class TimeClient extends Thread {
         try (MulticastSocket ms = new MulticastSocket(this.port)) {
             // socketIA = new InetSocketAddress(this.port);
             // ms.joinGroup(socketIA, NetworkInterface.getByName(this.group_name));
-            ia = InetAddress.getByName(this.group_name);
-            if(!ia.isMulticastAddress()) {
-                System.err.println("non un Multicast address");
-            }
-            ms.joinGroup(ia);
+
+            ms.joinGroup(this.multicast_address);
 
             for(int i = 1; i <= NUM_ITERAZIONI ; i++) {
                 dp_received = new DatagramPacket(buf, buf.length);
@@ -47,7 +47,6 @@ public class TimeClient extends Thread {
 
                 System.out.println("[CLIENT i=" + i + "] " + data_received);
             }
-
         }
         catch (BindException be)          { System.err.println("porta occupata --#Exiting#"); }
         catch (UnknownHostException ue)   { System.err.println("Indirizzo sconosciuto --#Exiting#"); }

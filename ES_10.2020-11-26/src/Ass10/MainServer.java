@@ -13,19 +13,59 @@ Definire un Server TimeServer, che
         per dieci volte consecutive, data ed ora, le visualizza, quindi termina.
  */
 
+/*
+esempio     IP:     239.255.1.29
+            porta:  9999
+ */
+
 import org.apache.commons.cli.*;
 
+import java.io.IOException;
+import java.net.UnknownHostException;
 import java.util.Optional;
 
 public class MainServer {
     public static void main(String args[]) {
         // controllo argomenti linea comand
+        // controllo argomenti linea comand
         Options opts = new Options();
+        // -a --address <multicast adrress>
+        Option optAddress = new Option("a", "address" ,
+                true, "multicast address");
+        optAddress.setRequired(true);
+        opts.addOption(optAddress);
 
-        int port = 9999;
-        String add = "239.255.29.29";
+        // -p --port <multicast port>
+        Option optPort = new Option("p", "port",
+                true, "multicast port");
+        optPort.setRequired(true);
+        opts.addOption(optPort);
 
-        UDPTimeServer server = new UDPTimeServer(port, add);
-        server.start();
+        // parsing degli args
+        CommandLineParser parser = new DefaultParser();
+        HelpFormatter formatter = new HelpFormatter();
+        CommandLine cmd = null;
+
+        int port;
+        String add;
+
+        try {
+            cmd = parser.parse(opts, args);
+
+            port = Integer.parseInt(cmd.getOptionValue("p"));
+            add  = cmd.getOptionValue("a");
+
+
+            UDPTimeServer server = new UDPTimeServer(port, add);
+            server.start();
+        }
+        catch (ParseException pe)       {
+            formatter.printHelp("java <.class>", opts);
+            System.err.println("argomenti non validi --#Exiting#"); }
+        catch (NumberFormatException n) { System.err.println("valore porta non valido --#Exiting#"); }
+        catch (IllegalArgumentException e) {
+            System.err.println("l'indirizzo passato NON è di multicast --#Exiting#"); }
+        catch (UnknownHostException ue) { System.err.println("indirizzo sconosciuto --#Exiting#"); }
+        catch (IOException e)           { System.err.println("IOException --#Exiting#"); }
     }
 }

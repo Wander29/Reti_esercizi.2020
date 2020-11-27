@@ -59,9 +59,7 @@ public class MainClient {
 
             client.join(30 * 1000);
         }
-        catch (InterruptedException i ) {
-            System.out.println("[MainClient] join interrotta");
-        }
+        catch (InterruptedException i ) { System.out.println("[MainClient] join interrotta"); }
         catch (MissingArgumentException m) {
             //  ERR -arg x, dove x è il numero dell'argomento
             Option o = m.getOption();
