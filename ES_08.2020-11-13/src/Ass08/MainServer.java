@@ -1,4 +1,5 @@
 package Ass08;
+
 /**
  * @author              VENTURI LUDOVICO 578033
  * @date                2020/11/22
@@ -6,7 +7,6 @@ package Ass08;
  */
 
 import org.apache.commons.cli.*;
-
 /**
  * scrivere un programma echo server usando :
  * - la libreria java NIO e, in particolare
@@ -49,11 +49,7 @@ public class MainServer {
             // server.join(20 * 1000);
             server.join(CSProtocol.TIMEOUT_JOIN_SERVER());
         }
-        catch (ParseException | NumberFormatException e) {
-            formatter.printHelp("java MainServer", opts);
-        }
-        catch (InterruptedException e) {
-            e.printStackTrace();
-        }
+        catch (ParseException | NumberFormatException e) { formatter.printHelp("java MainServer", opts); }
+        catch (InterruptedException e) { System.err.println("Join interrotta, Exiting"); }
     }
 }

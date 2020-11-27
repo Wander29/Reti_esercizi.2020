@@ -69,30 +69,24 @@ public class MainClient {
                                                     o.getOpt(),
                                                     o.getArgName() );
         }
-        catch (NumberFormatException n) {
-            System.out.println("ERR --port -p <server port>: invalid argument");
-            // System.out.println("ERR -arg ");
-        }
-        catch (UnknownHostException u) {
-            System.out.println("ERR --name -n <server name>: invalid argument");
-        }
+        catch (NumberFormatException n) { System.out.println(ClientErrors.ERR_PORT() + ": invalid argument"); }
+        catch (UnknownHostException u)  { System.out.println(ClientErrors.ERR_SERV_NAME() + ": invalid argument"); }
         catch (ParseException | IOException e) {
             // formatter.printHelp("java MainClient", opts);
-            if(args.length == 0)
-                System.out.println("ERR -n <server name> -p <server port>: no arguments");
+            if(args.length == 0) {
+                System.out.println(ClientErrors.ERR_PORT() + ": no arguments");
+                System.out.println(ClientErrors.ERR_SERV_NAME() + ": no arguments");
+            }
 
             List<String> list = Arrays.asList(args);
             if(! list.contains("-p") || ! list.contains("--port"))
-                System.out.println("ERR --port -p <server port>: no argument");
+                System.out.println(ClientErrors.ERR_PORT() + ": no argument");
 
             if(! list.contains("-n") || ! list.contains("--name"))
-                System.out.println("ERR --name -n <server name>: no argument");
+                System.out.println(ClientErrors.ERR_SERV_NAME() + ": no argument");
 
 
             formatter.printHelp("java MainClient", opts);
-        }
-        finally {
-            System.exit(1);
         }
     }
 }
