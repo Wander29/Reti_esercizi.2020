@@ -1,5 +1,11 @@
 package Ass10;
 
+/**
+ * @author              LUDOVICO VENTURI 578033
+ * @date                2020/11/28
+ * @version             1.0
+ */
+
 /*
 Definire un Server TimeServer, che
 
@@ -27,8 +33,8 @@ import java.util.Optional;
 public class MainServer {
     public static void main(String args[]) {
         // controllo argomenti linea comand
-        // controllo argomenti linea comand
         Options opts = new Options();
+
         // -a --address <multicast adrress>
         Option optAddress = new Option("a", "address" ,
                 true, "multicast address");
@@ -46,6 +52,7 @@ public class MainServer {
         HelpFormatter formatter = new HelpFormatter();
         CommandLine cmd = null;
 
+        // variabili supporto
         int port;
         String add;
 
@@ -55,17 +62,16 @@ public class MainServer {
             port = Integer.parseInt(cmd.getOptionValue("p"));
             add  = cmd.getOptionValue("a");
 
-
+            // attivazione server
             UDPTimeServer server = new UDPTimeServer(port, add);
             server.start();
         }
-        catch (ParseException pe)       {
-            formatter.printHelp("java <.class>", opts);
-            System.err.println("argomenti non validi --#Exiting#"); }
-        catch (NumberFormatException n) { System.err.println("valore porta non valido --#Exiting#"); }
-        catch (IllegalArgumentException e) {
-            System.err.println("l'indirizzo passato NON è di multicast --#Exiting#"); }
-        catch (UnknownHostException ue) { System.err.println("indirizzo sconosciuto --#Exiting#"); }
-        catch (IOException e)           { System.err.println("IOException --#Exiting#"); }
+        catch (ParseException pe) {
+            System.err.println("argomenti non validi --#Exiting#");
+            formatter.printHelp("java <.class>", opts); }
+        catch (NumberFormatException n)     { System.err.println("valore porta non valido --#Exiting#"); }
+        catch (IllegalArgumentException e)  { System.err.println("l'indirizzo passato NON è di multicast --#Exiting#"); }
+        catch (UnknownHostException ue)     { System.err.println("indirizzo sconosciuto --#Exiting#"); }
+        catch (IOException e)               { System.err.println("IOException --#Exiting#"); }
     }
 }

@@ -1,5 +1,11 @@
 package Ass10;
 
+/**
+ * @author              LUDOVICO VENTURI 578033
+ * @date                2020/11/28
+ * @version             1.0
+ */
+
 /*
     SENDER del gruppo multicast
     ha bisogno della porta di ascoto e del multicast IP
@@ -19,6 +25,13 @@ public class UDPTimeServer extends Thread {
     private final int port;
     private InetAddress multicast_address;
 
+    /**
+     *
+     * @param port      porta sulla quale gli host del multicast sono in ascolto
+     * @param name      nome/indirizzo del gruppo multicast
+     * @throws UnknownHostException     se l'indirizzo non è valido
+     * @throws IllegalArgumentException se l'indirizzo è valido ma non di MultiCast
+     */
     public UDPTimeServer(int port, String name) throws UnknownHostException, IllegalArgumentException {
         this.port = port;
         this.multicast_address = InetAddress.getByName(name);
@@ -44,6 +57,8 @@ public class UDPTimeServer extends Thread {
                 // prepara messaggio
                 dateObj = new Date();
                 to_send = df.format(dateObj);
+
+                // prepara datagramma
                 buf = to_send.getBytes();
                 dp_to_send = new DatagramPacket(buf, buf.length, multicast_address, this.port);
                 System.out.println("[SERVER] " + to_send);
