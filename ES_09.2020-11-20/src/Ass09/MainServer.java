@@ -19,12 +19,12 @@ import java.net.UnknownHostException;
  *      messaggio di errore del tipo ERR -arg x, dove x è il numero dell'argomento.
  *
  *   Lo scopo di questo assignment è quello di implementare un server PING ed
- * un corrispondente client PING che consenta al client di misurare il suo RTT
- * verso il server.
+ *      un corrispondente client PING che consenta al client di misurare il suo RTT
+ *      verso il server.
  *
  * il Client  utilizza una comunicazione UDP per comunicare con il server ed invia 10
- * messaggi al server, con il seguente formato:
- * PING seqno timestamp
+ *      messaggi al server, con il seguente formato:
+ *      PING seqno timestamp
  */
 
 public class MainServer {
@@ -41,29 +41,21 @@ public class MainServer {
         // parsing degli args
         CommandLineParser parser = new DefaultParser();
         HelpFormatter formatter = new HelpFormatter();
-
         CommandLine cmd = null;
+
         try {
             cmd = parser.parse(opts, args);
-
-            InetAddress serverAddress = InetAddress.getLocalHost();
             int serverPort = Integer.parseInt(cmd.getOptionValue("port"));
 
             ServerPing server = new ServerPing(serverPort);
             server.start();
 
-            server.join(30 * 1000);
+            server.join(CSProtocol.TIMEOUT_JOIN());
         }
-        catch (InterruptedException i ) {
-            System.out.println("[MainServer] join interrotta");
-        }
+        catch (InterruptedException i ) { System.err.println("[MainServer] join interrotta"); }
         catch (ParseException | NumberFormatException p) {
-            System.out.println("ERR --port -p <service port>\n");
+            System.err.println("ERR --port -p <service port>\n");
             formatter.printHelp("java MainServer", opts);
-            System.exit(1);
-        }
-        catch (UnknownHostException u) {
-            System.out.println("localhost non disponibile, aia");
         }
     }
 }

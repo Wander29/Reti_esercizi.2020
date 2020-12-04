@@ -41,37 +41,41 @@ public class ClientPing extends Thread {
      */
     class RTTStats {
         long min = Long.MAX_VALUE;
-        long max = 0;
+        long max = -1;
 
-        int num_sent_packets = 0;
-        int num_received_packets = 0;
+        int num_sent_packets        = 0;
+        int num_received_packets    = 0;
 
-        long sum;
-        double avg = 0;
+        long sum    = 0;
+        double avg  = 0;
     }
 
-    private final static int TIMEOUT_SOCKET = 2000; // ms
+    private final static int TIMEOUT_SOCKET = 2000;  // ms
 
-    private final static int BUF_SIZE = 256;        // dimensione buffer invio & ricezione UDP
-    private final static int NUM_PINGS = 10;        // iterazioni di invio
-    private final static String PING = "PING";      // stringa da inviare
+    private final static int BUF_SIZE   = 1024;      // dimensione buffer invio & ricezione UDP
+    private final static int NUM_PINGS  = 10;        // iterazioni di invio
+    private final static String PING    = "PING";    // stringa da inviare
 
     private final InetAddress serverAddress;
     private final int serverPort;
 
     public ClientPing(InetAddress server, int servPort) {
-        this.serverAddress = server;
-        this.serverPort = servPort;
+        this.serverAddress  = server;
+        this.serverPort     = servPort;
     }
 
     public void run() {
+
+        byte[] sendBuffer;
+        DatagramPacket sendPacket;
+        String sentData;
+        long rtt = 0L;
+
         try(DatagramSocket clientSock = new DatagramSocket()) {
             clientSock.setSoTimeout(TIMEOUT_SOCKET);
             // preparazione all'invio del PING e alle ricezioni
-            byte[] sendBuffer = new byte[BUF_SIZE];
-            DatagramPacket sendPacket;
-            String sentData;
-            long rtt = 0L;
+            sendBuffer = new byte[BUF_SIZE];
+
 
             byte[] receiveBuffer = new byte[BUF_SIZE];
             DatagramPacket rcvdPacket;
@@ -128,7 +132,7 @@ public class ClientPing extends Thread {
 
         }
         catch (BindException e1) {
-                System.out.printf("every port is in use!\n");
+                System.err.printf("every port is in use!\n");
         }
         catch (SocketException | UnsupportedEncodingException | CorruptedUDPDataException e) {
             e.printStackTrace();}

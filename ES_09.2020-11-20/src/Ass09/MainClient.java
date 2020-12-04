@@ -42,47 +42,42 @@ public class MainClient {
         // parsing degli args
         CommandLineParser parser = new DefaultParser();
         HelpFormatter formatter = new HelpFormatter();
-
         CommandLine cmd = null;
+
         try {
             cmd = parser.parse(opts, args);
 
-            InetAddress serverAddress = InetAddress.getByName(cmd.getOptionValue("name"));
-            if(! serverAddress.isReachable(1000)) {
-                throw new UnknownHostException();
-            }
-
-            int serverPort = Integer.parseInt(cmd.getOptionValue("port"));
+            InetAddress serverAddress   = InetAddress.getByName(cmd.getOptionValue("name"));
+            int serverPort              = Integer.parseInt(cmd.getOptionValue("port"));
 
             ClientPing client = new ClientPing(serverAddress, serverPort);
             client.start();
 
-            client.join(30 * 1000);
+            client.join(CSProtocol.TIMEOUT_JOIN());
         }
-        catch (InterruptedException i ) { System.out.println("[MainClient] join interrotta"); }
+        catch (InterruptedException i ) { System.err.println("[MainClient] join interrotta"); }
         catch (MissingArgumentException m) {
             //  ERR -arg x, dove x è il numero dell'argomento
             Option o = m.getOption();
-            System.out.printf("ERR --%s -%s <%s>",  o.getLongOpt(),
+            System.err.printf("ERR --%s -%s <%s>",  o.getLongOpt(),
                                                     o.getOpt(),
                                                     o.getArgName() );
         }
-        catch (NumberFormatException n) { System.out.println(ClientErrors.ERR_PORT() + ": invalid argument"); }
-        catch (UnknownHostException u)  { System.out.println(ClientErrors.ERR_SERV_NAME() + ": invalid argument"); }
-        catch (ParseException | IOException e) {
-            // formatter.printHelp("java MainClient", opts);
+        catch (NumberFormatException n) { System.err.println(ClientErrors.ERR_PORT() + ": invalid argument"); }
+        catch (UnknownHostException u)  { System.err.println(ClientErrors.ERR_SERV_NAME() + ": invalid argument"); }
+        catch (ParseException e) {
+
             if(args.length == 0) {
-                System.out.println(ClientErrors.ERR_PORT() + ": no arguments");
-                System.out.println(ClientErrors.ERR_SERV_NAME() + ": no arguments");
+                System.err.println(ClientErrors.ERR_PORT() + ": no arguments");
+                System.err.println(ClientErrors.ERR_SERV_NAME() + ": no arguments");
+            } else {
+                List<String> list = Arrays.asList(args);
+                if(! list.contains("-p") || ! list.contains("--port"))
+                    System.err.println(ClientErrors.ERR_PORT() + ": no argument");
+
+                if(! list.contains("-n") || ! list.contains("--name"))
+                    System.err.println(ClientErrors.ERR_SERV_NAME() + ": no argument");
             }
-
-            List<String> list = Arrays.asList(args);
-            if(! list.contains("-p") || ! list.contains("--port"))
-                System.out.println(ClientErrors.ERR_PORT() + ": no argument");
-
-            if(! list.contains("-n") || ! list.contains("--name"))
-                System.out.println(ClientErrors.ERR_SERV_NAME() + ": no argument");
-
 
             formatter.printHelp("java MainClient", opts);
         }
