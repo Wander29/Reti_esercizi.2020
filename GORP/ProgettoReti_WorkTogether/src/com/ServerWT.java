@@ -5,6 +5,10 @@ import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.util.concurrent.ConcurrentHashMap;
 
+/*
+    this object class will be managed by a manager, which will use the object as private
+ */
+
 public class ServerWT {
     private class UserInfo {
         String          username;
@@ -28,8 +32,8 @@ public class ServerWT {
     Map<String, Boolean> onlineStateUsers;
 
     public ServerWT() {
-        users = new ConcurrentHashMap<String, UserInfo>();
-        onlineUsers = new ConcurrentHashMap<String, Boolean>();
+        this.users              = new ConcurrentHashMap<String, UserInfo>();
+        this.onlineStateUsers   = new ConcurrentHashMap<String, Boolean>();
 
     }
 
@@ -50,6 +54,7 @@ public class ServerWT {
         if(ClientServerProtocol.DEBUG()) {
             System.out.println(username + " si è registrato");
         }
+        this.onlineStateUsers.put(username, Boolean.FALSE);
 
         //users.putIfAbsent(username, new UserInfo(username, name, surname, psw));
         return ClientServerErrorCodes.REGISTRATION_OK();
@@ -76,7 +81,7 @@ public class ServerWT {
             System.out.println(username + " si è loggato");
         }
         user_found.isOnline = Boolean.TRUE;
-        this.onlineUsers.put(username, Boolean.TRUE);
+        this.onlineStateUsers.put(username, Boolean.TRUE);
 
         return ClientServerErrorCodes.LOGIN_OK();
     }
@@ -92,7 +97,7 @@ public class ServerWT {
         if(!this.users.containsKey(username))
             return ClientServerErrorCodes.USERNAME_NOT_PRESENT();
 
-        this.onlineUsers.remove(username);
+        this.onlineStateUsers.replace(username, Boolean.FALSE);
         this.users.get(username).isOnline = Boolean.FALSE;
 
         if(ClientServerProtocol.DEBUG()) {
@@ -102,11 +107,10 @@ public class ServerWT {
         return ClientServerErrorCodes.LOGOUT_OK();
     }
 
-    public Set<String> getUsers() {
-        return this.users.keySet();
-    }
-
-    public Set<String> getOnlineUsers() {
-        return this.onlineUsers.keySet();
+    /*
+        returns an unmodifiable reference to map of users with their state
+     */
+    public Map<String, Boolean> getStateUsers() {
+        return Collections.unmodifiableMap(this.onlineStateUsers);
     }
 }

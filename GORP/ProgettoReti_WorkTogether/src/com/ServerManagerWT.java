@@ -1,11 +1,11 @@
 package com;
 
 import java.rmi.RemoteException;
+import java.util.Map;
 import java.util.Set;
 
 /*
-gestisce la concorrenza ecc.. del SERVER REALE
-
+    gestisce la concorrenza ecc.. del SERVER REALE
  */
 
 public class ServerManagerWT {
@@ -28,11 +28,7 @@ public class ServerManagerWT {
         return this.server.logout(username);
     }
 
-    public Set<String> getUsers() {
-        return this.server.getUsers();
-    }
-
-    public Set<String> getOnlineUsers() {
-        return this.server.getOnlineUsers();
+    public Map<String, Boolean> getStateUsers() {
+        return this.server.getStateUsers();
     }
 }

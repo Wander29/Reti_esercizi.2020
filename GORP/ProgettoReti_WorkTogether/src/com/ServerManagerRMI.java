@@ -1,11 +1,11 @@
 package com;
 
-import java.awt.*;
 import java.rmi.RemoteException;
 import java.rmi.server.UnicastRemoteObject;
 import java.util.ArrayList;
+import java.util.Iterator;
 import java.util.List;
-import java.util.Set;
+import java.util.Map;
 
 public class ServerManagerRMI extends UnicastRemoteObject implements ServerInterface {
 
@@ -27,33 +27,34 @@ public class ServerManagerRMI extends UnicastRemoteObject implements ServerInter
     }
 
     @Override
-    public int login(String username, byte[] psw) throws RemoteException {
-        if(username.isEmpty())
-            return ClientServerErrorCodes.USERNAME_EMPTY();
+    public Map<String, Boolean> registerForCallback(NotifyInterface cli) throws RemoteException {
+        if(!this.clients.contains(cli)) {
+            this.clients.add(cli);
 
-        return this.server.login(username, psw);
-    }
+            return this.server.getStateUsers();
+        }
 
-    @Override
-    public int logout(String username) throws RemoteException {
-        if(username.isEmpty())
-            return ClientServerErrorCodes.USERNAME_EMPTY();
-
-        return this.server.logout(username);
-    }
-
-    @Override
-    public Set<String> registerForCallback(NotifyInterface cli) throws RemoteException {
-
-        return this.server.getOnlineUsers();
+        return null;
     }
 
     @Override
     public int unregisterForCallback(NotifyInterface cli) throws RemoteException {
+        if(!this.clients.contains(cli)) {
+            return -1;
+        }
+
+        this.clients.remove(cli);
         return 0;
     }
 
-    private int doCallbacks() throws RemoteException {
-        return 0;
+    public void doCallbacks() throws RemoteException {
+        Iterator i = clients.iterator();
+
+        while(i.hasNext()) {
+            NotifyInterface cli = (NotifyInterface) i.next();
+            cli.notifyEvent();
+            // notifica inviata ad 1 client
+        }
+        // notificati tutti i client
     }
 }
