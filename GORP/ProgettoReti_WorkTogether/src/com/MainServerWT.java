@@ -23,11 +23,14 @@ public class MainServerWT {
     private final static int MAX_CONNECTIONS_PER_THREAD = 4;
 
     public static void main(String[] args) {
+        ServerManagerWT server = null;
+        ServerManagerRMI serverRMI = null;
+
         // RMI
         try {
             // service start
-            ServerManagerWT server = new ServerManagerWT();
-            ServerManagerRMI serverRMI = new ServerManagerRMI(server); // è gia uno stub
+            server = new ServerManagerWT();
+            serverRMI = new ServerManagerRMI(server); // è gia uno stub
 
             // Publication RMI service
             LocateRegistry.createRegistry(ClientServerProtocol.RMI_SERVICE_PORT());
@@ -57,7 +60,7 @@ public class MainServerWT {
                     sel = Selector.open(); // open new Selector (each MAX_CONNECTIONS_PER_THREAD socket opened)
                     client.register(sel, SelectionKey.OP_READ, buf);
 
-                    tpe.submit(new ServerWorker(sel));
+                    tpe.submit(new ServerWorker(sel, server));
                 } else {
                     client.register(sel, SelectionKey.OP_READ, buf);
                 }

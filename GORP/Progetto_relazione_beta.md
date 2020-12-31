@@ -8,14 +8,17 @@ Indice
 
 ```mermaid
 classDiagram
-	class ServerWT{
+	class ServerWT{ }
 	
+	class MainServer{
+		<<WelcomingSocket>>
 	}
 	
 	ServerWT<--ServerManagerWT
-	ServerManagerWT<--MainServer
+	ServerManagerWT<--ServerWorker
 	ServerManagerRMI<--MainServer
 	ServerManagerWT<..ServerManagerRMI
+	MainServer-->ServerWorker
 	
 	
 ```

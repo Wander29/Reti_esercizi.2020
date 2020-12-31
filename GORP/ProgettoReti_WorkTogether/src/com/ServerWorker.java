@@ -11,13 +11,17 @@ import java.nio.channels.Selector;
 import java.nio.channels.SocketChannel;
 import java.util.Iterator;
 import java.util.Set;
+import java.util.StringTokenizer;
 
 public class ServerWorker implements Runnable {
 
+    private final static int BUF_SIZE = 2048;
     private Selector selector;
+    private ServerManagerWT server;
 
-    public ServerWorker(Selector s) {
-        this.selector = s;
+    public ServerWorker(Selector sel, ServerManagerWT server) {
+        this.selector = sel;
+        this.server = server;
     }
 
     public void run() {
@@ -43,6 +47,9 @@ public class ServerWorker implements Runnable {
                     if(key.isReadable()) {
                         // try yo read client request
                         try { readMsgAndComputeRequest(key); }
+                        catch (BufferUnderflowException bue) {
+                            System.out.println("Non ci sono 4 byte da leggere nel " +
+                                    "buffer per comporre un «int»");}
                         catch (TerminationException e) {
                             key.cancel();
                             System.err.println("Connessione con 1 client terminata!");
@@ -52,6 +59,7 @@ public class ServerWorker implements Runnable {
                         }
                         catch (IOException e) { System.err.println("errore durante la " +
                                                 "lettura di una richiesta dal client"); }
+
                     }
                     if(key.isWritable()) {
                         // answer client request
@@ -62,22 +70,40 @@ public class ServerWorker implements Runnable {
         }
     }
 
-    public void readMsgAndComputeRequest(SelectionKey key) throws IOException, TerminationException {
+    public void readMsgAndComputeRequest(SelectionKey key)
+            throws IOException, BufferUnderflowException, TerminationException {
         SocketChannel cliCh     = (SocketChannel)   key.channel();
         ByteBuffer buf          = (ByteBuffer)      key.attachment();
 
 
-        // (1) non-blocking read, writing into buffer
+        // non-blocking read, writing into buffer
         cliCh.read(buf);
-        // since i want to read the buffer, i "flip" it to reading mode
+        // since i want to read the buffer, "flip" it to reading mode
         buf.flip();
+        // get the operation code to distinguish the operation
+        StringBuilder sbuilder = new StringBuilder();
 
-        int opCode = -1;
-        try {
-            opCode = buf.getInt();
-        } catch (BufferUnderflowException bue) {
-            System.out.println("Non ci sono 4 byte da leggere nel buffer per comporre un «int»");
+        while(buf.hasRemaining()) {
+            char charRead = (char) buf.get();
+            if(charRead == ';')     // delimiter
+                break;
+            sbuilder.append(charRead);
         }
+
+        ClientServerOperations cso = ClientServerOperations.valueOf(sbuilder.toString());
+        switch(cso) {
+            case LOGIN:
+                opLogin(buf);
+                break;
+
+            case LOGOUT:
+                throw new TerminationException();
+
+            default:
+                break;
+
+        }
+
         /*
         // aggiunta header al msg, costruisco la stringa da inviare
         StringBuilder sbuilder = new StringBuilder();
@@ -89,12 +115,7 @@ public class ServerWorker implements Runnable {
         String receivedString = sbuilder.toString();
         System.out.println("\n[Server received] " + receivedString);
 
-        // controllo Terminazione, secondo il protocollo
-        if(receivedString.equals("LOGOUT"))
-           throw new TerminationException();
         */
-        if(opCode == ClientServerOperations.LOGOUT.OP_CODE)
-            throw new TerminationException();
         /*
         String answerToSend = ECHO_STRING + " " + receivedString;
         System.out.println("[Server is sending] " + answerToSend);
@@ -108,5 +129,45 @@ public class ServerWorker implements Runnable {
         clientCh.register(key.selector(), SelectionKey.OP_WRITE, buf);
 
          */
+    }
+
+    /*
+    protocol for LOGIN operation:
+        -   LOGIN_OP_CODE: int, 4 bytes -> già letto
+        -   length username: int 4 bytes
+        -   username: string [variable] bytes
+        -   length password: in 4 bytes
+        -   password: byte[]
+     */
+    public void opLogin(ByteBuffer buf) {
+        StringBuilder sbuilder = new StringBuilder();
+        while(buf.hasRemaining()) {
+            char charRead = (char) buf.get();
+            if(charRead == ';')
+                break;
+            sbuilder.append(charRead);
+        }
+
+        String username = sbuilder.toString();
+        byte[] psw = new byte[ ( buf.limit() - buf.position() ) ];
+
+        buf.get(psw, buf.position(), buf.limit());
+
+        this.server.register(username, psw);
+    }
+
+    /*
+    protocol for LOGOUT operation:
+        -   LOGOUT;username
+     */
+    public void opLogout(ByteBuffer buf) {
+        StringBuilder sbuilder = new StringBuilder();
+        while(buf.hasRemaining()) {
+            sbuilder.append((char) buf.get());
+        }
+
+        String username = sbuilder.toString();
+
+        this.server.logout(username);
     }
 }
