@@ -30,9 +30,15 @@ Di conseguenza non ho bisogno di gestire la concorrenza server-side riguardo l'R
 ```sequence
 title: COMUNICAZIONE CLIENT-SERVER: Protocollo, operazioni
 Client->Server: LOGIN;username;password
-Server-->Client: LOGIN_OK \n USERNAME_NOT_PRESENT || PSW_INCORRECT 
+Server-->Client: LOGIN_OK \n USERNAME_NOT_PRESENT || PSW_INCORRECT || ALREADY_LOGGED_IN
 Client->Server: LOGOUT;username
 Server-->Client: LOGOUT_OK || USERNAME_NOT_PRESENT || USER_NOT_ONLINE
 Client->Server: CREATE_PROJECT;username;projectName
-Server-->Client: CREATE_PROJECT_OK;MulticastIP || PROJECT_ALREADY_PRESENT
+Server-->Client: CREATE_PROJECT_OK;MulticastIP || PROJECT_ALREADY_PRESENT || \n SERVER_INTERNAL_NETWORK_ERROR
 ```
+
+
+
+# Ipotesi
+
+- un utente può loggarsi su una sola connessione (no login multipli)

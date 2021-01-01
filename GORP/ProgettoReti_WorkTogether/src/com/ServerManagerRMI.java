@@ -19,9 +19,9 @@ public class ServerManagerRMI extends UnicastRemoteObject implements ServerInter
     }
 
     @Override
-    public int register(String username, byte[] psw) throws RemoteException {
+    public String register(String username, String psw) throws RemoteException {
         if(username.isEmpty())
-            return ClientServerErrorCodes.USERNAME_EMPTY();
+            return CSReturnValues.USERNAME_INVALID.toString();
 
         return this.server.register(username, psw);
     }

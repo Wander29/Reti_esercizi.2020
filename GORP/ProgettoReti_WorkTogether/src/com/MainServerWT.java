@@ -1,11 +1,8 @@
 package com;
 
 import java.io.IOException;
-import java.net.InetAddress;
 import java.net.InetSocketAddress;
 import java.net.ServerSocket;
-import java.net.Socket;
-import java.nio.ByteBuffer;
 import java.nio.channels.SelectionKey;
 import java.nio.channels.Selector;
 import java.nio.channels.ServerSocketChannel;
@@ -32,9 +29,9 @@ public class MainServerWT {
             serverRMI = new ServerManagerRMI(server); // è gia uno stub
 
             // Publication RMI service
-            LocateRegistry.createRegistry(ClientServerProtocol.RMI_SERVICE_PORT());
-            Registry r = LocateRegistry.getRegistry(ClientServerProtocol.RMI_SERVICE_PORT());
-            r.bind(ClientServerProtocol.RMI_SERVICE_NAME(), serverRMI);
+            LocateRegistry.createRegistry(CSProtocol.RMI_SERVICE_PORT());
+            Registry r = LocateRegistry.getRegistry(CSProtocol.RMI_SERVICE_PORT());
+            r.bind(CSProtocol.RMI_SERVICE_NAME(), serverRMI);
 
         }
         catch (AlreadyBoundException abe)   { System.out.println("Nome serivzio RMI già in uso"); }
@@ -44,7 +41,7 @@ public class MainServerWT {
         try( ServerSocketChannel serverSockCh = ServerSocketChannel.open() ) {
             ServerSocket serverSock = serverSockCh.socket();
 
-            serverSock.bind(new InetSocketAddress(ClientServerProtocol.SERVER_PORT()));
+            serverSock.bind(new InetSocketAddress(CSProtocol.SERVER_PORT()));
             // @todo NTHREADS da definire costante
             ThreadPoolExecutor tpe = (ThreadPoolExecutor) Executors.newCachedThreadPool();
             Selector sel = null;

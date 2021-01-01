@@ -24,20 +24,22 @@ public class ClientWT implements Runnable {
 
         // RMI
         try {
-            r = LocateRegistry.getRegistry(ClientServerProtocol.RMI_SERVICE_PORT());
-            serverStub = (ServerInterface) r.lookup(ClientServerProtocol.RMI_SERVICE_NAME());
+            r = LocateRegistry.getRegistry(CSProtocol.RMI_SERVICE_PORT());
+            serverStub = (ServerInterface) r.lookup(CSProtocol.RMI_SERVICE_NAME());
+
             this.register("Wander29", "Ludo1234", serverStub);
+            Noti
         }
         catch(RemoteException re)           { re.printStackTrace(); }
         catch (NotBoundException e)         { System.out.println("Servizio" +
-                ClientServerProtocol.RMI_SERVICE_NAME() + " non presente"); }
+                CSProtocol.RMI_SERVICE_NAME() + " non presente"); }
 
         // TCP connection
         try ( Socket cliSock = new Socket() )
         {
-            cliSock.connect(new InetSocketAddress(ClientServerProtocol.SERVER_PORT()));
+            cliSock.connect(new InetSocketAddress(CSProtocol.SERVER_PORT()));
 
-            if(ClientServerProtocol.DEBUG()) {
+            if(CSProtocol.DEBUG()) {
                 System.out.println("[Client log] Connessione TCP instaurata");
             }
             try(BufferedReader bis = new
@@ -51,11 +53,14 @@ public class ClientWT implements Runnable {
                 // reading server response to Login attempt
                 System.out.println(bis.readLine());
 
-                //2) Create Project
+                // 2) registerToRMICallback
+
+
+                // 3) Create Project
                 this.createProject("Wander29", "ProjectWander", bos);
                 System.out.println(bis.readLine());
 
-                // 3)LOGOUT
+                // LAST)LOGOUT
                 this.logout("Wander29", bos);
                 System.out.println(bis.readLine());
 
@@ -72,36 +77,17 @@ public class ClientWT implements Runnable {
             // RMI callback
     }
 
-    /* OPERATIONS
-    . register (RMI)
+    // RMI operations
 
-    - LOGIN
-    - LOGOUT
-    - CREATE PROJECT
-     */
-
-    /* TCP operation
-    -   CREATE_PROJECT;username;projectName
-
-    possible responses:
-    CREATE_PROJECT_OK           if everything is ok
-    PROJECT_ALREADY_PRESENT     if a project with the same name is already present in the server
-     */
-    public void createProject(String username, String projName, BufferedWriter stream) throws IOException {
-        String req = ClientServerOperations.CREATE_PROJECT.toString()
-                + ";" + username + ";" + projName;
-
-        stream.write(req);
-        stream.flush();
-    }
-
-    /* RMI operation
-     */
     public void register(String username, String password, ServerInterface stub)
             throws RemoteException, NotBoundException {
 
-        int ret = stub.register(username, md.digest(password.getBytes()));
-        ClientServerErrorCodes.printError(ret);
+        String ret = stub.register(username, password);
+        System.out.println(ret);
+    }
+
+    public void registerToCallbacks(ServerInterface stub) {
+        stub.registerForCallback();
     }
 
     /* TCP operation
@@ -113,9 +99,10 @@ public class ClientWT implements Runnable {
 
     USERNAME_NOT_PRESENT    if the username is not registered
     PSW_INCORRECT           if the password is incorrect for the given username
+    ALREADY_LOGGED_IN
      */
     public void login(String username, String password, BufferedWriter stream) throws IOException {
-        StringBuilder sbuild = new StringBuilder(ClientServerOperations.LOGIN.toString());
+        StringBuilder sbuild = new StringBuilder(CSOperations.LOGIN.toString());
         sbuild.append(";");
         sbuild.append(username);
         sbuild.append(";");
@@ -136,7 +123,23 @@ public class ClientWT implements Runnable {
         USERNAME_NOT_ONLINE     if the user related to this username is not online
      */
     public void logout(String username, BufferedWriter stream) throws IOException {
-        String req = ClientServerOperations.LOGOUT.toString() + ';' + username;
+        String req = CSOperations.LOGOUT.toString() + ';' + username;
+
+        stream.write(req);
+        stream.flush();
+    }
+
+    /* TCP operation
+        -   CREATE_PROJECT;username;projectName
+
+        possible responses:
+        CREATE_PROJECT_OK;ip            if everything is ok
+        PROJECT_ALREADY_PRESENT         if a project with the same name is already present in the server
+        SERVER_INTERNAL_NETWORK_ERROR   if server can't use a Multicast Ip
+ */
+    public void createProject(String username, String projName, BufferedWriter stream) throws IOException {
+        String req = CSOperations.CREATE_PROJECT.toString()
+                + ";" + username + ";" + projName;
 
         stream.write(req);
         stream.flush();

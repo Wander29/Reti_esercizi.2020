@@ -1,6 +1,6 @@
 package com;
 
-public abstract class ClientServerProtocol {
+public abstract class CSProtocol {
     private final static boolean DEBUG = true;
     private final static int RMI_SERVICE_PORT   = 10029;
     private final static int SERVER_PORT        = 11029;

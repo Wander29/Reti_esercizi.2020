@@ -1,5 +1,6 @@
 package com;
 
+import java.net.UnknownHostException;
 import java.util.*;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
@@ -13,29 +14,29 @@ public class ServerWT {
     private class UserInfo {
         String          username;
         byte[]          psw;
-        Boolean         isOnline;
         List<Project>   projects;   // projects of which he is a member
 
         private UserInfo(String us, byte[] psw) {
             this.username   = us;
             this.psw        = psw;
-            this.isOnline   = Boolean.FALSE;
             this.projects   = new ArrayList<>();
         }
     }
 
-    // struttura dati per le informazioni di login degli utenti
-    Map<String, UserInfo> users;
-    // struttura dati per i progetti
-    Map<String, Project> projects;
-    // contiene tutti gli utenti ed il loro stato
-    Map<String, Boolean> onlineStateUsers;
+    Map<String, UserInfo> users;    // users login info
+    Map<String, Project> projects;  // project datas
+    Map<String, Boolean> onlineStateUsers;  // (all) users online state
+
+    MessageDigest md = null;        // useful to hash psws
 
     public ServerWT() {
         this.users              = new ConcurrentHashMap<String, UserInfo>();
         this.onlineStateUsers   = new ConcurrentHashMap<String, Boolean>();
 
         this.projects           = new HashMap<String, Project>();
+
+        try { this.md = MessageDigest.getInstance("SHA-256"); }
+        catch (NoSuchAlgorithmException e) { e.printStackTrace(); }
     }
 
     /**
@@ -46,55 +47,52 @@ public class ServerWT {
      * @return          USERNAME_ALREADY_PRESENT
      *                  REGISTRATION_OK
      */
-    public int register(String username, byte[] psw) {
+    public CSReturnValues register(String username, String psw) {
 
         if(this.users.containsKey(username))
-            return ClientServerErrorCodes.USERNAME_ALREADY_PRESENT();
+            return CSReturnValues.USERNAME_ALREADY_PRESENT;
 
-        this.users.put(username, new UserInfo(username, psw));
-        if(ClientServerProtocol.DEBUG()) {
+        // hashing psw
+        byte[] pswInBytes = md.digest(psw.getBytes());
+        this.users.put(username, new UserInfo(username, pswInBytes));
+
+        this.onlineStateUsers.put(username, Boolean.FALSE);
+        // @todo callback
+
+        if(CSProtocol.DEBUG()) {
             System.out.println(username + " si è registrato");
         }
-        this.onlineStateUsers.put(username, Boolean.FALSE);
 
-        //users.putIfAbsent(username, new UserInfo(username, name, surname, psw));
-        return ClientServerErrorCodes.REGISTRATION_OK();
+        return CSReturnValues.REGISTRATION_OK;
     }
 
     /**
-     * Allow a user to login into the service, if he was already registered and
-     *  the password is correct
-     *
-     * @param username
-     * @param psw
-     * @return          USERNAME_NOT_PRESENT
-     *                  LOGIN_OK
+     * Allow a user to login into the service, if he was already registered,
+     *  the password is correct and he wasn't already online
      */
     public CSReturnValues login(String username, String psw) {
         if(!this.users.containsKey(username))
             return CSReturnValues.USERNAME_NOT_PRESENT;
 
-        UserInfo user_found = this.users.get(username);
-
-        MessageDigest md = null;
-        try {
-            md = MessageDigest.getInstance("SHA-256");
-        } catch (NoSuchAlgorithmException e) {
-            e.printStackTrace();
+        if(this.onlineStateUsers.get(username) == Boolean.TRUE) {
+            return CSReturnValues.ALREADY_LOGGED_IN;
         }
 
+        // hashing psw
         byte[] pswInBytes = md.digest(psw.getBytes());
+        UserInfo user_found = this.users.get(username);
 
+        // compare byte per byte
         if(!Arrays.equals(user_found.psw, pswInBytes)) {
             System.out.println(username + " psw errata");
             return CSReturnValues.PSW_INCORRECT;
         }
+        this.onlineStateUsers.put(username, Boolean.TRUE);
+        // @todo callback
 
-        if(ClientServerProtocol.DEBUG()) {
+        if(CSProtocol.DEBUG()) {
             System.out.println(username + " si è loggato");
         }
-        user_found.isOnline = Boolean.TRUE;
-        this.onlineStateUsers.put(username, Boolean.TRUE);
 
         return CSReturnValues.LOGIN_OK;
     }
@@ -103,8 +101,11 @@ public class ServerWT {
     try to create a new project
     IF there is no projectName already in database
         create new project and put the creatore as a member
+        Next assign a Multicast IP to the project
      */
-    public CSReturnValues createProject(String username, String projectName) {
+    public CSReturnValues createProject(String username, String projectName)
+            throws UnknownHostException, NoSuchElementException
+    {
         if(!this.users.containsKey(username))
             return CSReturnValues.USERNAME_NOT_PRESENT;
 
@@ -112,26 +113,34 @@ public class ServerWT {
             return CSReturnValues.PROJECT_ALREADY_PRESENT;
         }
 
-        this.projects.put(username, new Project(projectName));
+        this.projects.put(projectName, new Project(projectName, username));
 
         return CSReturnValues.CREATE_PROJECT_OK;
     }
 
+    /*
+        get the MulticastIP of a specific project and returns it as String
+        ex. -> "224.0.0.0"
+     */
+    public String getProjectMulticasIp(String projectName) {
+        if(this.projects.containsKey(projectName)) {
+            return this.projects.get(projectName).getMulticastIP().toString();
+        }
+        return null;
+    }
+
     /**
      * Allow a user to logout from the service
-     *
-     * @param username
-     * @return          USERNAME_NOT_PRESENT
-     *                  LOGIN_OK
      */
     public CSReturnValues logout(String username) {
         if(!this.users.containsKey(username))
             return CSReturnValues.USERNAME_NOT_PRESENT;
 
         this.onlineStateUsers.replace(username, Boolean.FALSE);
-        this.users.get(username).isOnline = Boolean.FALSE;
+        // @todo callback
 
-        if(ClientServerProtocol.DEBUG()) {
+
+        if(CSProtocol.DEBUG()) {
             System.out.println(username + " ha effettuato il logout");
         }
 
@@ -139,7 +148,7 @@ public class ServerWT {
     }
 
     /*
-        returns an unmodifiable reference to map of users with their state
+        returns an unmodifiable reference to the map of users and their state
      */
     public Map<String, Boolean> getStateUsers() {
         return Collections.unmodifiableMap(this.onlineStateUsers);
