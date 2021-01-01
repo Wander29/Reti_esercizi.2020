@@ -57,7 +57,6 @@ public class ServerWT {
         this.users.put(username, new UserInfo(username, pswInBytes));
 
         this.onlineStateUsers.put(username, Boolean.FALSE);
-        // @todo callback
 
         if(CSProtocol.DEBUG()) {
             System.out.println(username + " si è registrato");
@@ -88,7 +87,6 @@ public class ServerWT {
             return CSReturnValues.PSW_INCORRECT;
         }
         this.onlineStateUsers.put(username, Boolean.TRUE);
-        // @todo callback
 
         if(CSProtocol.DEBUG()) {
             System.out.println(username + " si è loggato");
@@ -114,6 +112,9 @@ public class ServerWT {
         }
 
         this.projects.put(projectName, new Project(projectName, username));
+        if(CSProtocol.DEBUG()) {
+            System.out.println(projectName + " è statoc creato");
+        }
 
         return CSReturnValues.CREATE_PROJECT_OK;
     }
@@ -137,8 +138,6 @@ public class ServerWT {
             return CSReturnValues.USERNAME_NOT_PRESENT;
 
         this.onlineStateUsers.replace(username, Boolean.FALSE);
-        // @todo callback
-
 
         if(CSProtocol.DEBUG()) {
             System.out.println(username + " ha effettuato il logout");

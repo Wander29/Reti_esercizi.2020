@@ -17,7 +17,7 @@ classDiagram
 	ServerWT<--ServerManagerWT
 	ServerManagerWT<--ServerWorker
 	ServerManagerRMI<--MainServer
-	ServerManagerWT<..ServerManagerRMI
+	ServerManagerWT<..>ServerManagerRMI
 	MainServer-->ServerWorker
 	
 	

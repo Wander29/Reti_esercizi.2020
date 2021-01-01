@@ -13,21 +13,29 @@ import java.util.Set;
 public class ServerManagerWT {
 
     private ServerWT server;
+    private ServerManagerRMI manager;
 
     public ServerManagerWT() {
         this.server = new ServerWT();
     }
 
-    public String register(String username, String psw) {
-        return this.server.register(username, psw).toString();
+    public String register(String username, String psw) throws RemoteException {
+        String ret = this.server.register(username, psw).toString();
+        this.manager.newUserCallbacks(username);
+
+        return ret;
     }
 
-    public String login(String username, String psw) {
-        return (this.server.login(username, psw).toString());
+    public String login(String username, String psw) throws RemoteException {
+        String ret = this.server.login(username, psw).toString();
+        this.manager.userIsOnlineCallbacks(username);
+        return ret;
     }
 
-    public String logout(String username) {
-        return this.server.logout(username).toString();
+    public String logout(String username) throws RemoteException {
+        String ret = this.server.logout(username).toString();
+        this.manager.userIsOfflineCallbacks(username);
+        return ret;
     }
 
     /*
@@ -48,5 +56,9 @@ public class ServerManagerWT {
 
     public Map<String, Boolean> getStateUsers() {
         return this.server.getStateUsers();
+    }
+
+    protected void setRMIManager(ServerManagerRMI manager) {
+        this.manager = manager;
     }
 }

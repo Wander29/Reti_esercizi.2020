@@ -47,14 +47,30 @@ public class ServerManagerRMI extends UnicastRemoteObject implements ServerInter
         return 0;
     }
 
-    public void doCallbacks() throws RemoteException {
+    public void userIsOfflineCallbacks(String username) throws RemoteException {
         Iterator i = clients.iterator();
 
         while(i.hasNext()) {
             NotifyInterface cli = (NotifyInterface) i.next();
-            cli.notifyEvent();
-            // notifica inviata ad 1 client
+            cli.userIsOffline(username);
         }
-        // notificati tutti i client
+    }
+
+    public void userIsOnlineCallbacks(String username) throws RemoteException {
+        Iterator i = clients.iterator();
+
+        while(i.hasNext()) {
+            NotifyInterface cli = (NotifyInterface) i.next();
+            cli.userIsOnline(username);
+        }
+    }
+
+    public void newUserCallbacks(String username) throws RemoteException {
+        Iterator i = clients.iterator();
+
+        while(i.hasNext()) {
+            NotifyInterface cli = (NotifyInterface) i.next();
+            cli.newUser(username);
+        }
     }
 }

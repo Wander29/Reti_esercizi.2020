@@ -27,6 +27,7 @@ public class MainServerWT {
             // service start
             server = new ServerManagerWT();
             serverRMI = new ServerManagerRMI(server); // è gia uno stub
+            server.setRMIManager(serverRMI);
 
             // Publication RMI service
             LocateRegistry.createRegistry(CSProtocol.RMI_SERVICE_PORT());

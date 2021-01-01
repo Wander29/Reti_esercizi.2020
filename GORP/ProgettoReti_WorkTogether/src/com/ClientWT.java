@@ -9,18 +9,20 @@ import java.rmi.registry.LocateRegistry;
 import java.rmi.registry.Registry;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
 
 public class ClientWT implements Runnable {
 
-    MessageDigest md;
+    ClientNotify clientStub;
 
-    public ClientWT() throws NoSuchAlgorithmException {
-        md = MessageDigest.getInstance("SHA-256");
-    }
+    public ClientWT() { }
 
     public void run() {
-        Registry r;
-        ServerInterface serverStub;
+        Registry r = null;
+        ServerInterface serverStub = null;
 
         // RMI
         try {
@@ -28,7 +30,6 @@ public class ClientWT implements Runnable {
             serverStub = (ServerInterface) r.lookup(CSProtocol.RMI_SERVICE_NAME());
 
             this.register("Wander29", "Ludo1234", serverStub);
-            Noti
         }
         catch(RemoteException re)           { re.printStackTrace(); }
         catch (NotBoundException e)         { System.out.println("Servizio" +
@@ -54,14 +55,29 @@ public class ClientWT implements Runnable {
                 System.out.println(bis.readLine());
 
                 // 2) registerToRMICallback
+                try {
 
+                    clientStub = new ClientNotify();
+                    // registration for callbacks AND getting users state info
+                    Map<String, Boolean> usersStateUnmodifiable =
+                            serverStub.registerForCallback(clientStub);
+
+                    clientStub.setUsersMap(
+                            new ConcurrentHashMap<>(usersStateUnmodifiable) );
+
+                    System.out.println("-USERS ONLINE-");
+                    for(String s : this.listUsers()) {
+                        System.out.println(s);
+                    }
+                }
+                catch(RemoteException re)   { re.printStackTrace(); }
 
                 // 3) Create Project
                 this.createProject("Wander29", "ProjectWander", bos);
                 System.out.println(bis.readLine());
 
-                // LAST)LOGOUT
-                this.logout("Wander29", bos);
+                // LAST) LOGOUT
+                this.logout("Wander29", bos, serverStub);
                 System.out.println(bis.readLine());
 
             }
@@ -79,15 +95,19 @@ public class ClientWT implements Runnable {
 
     // RMI operations
 
-    public void register(String username, String password, ServerInterface stub)
+    private void register(String username, String password, ServerInterface stub)
             throws RemoteException, NotBoundException {
 
         String ret = stub.register(username, password);
         System.out.println(ret);
     }
 
-    public void registerToCallbacks(ServerInterface stub) {
-        stub.registerForCallback();
+    private Set<String> listUsers() {
+        return this.clientStub.getAllUsers();
+    }
+
+    private Set<String> listOnlineUsers() {
+       return this.clientStub.getOnlineUsers();
     }
 
     /* TCP operation
@@ -101,7 +121,7 @@ public class ClientWT implements Runnable {
     PSW_INCORRECT           if the password is incorrect for the given username
     ALREADY_LOGGED_IN
      */
-    public void login(String username, String password, BufferedWriter stream) throws IOException {
+    private void login(String username, String password, BufferedWriter stream) throws IOException {
         StringBuilder sbuild = new StringBuilder(CSOperations.LOGIN.toString());
         sbuild.append(";");
         sbuild.append(username);
@@ -122,7 +142,10 @@ public class ClientWT implements Runnable {
         USERNAME_NOT_PRESENT    if the given username is not registered
         USERNAME_NOT_ONLINE     if the user related to this username is not online
      */
-    public void logout(String username, BufferedWriter stream) throws IOException {
+    private void logout(String username, BufferedWriter stream, ServerInterface stub)
+            throws IOException {
+        stub.unregisterForCallback(this.clientStub);
+
         String req = CSOperations.LOGOUT.toString() + ';' + username;
 
         stream.write(req);
@@ -137,7 +160,7 @@ public class ClientWT implements Runnable {
         PROJECT_ALREADY_PRESENT         if a project with the same name is already present in the server
         SERVER_INTERNAL_NETWORK_ERROR   if server can't use a Multicast Ip
  */
-    public void createProject(String username, String projName, BufferedWriter stream) throws IOException {
+    private void createProject(String username, String projName, BufferedWriter stream) throws IOException {
         String req = CSOperations.CREATE_PROJECT.toString()
                 + ";" + username + ";" + projName;
 
