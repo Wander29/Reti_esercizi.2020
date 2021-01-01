@@ -13,4 +13,8 @@ public class Project {
     List<Card> doneCards;
 
     InetAddress chatMulticastIP;
+
+    public Project(String s) {
+        this.projectName = s;
+    }
 }

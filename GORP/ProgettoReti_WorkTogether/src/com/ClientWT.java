@@ -1,8 +1,6 @@
 package com;
 
-import java.io.BufferedOutputStream;
-import java.io.DataOutputStream;
-import java.io.IOException;
+import java.io.*;
 import java.net.InetSocketAddress;
 import java.net.Socket;
 import java.rmi.NotBoundException;
@@ -35,30 +33,39 @@ public class ClientWT implements Runnable {
                 ClientServerProtocol.RMI_SERVICE_NAME() + " non presente"); }
 
         // TCP connection
-        try ( Socket cliSock = new Socket(); ) {
+        try ( Socket cliSock = new Socket() )
+        {
             cliSock.connect(new InetSocketAddress(ClientServerProtocol.SERVER_PORT()));
 
             if(ClientServerProtocol.DEBUG()) {
-                System.out.println("Connessione TCP instaurata");
+                System.out.println("[Client log] Connessione TCP instaurata");
             }
+            try(BufferedReader bis = new
+                    BufferedReader(new InputStreamReader( cliSock.getInputStream() )) ;
 
-            try(DataOutputStream dos = new DataOutputStream( new
-                    BufferedOutputStream(cliSock.getOutputStream() )) )
+                BufferedWriter bos = new
+                        BufferedWriter(new OutputStreamWriter( cliSock.getOutputStream() )))
             {
                 // 1) LOGIN
-                this.login("Wander29", "Ludo1234", dos);
-                if(ClientServerProtocol.DEBUG()) {
-                    System.out.println("login CORRETTO");
-                }
+                this.login("Wander29", "Ludo1234", bos);
+                // reading server response to Login attempt
+                System.out.println(bis.readLine());
+
+                //2) Create Project
+                this.createProject("Wander29", "ProjectWander", bos);
+                System.out.println(bis.readLine());
 
                 // 3)LOGOUT
-                this.logout("Wander29", dos);
-                if(ClientServerProtocol.DEBUG()) {
-                    System.out.println("logout CORRETTO");
-                }
+                this.logout("Wander29", bos);
+                System.out.println(bis.readLine());
+
+            }
+            catch (IOException e) {
+                e.printStackTrace();
             }
 
-        } catch (IOException e) {
+        }
+        catch (IOException e) {
             e.printStackTrace();
         }
 
@@ -73,6 +80,23 @@ public class ClientWT implements Runnable {
     - CREATE PROJECT
      */
 
+    /* TCP operation
+    -   CREATE_PROJECT;username;projectName
+
+    possible responses:
+    CREATE_PROJECT_OK           if everything is ok
+    PROJECT_ALREADY_PRESENT     if a project with the same name is already present in the server
+     */
+    public void createProject(String username, String projName, BufferedWriter stream) throws IOException {
+        String req = ClientServerOperations.CREATE_PROJECT.toString()
+                + ";" + username + ";" + projName;
+
+        stream.write(req);
+        stream.flush();
+    }
+
+    /* RMI operation
+     */
     public void register(String username, String password, ServerInterface stub)
             throws RemoteException, NotBoundException {
 
@@ -80,35 +104,42 @@ public class ClientWT implements Runnable {
         ClientServerErrorCodes.printError(ret);
     }
 
-    /*
+    /* TCP operation
     protocol for LOGIN operation:
-        -   LOGIN;username;pswAsBytes
+    -   LOGIN;username;psw
+
+    possible responses:
+    LOGIN_OK                if everything is ok
+
+    USERNAME_NOT_PRESENT    if the username is not registered
+    PSW_INCORRECT           if the password is incorrect for the given username
      */
-    public void login(String username, String password, DataOutputStream stream) throws IOException {
-        //stream.writeInt(ClientServerOperations.LOGIN.OP_CODE);
+    public void login(String username, String password, BufferedWriter stream) throws IOException {
         StringBuilder sbuild = new StringBuilder(ClientServerOperations.LOGIN.toString());
         sbuild.append(";");
         sbuild.append(username);
         sbuild.append(";");
+        sbuild.append(password);
 
-        byte[] tmp = sbuild.toString().getBytes();
-        stream.write(tmp, 0, tmp.length);
-
-        tmp = md.digest(password.getBytes());
-        stream.write(tmp, 0, tmp.length);
-
+        stream.write(sbuild.toString());
         stream.flush();
     }
 
-    /*
+    /* TCP operation
         protocol for LOGOUT operation:
         -   LOGOUT;username
-     */
-    public void logout(String username, DataOutputStream stream) throws IOException {
-        String req = ClientServerOperations.LOGOUT.toString() + ';' + username;
-        byte[] tmp = req.getBytes();
 
-        stream.write(tmp, 0, tmp.length);
+        possible reponses:
+        LOGOUT_OK               if everything is ok
+
+        USERNAME_NOT_PRESENT    if the given username is not registered
+        USERNAME_NOT_ONLINE     if the user related to this username is not online
+     */
+    public void logout(String username, BufferedWriter stream) throws IOException {
+        String req = ClientServerOperations.LOGOUT.toString() + ';' + username;
+
+        stream.write(req);
+        stream.flush();
     }
 }
 

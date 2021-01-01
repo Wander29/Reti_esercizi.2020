@@ -20,11 +20,11 @@ public class ServerManagerWT {
         return this.server.register(username, psw);
     }
 
-    public int login(String username, byte[] psw) {
+    public CSReturnValues login(String username, String psw) {
         return this.server.login(username, psw);
     }
 
-    public int logout(String username) {
+    public CSReturnValues logout(String username) {
         return this.server.logout(username);
     }
 

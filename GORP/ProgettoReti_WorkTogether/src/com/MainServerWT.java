@@ -19,7 +19,6 @@ import java.util.concurrent.ThreadPoolExecutor;
 
 public class MainServerWT {
 
-    private final static int BUF_SIZE = 2048;
     private final static int MAX_CONNECTIONS_PER_THREAD = 4;
 
     public static void main(String[] args) {
@@ -54,19 +53,15 @@ public class MainServerWT {
             while(true) {
                 SocketChannel client = serverSockCh.accept(); // single connection with client
                 client.configureBlocking(false);
-                ByteBuffer buf = ByteBuffer.allocate(BUF_SIZE);
+                TCPBuffersNIO bufs = new TCPBuffersNIO();
 
                 if(counterConnectionPerWorker == 0) {
                     sel = Selector.open(); // open new Selector (each MAX_CONNECTIONS_PER_THREAD socket opened)
-                    client.register(sel, SelectionKey.OP_READ, buf);
+                    client.register(sel, SelectionKey.OP_READ, bufs);
 
                     tpe.submit(new ServerWorker(sel, server));
                 } else {
-                    client.register(sel, SelectionKey.OP_READ, buf);
-                }
-
-                if(ClientServerProtocol.DEBUG()) {
-                    System.out.println(tpe.getPoolSize());
+                    client.register(sel, SelectionKey.OP_READ, bufs);
                 }
 
                 if(++counterConnectionPerWorker == MAX_CONNECTIONS_PER_THREAD) {

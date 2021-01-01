@@ -4,18 +4,16 @@ import com.sun.jdi.connect.TransportTimeoutException;
 
 import java.io.IOException;
 import java.net.Socket;
+import java.nio.Buffer;
 import java.nio.BufferUnderflowException;
 import java.nio.ByteBuffer;
 import java.nio.channels.SelectionKey;
 import java.nio.channels.Selector;
 import java.nio.channels.SocketChannel;
-import java.util.Iterator;
-import java.util.Set;
-import java.util.StringTokenizer;
+import java.util.*;
 
 public class ServerWorker implements Runnable {
 
-    private final static int BUF_SIZE = 2048;
     private Selector selector;
     private ServerManagerWT server;
 
@@ -30,10 +28,11 @@ public class ServerWorker implements Runnable {
             System.out.println("Worker creato, sto per runnare: " + Thread.currentThread().getName());
         }
 
-        while(!this.selector.keys().isEmpty()) {
+        // while(!this.selector.keys().isEmpty()) {
+        while(true) {
             try {
                 // @todo change timeuout to constant
-                if(this.selector.select(2000) == 0)
+                if(this.selector.select(5000) == 0)
                     continue;
 
                 // check selected keys
@@ -45,11 +44,13 @@ public class ServerWorker implements Runnable {
                     it.remove();
 
                     if(key.isReadable()) {
-                        // try yo read client request
-                        try { readMsgAndComputeRequest(key); }
+                        try {
+                            // try yo read client request
+                            readMsgAndComputeRequest(key);
+                        }
                         catch (BufferUnderflowException bue) {
-                            System.out.println("Non ci sono 4 byte da leggere nel " +
-                                    "buffer per comporre un «int»");}
+                            System.err.println("Non ci sono 4 byte da leggere nel " +
+                                    "buffer per comporre un «int»"); }
                         catch (TerminationException e) {
                             key.cancel();
                             System.err.println("Connessione con 1 client terminata!");
@@ -70,21 +71,21 @@ public class ServerWorker implements Runnable {
         }
     }
 
-    public void readMsgAndComputeRequest(SelectionKey key)
+    private void readMsgAndComputeRequest(SelectionKey key)
             throws IOException, BufferUnderflowException, TerminationException {
         SocketChannel cliCh     = (SocketChannel)   key.channel();
-        ByteBuffer buf          = (ByteBuffer)      key.attachment();
+        TCPBuffersNIO bufs      = (TCPBuffersNIO)   key.attachment();
 
 
         // non-blocking read, writing into buffer
-        cliCh.read(buf);
+        cliCh.read(bufs.inputBuf);
         // since i want to read the buffer, "flip" it to reading mode
-        buf.flip();
+        bufs.inputBuf.flip();
         // get the operation code to distinguish the operation
         StringBuilder sbuilder = new StringBuilder();
 
-        while(buf.hasRemaining()) {
-            char charRead = (char) buf.get();
+        while(bufs.inputBuf.hasRemaining()) {
+            char charRead = (char) bufs.inputBuf.get();
             if(charRead == ';')     // delimiter
                 break;
             sbuilder.append(charRead);
@@ -93,10 +94,16 @@ public class ServerWorker implements Runnable {
         ClientServerOperations cso = ClientServerOperations.valueOf(sbuilder.toString());
         switch(cso) {
             case LOGIN:
-                opLogin(buf);
+                opLogin(bufs, cliCh);
+                cliCh.register(key.selector(), SelectionKey.OP_READ, bufs);
                 break;
 
+            case CREATE_PROJECT:
+                opCreateProject(bufs, cliCh);
+                cliCh.register(key.selector(), SelectionKey.OP_READ, bufs);
+
             case LOGOUT:
+                opLogout(bufs, cliCh);
                 throw new TerminationException();
 
             default:
@@ -131,43 +138,79 @@ public class ServerWorker implements Runnable {
          */
     }
 
+    private void opCreateProject(TCPBuffersNIO bufs, SocketChannel cliCH) throws IOException {
+        List<String> tokens = tokenizeRequest(bufs.inputBuf);
+        String projectName  = tokens.remove(0);
+
+        CSReturnValues ret = this.server.createProject();
+    }
+
+    private void sendResponse(ByteBuffer buf, SocketChannel channel, String toSend) throws IOException {
+        buf.clear();
+
+        String s = toSend + "\n";
+        byte[] tmp = s.getBytes();
+        buf.put(tmp, 0, tmp.length);
+
+        buf.flip();
+
+        channel.write(buf);
+        buf.clear();
+    }
+
+
     /*
-    protocol for LOGIN operation:
-        -   LOGIN_OP_CODE: int, 4 bytes -> già letto
-        -   length username: int 4 bytes
-        -   username: string [variable] bytes
-        -   length password: in 4 bytes
-        -   password: byte[]
+        tokenize request string
      */
-    public void opLogin(ByteBuffer buf) {
+    private List<String> tokenizeRequest(ByteBuffer buf) {
         StringBuilder sbuilder = new StringBuilder();
+
         while(buf.hasRemaining()) {
             char charRead = (char) buf.get();
-            if(charRead == ';')
-                break;
             sbuilder.append(charRead);
         }
+        String received = sbuilder.toString();
 
-        String username = sbuilder.toString();
-        byte[] psw = new byte[ ( buf.limit() - buf.position() ) ];
+        ArrayList<String> tokens = new ArrayList<>();
+        StringTokenizer tokenizer = new StringTokenizer(received, ";");
 
-        buf.get(psw, buf.position(), buf.limit());
+        while(tokenizer.hasMoreTokens()) {
+            tokens.add(tokenizer.nextToken());
+        }
 
-        this.server.register(username, psw);
+        return tokens;
+    }
+
+    /*
+    protocol for LOGIN operation:
+        -   LOGIN;username;pswInBytes
+     */
+    private void opLogin(TCPBuffersNIO bufs, SocketChannel cliCh) throws IOException {
+
+        List<String> tokens = tokenizeRequest(bufs.inputBuf);
+        bufs.inputBuf.clear();
+
+        String username = tokens.remove(0);
+        String psw = tokens.remove(0);
+
+        CSReturnValues ret = this.server.login(username, psw);
+        sendResponse(bufs.outputBuf, cliCh, ret.toString());
     }
 
     /*
     protocol for LOGOUT operation:
         -   LOGOUT;username
      */
-    public void opLogout(ByteBuffer buf) {
+    private void opLogout(TCPBuffersNIO bufs, SocketChannel cliCh) throws IOException {
+
         StringBuilder sbuilder = new StringBuilder();
-        while(buf.hasRemaining()) {
-            sbuilder.append((char) buf.get());
+        while(bufs.inputBuf.hasRemaining()) {
+            sbuilder.append((char) bufs.inputBuf.get());
         }
-
         String username = sbuilder.toString();
+        bufs.inputBuf.clear();
 
-        this.server.logout(username);
+        CSReturnValues ret = this.server.logout(username);
+        sendResponse(bufs.outputBuf, cliCh, ret.toString());
     }
 }

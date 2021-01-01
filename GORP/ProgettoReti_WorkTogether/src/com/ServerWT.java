@@ -35,6 +35,7 @@ public class ServerWT {
         this.users              = new ConcurrentHashMap<String, UserInfo>();
         this.onlineStateUsers   = new ConcurrentHashMap<String, Boolean>();
 
+        this.projects           = new HashMap<String, Project>();
     }
 
     /**
@@ -69,13 +70,25 @@ public class ServerWT {
      * @return          USERNAME_NOT_PRESENT
      *                  LOGIN_OK
      */
-    public int login(String username, byte[] psw) {
+    public CSReturnValues login(String username, String psw) {
         if(!this.users.containsKey(username))
-            return ClientServerErrorCodes.USERNAME_NOT_PRESENT();
+            return CSReturnValues.USERNAME_NOT_PRESENT;
 
         UserInfo user_found = this.users.get(username);
-        if(!Arrays.equals(user_found.psw, psw))
-            return ClientServerErrorCodes.PSW_INCORRECT();
+
+        MessageDigest md = null;
+        try {
+            md = MessageDigest.getInstance("SHA-256");
+        } catch (NoSuchAlgorithmException e) {
+            e.printStackTrace();
+        }
+
+        byte[] pswInBytes = md.digest(psw.getBytes());
+
+        if(!Arrays.equals(user_found.psw, pswInBytes)) {
+            System.out.println(username + " psw errata");
+            return CSReturnValues.PSW_INCORRECT;
+        }
 
         if(ClientServerProtocol.DEBUG()) {
             System.out.println(username + " si è loggato");
@@ -83,7 +96,25 @@ public class ServerWT {
         user_found.isOnline = Boolean.TRUE;
         this.onlineStateUsers.put(username, Boolean.TRUE);
 
-        return ClientServerErrorCodes.LOGIN_OK();
+        return CSReturnValues.LOGIN_OK;
+    }
+
+    /*
+    try to create a new project
+    IF there is no projectName already in database
+        create new project and put the creatore as a member
+     */
+    public CSReturnValues createProject(String username, String projectName) {
+        if(!this.users.containsKey(username))
+            return CSReturnValues.USERNAME_NOT_PRESENT;
+
+        if(this.projects.containsKey(projectName)) {
+            return CSReturnValues.PROJECT_ALREADY_PRESENT;
+        }
+
+        this.projects.put(username, new Project(projectName));
+
+        return CSReturnValues.CREATE_PROJECT_OK;
     }
 
     /**
@@ -93,9 +124,9 @@ public class ServerWT {
      * @return          USERNAME_NOT_PRESENT
      *                  LOGIN_OK
      */
-    public int logout(String username) {
+    public CSReturnValues logout(String username) {
         if(!this.users.containsKey(username))
-            return ClientServerErrorCodes.USERNAME_NOT_PRESENT();
+            return CSReturnValues.USERNAME_NOT_PRESENT;
 
         this.onlineStateUsers.replace(username, Boolean.FALSE);
         this.users.get(username).isOnline = Boolean.FALSE;
@@ -104,7 +135,7 @@ public class ServerWT {
             System.out.println(username + " ha effettuato il logout");
         }
 
-        return ClientServerErrorCodes.LOGOUT_OK();
+        return CSReturnValues.LOGOUT_OK;
     }
 
     /*
