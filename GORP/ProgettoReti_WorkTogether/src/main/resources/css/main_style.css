@@ -1,0 +1,15 @@
+.root{
+    -fx-font-size: 25pt;
+    -fx-font-family: "Roboto";
+    -fx-background-color: #332200;
+    -fx-text-inner-color: white;
+}
+
+.my-button{
+    -fx-border-color: white;
+    -fx-border-width: 2px;
+}
+
+.my-button:hover{
+    -fx-opacity: 0.8;
+}
