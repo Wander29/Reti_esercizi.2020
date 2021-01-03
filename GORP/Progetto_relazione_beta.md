@@ -28,6 +28,14 @@ Non vi sono sovrapposizioni fra inserimenti e rimozioni in quanto un utente non 
 Di conseguenza non ho bisogno di gestire la concorrenza server-side riguardo l'RMI.
 
 ```sequence
+title: COMUNICAZIONE CLIENT-SERVER - RMI
+Client->Server: REGISTER(username, password)
+Server-->Client: REGISTRATION_OK || USERNAME_ALREADY_PRESENT
+```
+
+
+
+```sequence
 title: COMUNICAZIONE CLIENT-SERVER: Protocollo, operazioni
 Client->Server: LOGIN;username;password
 Server-->Client: LOGIN_OK \n USERNAME_NOT_PRESENT || PSW_INCORRECT || ALREADY_LOGGED_IN
