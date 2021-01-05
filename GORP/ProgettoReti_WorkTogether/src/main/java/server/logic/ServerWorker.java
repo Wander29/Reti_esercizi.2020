@@ -23,28 +23,6 @@ public class ServerWorker implements Runnable {
         this.server = server;
     }
 
-    /*
-        tokenize request string
-     */
-    private List<String> tokenizeRequest(ByteBuffer buf) {
-        StringBuilder sbuilder = new StringBuilder();
-
-        while(buf.hasRemaining()) {
-            char charRead = (char) buf.get();
-            sbuilder.append(charRead);
-        }
-        String received = sbuilder.toString();
-
-        ArrayList<String> tokens = new ArrayList<>();
-        StringTokenizer tokenizer = new StringTokenizer(received, ";");
-
-        while(tokenizer.hasMoreTokens()) {
-            tokens.add(tokenizer.nextToken());
-        }
-
-        return tokens;
-    }
-
     private void readMsgAndComputeRequest(SelectionKey key)
             throws IOException, BufferUnderflowException, TerminationException {
         SocketChannel cliCh     = (SocketChannel)   key.channel();
@@ -81,25 +59,13 @@ public class ServerWorker implements Runnable {
                 opLogout(bufs, cliCh);
                 throw new TerminationException();
 
+            case EXIT:
+                throw new TerminationException();
+
             default:
                 break;
 
         }
-    }
-
-    private void sendResponse(ByteBuffer buf, SocketChannel channel, String toSend)
-            throws IOException
-    {
-        buf.clear();
-
-        String s = toSend + "\n";
-        byte[] tmp = s.getBytes();
-        buf.put(tmp, 0, tmp.length);
-
-        buf.flip();
-
-        channel.write(buf);
-        buf.clear();
     }
 
     public void run() {
@@ -108,8 +74,8 @@ public class ServerWorker implements Runnable {
             System.out.println("Worker creato, sto per runnare: " + Thread.currentThread().getName());
         }
 
-        // while(!this.selector.keys().isEmpty()) {
-        while(true) {
+        while(!this.selector.keys().isEmpty()) {
+        // while(true) {
             try {
                 // @todo change timeuout to constant
                 if(this.selector.select(5000) == 0)
@@ -134,18 +100,18 @@ public class ServerWorker implements Runnable {
                         catch (TerminationException e) {
                             key.cancel();
                             System.err.println("Connessione con 1 client terminata!");
-                            //break outer_loop;
-                            break;
+                            // break outer_loop;
                             // per avere un comportamento while(true) usare «break;»
+                            break;
                         }
                         catch (IOException e) { System.err.println("errore durante la " +
                                                 "lettura di una richiesta dal client"); }
 
                     }
-                    if(key.isWritable()) {
-                        // answer client request
-                    }
-                }
+                    // if(key.isWritable()) {}
+
+                } //; end while(it.hasNExt())
+                System.out.println("[SERVER WORKER] sto terminando");
             }
             catch (IOException e)           { e.printStackTrace(); }
         }
@@ -195,5 +161,45 @@ public class ServerWorker implements Runnable {
 
         String ret = this.server.logout(username);
         sendResponse(bufs.outputBuf, cliCh, ret);
+    }
+
+    /**
+     * UTILS
+     */
+    /*
+       tokenize request string
+    */
+    private List<String> tokenizeRequest(ByteBuffer buf) {
+        StringBuilder sbuilder = new StringBuilder();
+
+        while(buf.hasRemaining()) {
+            char charRead = (char) buf.get();
+            sbuilder.append(charRead);
+        }
+        String received = sbuilder.toString();
+
+        ArrayList<String> tokens = new ArrayList<>();
+        StringTokenizer tokenizer = new StringTokenizer(received, ";");
+
+        while(tokenizer.hasMoreTokens()) {
+            tokens.add(tokenizer.nextToken());
+        }
+
+        return tokens;
+    }
+
+    private void sendResponse(ByteBuffer buf, SocketChannel channel, String toSend)
+            throws IOException
+    {
+        buf.clear();
+
+        String s = toSend + "\n";
+        byte[] tmp = s.getBytes();
+        buf.put(tmp, 0, tmp.length);
+
+        buf.flip();
+
+        channel.write(buf);
+        buf.clear();
     }
 }

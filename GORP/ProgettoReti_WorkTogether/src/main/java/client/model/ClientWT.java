@@ -135,7 +135,7 @@ public class ClientWT implements Runnable {
         clientStub = new ClientNotify();
         // registration for callbacks AND getting users state info
         Map<String, Boolean> usersStateUnmodifiable =
-                serverStub.registerForCallback(clientStub);
+                this.serverStub.registerForCallback(clientStub);
 
         clientStub.setUsersMap(
                 new ConcurrentHashMap<>(usersStateUnmodifiable) );
@@ -151,14 +151,19 @@ public class ClientWT implements Runnable {
         USERNAME_NOT_PRESENT    if the given username is not registered
         USERNAME_NOT_ONLINE     if the user related to this username is not online
      */
-    public void logout(String username, BufferedWriter stream, ServerInterface stub)
+    public void logout(String username)
             throws IOException {
-        stub.unregisterForCallback(this.clientStub);
+        this.serverStub.unregisterForCallback(this.clientStub);
 
         String req = CSOperations.LOGOUT.toString() + ';' + username;
 
-        stream.write(req);
-        stream.flush();
+        connThread.bOutput.write(req);
+        connThread.bOutput.flush();
+    }
+
+    public void exit() throws IOException {
+        connThread.bOutput.write("EXIT");
+        connThread.bOutput.flush();
     }
 
     /* TCP operation
@@ -185,7 +190,7 @@ public class ClientWT implements Runnable {
         return CSProtocol.SERVER_PORT();
     }
 
-    public void startConnection() {
+    public void startConnection() throws Exception {
         connThread.start();
     }
 
@@ -211,15 +216,18 @@ public class ClientWT implements Runnable {
                 this.bInput = in;
                 this.bOutput = out;
 
+                System.out.println("[CLIENT] connessione TCP instaurata");
+
                 this.socket.setTcpNoDelay(true);
                 synchronized (this) {
                     this.wait();
                 }
             }
-            catch(UnknownHostException ue) {}
-            catch(IOException e) {}
-            catch (InterruptedException e) { e.printStackTrace(); }
+            catch(UnknownHostException ue) { ue.printStackTrace(); }
+            catch(IOException e) { e.printStackTrace(); }
+            catch(InterruptedException e) { e.printStackTrace(); }
         }
     }
+
 }
 

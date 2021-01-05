@@ -3,6 +3,8 @@ package server.logic;
 import protocol.CSProtocol;
 import protocol.CSReturnValues;
 import server.data.Project;
+import server.data.UserInfo;
+import server.data.WorthData;
 
 import java.net.UnknownHostException;
 import java.util.*;
@@ -15,29 +17,31 @@ import java.util.concurrent.ConcurrentHashMap;
  */
 
 public class ServerWT {
-    private class UserInfo {
-        String          username;
-        byte[]          psw;
-        List<Project>   projects;   // projects of which he is a member
+    /*
+    PERSISTENZA:
+    una directory per ogni progetto
+    un file per ogni card del progetto (
+            sul file sono accodati gli eventi di spostamento relativi alla card).
+     */
 
-        private UserInfo(String us, byte[] psw) {
-            this.username   = us;
-            this.psw        = psw;
-            this.projects   = new ArrayList<>();
-        }
-    }
+    Map<String, Boolean> onlineStateUsers;  // users online state
+    // when you start server every user is offline
+    WorthData data;                     // useful for deserialization
+    Map<String, UserInfo> users;        // users login info
+    Map<String, Project> projects;      // project data
 
-    Map<String, UserInfo> users;    // users login info
-    Map<String, Project> projects;  // project datas
-    Map<String, Boolean> onlineStateUsers;  // (all) users online state
+    MessageDigest md = null;            // useful to hash psws
 
-    MessageDigest md = null;        // useful to hash psws
-
-    public ServerWT() {
-        this.users              = new ConcurrentHashMap<String, UserInfo>();
+    public ServerWT(WorthData recoveredData) {
         this.onlineStateUsers   = new ConcurrentHashMap<String, Boolean>();
 
-        this.projects           = new HashMap<String, Project>();
+        if(recoveredData == null )
+                data = new WorthData();
+        else
+                data = new WorthData(recoveredData);
+
+        users       = data.getUsers();
+        projects    = data.getProjects();
 
         try { this.md = MessageDigest.getInstance("SHA-256"); }
         catch (NoSuchAlgorithmException e) { e.printStackTrace(); }
@@ -86,7 +90,7 @@ public class ServerWT {
         UserInfo user_found = this.users.get(username);
 
         // compare byte per byte
-        if(!Arrays.equals(user_found.psw, pswInBytes)) {
+        if(!Arrays.equals(user_found.getPsw(), pswInBytes)) {
             System.out.println(username + " psw errata");
             return CSReturnValues.PSW_INCORRECT;
         }
@@ -129,7 +133,7 @@ public class ServerWT {
      */
     public String getProjectMulticasIp(String projectName) {
         if(this.projects.containsKey(projectName)) {
-            return this.projects.get(projectName).getMulticastIP().toString();
+            return this.projects.get(projectName).getChatMulticastIP().toString();
         }
         return null;
     }
@@ -156,4 +160,14 @@ public class ServerWT {
     public Map<String, Boolean> getStateUsers() {
         return Collections.unmodifiableMap(this.onlineStateUsers);
     }
+
+    public Map<String, Project> getProjects() {
+        return this.projects;
+    }
+
+    public Map<String, UserInfo> getUsers() {
+        return this.users;
+    }
+
+    public WorthData getWorthData() { return this.data; }
 }

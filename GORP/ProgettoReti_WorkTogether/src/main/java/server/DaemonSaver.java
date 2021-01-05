@@ -1,0 +1,35 @@
+package server;
+
+import server.logic.SerializeHelper;
+import server.logic.ServerManagerWT;
+
+import java.io.IOException;
+
+public class DaemonSaver extends Thread {
+
+    private int updateInterval;
+    private ServerManagerWT manager;
+
+    public DaemonSaver(int interval, ServerManagerWT man) {
+        updateInterval = interval;
+        this.setDaemon(true);
+        this.manager = man;
+    }
+
+    public void run() {
+        // every "updateInterval" milliseconds
+        while(true) {
+            try { Thread.sleep(updateInterval); }
+            catch (InterruptedException e) {
+                if(Thread.interrupted())
+                    return;
+            }
+
+            try {
+                SerializeHelper.saveData(manager.getWorthData());
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+        }
+    }
+}

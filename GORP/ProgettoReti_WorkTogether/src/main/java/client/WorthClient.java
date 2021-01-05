@@ -1,8 +1,9 @@
 package client;
 
 import client.controllers.ClientController;
-import client.model.ClientWT;
+import client.controllers.LoginController;
 import javafx.application.Application;
+import javafx.application.Platform;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
@@ -16,13 +17,35 @@ import java.io.IOException;
  */
 public class WorthClient extends Application {
 
-    private static Scene scene;
+    private Scene scene;
+    private FXMLLoader loader;
 
     @Override
     public void start(Stage stage) throws IOException {
-        scene = new Scene(loadFXML("login"));
-        scene.getStylesheets().add(getClass().getResource("../css/main_style.css").toExternalForm());
+        this.loader = this.getFXMLLoader("login");
 
+        scene = new Scene(this.loadFXML("login"));
+        scene.getStylesheets().add(getClass().getResource("../css/main_style.css"   ).toExternalForm());
+
+        // logic
+        ClientController controller = this.loader.getController();
+            // controller.setStage(stage);
+        /*
+        stage.setOnShown(event -> {
+            ClientController.
+        });
+
+         */
+
+        stage.setOnHiding(event -> {
+            try {
+                controller.handleCloseRequest();
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+            Platform.exit();
+        });
+        // view
         stage.setScene(scene);
         stage.setMaximized(true);
         stage.setTitle("WORTH - Work Together");
@@ -33,25 +56,17 @@ public class WorthClient extends Application {
         stage.show();
     }
 
-    @Override
-    public void stop() throws Exception {
-        FXMLLoader loader = getFXMLLoader("login");
-        ClientController appController = loader.getController();
-
-        appController.closeTCPconnection();
-    }
-
-    static void setRoot(String fxml) throws IOException {
+    void setRoot(String fxml) throws IOException {
         scene.setRoot(loadFXML(fxml));
     }
 
-    private static FXMLLoader getFXMLLoader(String fxml) {
+    private FXMLLoader getFXMLLoader(String fxml) {
         return new FXMLLoader(WorthClient.class.getResource(fxml + ".fxml"));
     }
 
-    private static Parent loadFXML(String fxml) throws IOException {
+    private Parent loadFXML(String fxml) throws IOException {
         // FXMLLoader fxmlLoader = new FXMLLoader(WorthClient.class.getResource(fxml + ".fxml"));
-        return getFXMLLoader(fxml).load();
+        return this.loader.load();
     }
 
     public static void main(String[] args) {

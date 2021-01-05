@@ -1,6 +1,9 @@
 package server;
 
+import java.io.BufferedReader;
 import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
 import java.net.InetSocketAddress;
 import java.net.ServerSocket;
 import java.nio.channels.SelectionKey;
@@ -15,68 +18,48 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.ThreadPoolExecutor;
 
 import protocol.CSProtocol;
+import server.data.WorthData;
+import server.logic.SerializeHelper;
+import server.logic.WelcomingServer;
 import server.logic.rmi.ServerManagerRMI;
 import server.logic.ServerManagerWT;
 import server.logic.ServerWorker;
 import utils.TCPBuffersNIO;
 
 public class WorthServer {
+    private final static String EXIT_STRING = "exit";
+    private final static int UPDATE_INTERVAL = 30; // seconds
 
-    private final static int MAX_CONNECTIONS_PER_THREAD = 4;
-
-    public static void main(String[] args) {
-        ServerManagerWT server = null;
-        ServerManagerRMI serverRMI = null;
-
-        // RMI
+    public static void main(String args[]) {
+        WorthData data = null;
         try {
-            // service start
-            server = new ServerManagerWT();
-            serverRMI = new ServerManagerRMI(server); // è gia uno stub
-            server.setRMIManager(serverRMI);
-
-            // Publication RMI service
-            LocateRegistry.createRegistry(CSProtocol.RMI_SERVICE_PORT());
-            Registry r = LocateRegistry.getRegistry(CSProtocol.RMI_SERVICE_PORT());
-            r.bind(CSProtocol.RMI_SERVICE_NAME(), serverRMI);
-
-        }
-        catch (AlreadyBoundException abe)   { System.out.println("Nome serivzio RMI già in uso"); }
-        catch (RemoteException re)          { re.printStackTrace(); }
-
-        // TCP Connection socket
-        try( ServerSocketChannel serverSockCh = ServerSocketChannel.open() ) {
-            ServerSocket serverSock = serverSockCh.socket();
-
-            serverSock.bind(new InetSocketAddress(CSProtocol.SERVER_PORT()));
-
-            ThreadPoolExecutor tpe = (ThreadPoolExecutor) Executors.newCachedThreadPool();
-            Selector sel = null;
-            int counterConnectionPerWorker = 0;
-
-            while(true) {
-                SocketChannel client = serverSockCh.accept(); // single connection with client
-                client.configureBlocking(false);
-                TCPBuffersNIO bufs = new TCPBuffersNIO();
-
-                // @todo gestire casi limite, tipo disconnessioni, chiusure precoci..
-                if(counterConnectionPerWorker == 0) {
-                    sel = Selector.open(); // open new Selector (each MAX_CONNECTIONS_PER_THREAD socket opened)
-                    client.register(sel, SelectionKey.OP_READ, bufs);
-
-                    tpe.submit(new ServerWorker(sel, server));
-                } else {
-                    client.register(sel, SelectionKey.OP_READ, bufs);
-                }
-
-                if(++counterConnectionPerWorker == MAX_CONNECTIONS_PER_THREAD) {
-                    counterConnectionPerWorker = 0;
-                }
-            }
-        }
-        catch (IOException e) {
+            data = SerializeHelper.recoverData();
+        } catch (IOException e) {
             e.printStackTrace();
         }
+
+        ServerManagerWT server = new ServerManagerWT(data);
+        Thread serverThread = new Thread( new WelcomingServer(server) );
+        serverThread.start();
+
+        // daemon thread for updating database
+        DaemonSaver daemonSaver = new DaemonSaver(UPDATE_INTERVAL * 1000, server);
+        daemonSaver.start();
+
+        // waiting for closure: manual handling
+        System.out.println("Enter \"" + EXIT_STRING + "\" to stop server");
+
+        BufferedReader input = new BufferedReader(new InputStreamReader(System.in));
+        String lineRead;
+        try {
+            while( !(lineRead = input.readLine()).equals(EXIT_STRING) ) { }
+
+            daemonSaver.interrupt();
+            SerializeHelper.saveData(server.getWorthData());
+        } catch (IOException e) { e.printStackTrace(); }
+
+        System.out.println("[MAIN SERVER] bye");
+        System.exit(0);
     }
 
 }

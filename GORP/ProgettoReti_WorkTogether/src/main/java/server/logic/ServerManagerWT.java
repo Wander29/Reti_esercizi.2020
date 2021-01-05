@@ -1,6 +1,9 @@
 package server.logic;
 
 import protocol.CSReturnValues;
+import server.data.Project;
+import server.data.UserInfo;
+import server.data.WorthData;
 import server.logic.rmi.ServerManagerRMI;
 
 import java.net.UnknownHostException;
@@ -17,8 +20,8 @@ public class ServerManagerWT {
     private ServerWT server;
     private ServerManagerRMI manager;
 
-    public ServerManagerWT() {
-        this.server = new ServerWT();
+    public ServerManagerWT(WorthData data) {
+        this.server = new ServerWT(data);
     }
 
     public String register(String username, String psw) throws RemoteException {
@@ -63,4 +66,12 @@ public class ServerManagerWT {
     public void setRMIManager(ServerManagerRMI manager) {
         this.manager = manager;
     }
+
+    public Map<String, Project> getProjects() {
+        return this.server.getProjects();
+    }
+
+    public Map<String, UserInfo> getUsers() { return this.server.getUsers(); }
+
+    public synchronized WorthData getWorthData() { return this.server.getWorthData(); }
 }

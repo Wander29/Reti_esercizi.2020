@@ -50,3 +50,11 @@ Server-->Client: CREATE_PROJECT_OK;MulticastIP || PROJECT_ALREADY_PRESENT || \n 
 # Ipotesi
 
 - un utente può loggarsi su una sola connessione (no login multipli)
+
+
+
+# Scelte
+
+quando la finestra della GUI del client viene chiusa viene una mandata una richiesta di **EXIT** che informa il server di chiudere quella connessione TCP in quanto non verranno effettuati altri login. 
+
+Se il client aveva effettuato l'accesso in aggiunta viene inviato una richiesta di **LOGOUT**.

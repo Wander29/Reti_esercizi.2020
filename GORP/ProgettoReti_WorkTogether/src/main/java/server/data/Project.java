@@ -1,12 +1,13 @@
 package server.data;
 
 import java.io.IOException;
+import java.io.Serializable;
 import java.net.InetAddress;
 import java.net.Socket;
 import java.net.UnknownHostException;
 import java.util.*;
 
-public class Project {
+public class Project implements Serializable {
 
     private final static int FIRST_FREE_PORT = 1024;
     private final static int MAX_PORT_NUM = 65535;
@@ -99,7 +100,35 @@ public class Project {
         return -1;
     }
 
-    public InetAddress getMulticastIP() {
-        return this.chatMulticastIP;
+    public String getProjectName() {
+        return projectName;
+    }
+
+    public List<String> getMembers() {
+        return members;
+    }
+
+    public List<Card> getToDoCards() {
+        return toDoCards;
+    }
+
+    public List<Card> getInProgressCards() {
+        return inProgressCards;
+    }
+
+    public List<Card> getToBeRevisedCards() {
+        return toBeRevisedCards;
+    }
+
+    public List<Card> getDoneCards() {
+        return doneCards;
+    }
+
+    public InetAddress getChatMulticastIP() {
+        return chatMulticastIP;
+    }
+
+    public int getChatMulticastPort() {
+        return chatMulticastPort;
     }
 }

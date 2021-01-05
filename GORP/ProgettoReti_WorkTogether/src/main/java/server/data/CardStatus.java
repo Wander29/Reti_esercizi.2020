@@ -1,6 +1,8 @@
 package server.data;
 
-public enum CardStatus {
+import java.io.Serializable;
+
+public enum CardStatus implements Serializable {
     TO_DO,
     IN_PROGRESS,
     TO_BE_REVISED,

@@ -9,5 +9,6 @@ Client and Server communicate with each other using these operations through a p
 public enum CSOperations {
     LOGIN,
     CREATE_PROJECT,
-    LOGOUT;
+    LOGOUT,
+    EXIT;
 }
