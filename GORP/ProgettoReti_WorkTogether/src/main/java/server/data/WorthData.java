@@ -33,7 +33,6 @@ public class WorthData {
     }
 
     public Map<String, UserInfo> getUsers() {
-        //return Collections.unmodifiableMap(users);
         return this.users;
     }
 
@@ -42,7 +41,6 @@ public class WorthData {
     }
 
     public Map<String, Project> getProjects() {
-        // return Collections.unmodifiableMap(projects);
         return this.projects;
     }
 }

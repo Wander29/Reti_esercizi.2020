@@ -38,4 +38,13 @@ public abstract class StringUtils {
 
         return tokens;
     }
+
+    private static String getFirstToken(String s) {
+        StringTokenizer tokenizer = new StringTokenizer(s, ";");
+
+        if(tokenizer.hasMoreTokens())
+            return tokenizer.nextToken();
+
+        return null;
+    }
 }

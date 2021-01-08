@@ -3,12 +3,12 @@ package server.logic;
 import protocol.CSOperations;
 import protocol.CSProtocol;
 import protocol.CSReturnValues;
-import utils.StringUtils;
-import utils.TCPBuffersNIO;
-import utils.TerminationException;
+import utils.*;
+import utils.exceptions.IllegalProjectException;
+import utils.exceptions.IllegalUsernameException;
+import utils.exceptions.TerminationException;
 
 import java.io.IOException;
-import java.nio.BufferUnderflowException;
 import java.nio.ByteBuffer;
 import java.nio.channels.SelectionKey;
 import java.nio.channels.Selector;
@@ -26,15 +26,17 @@ public class ServerWorker implements Runnable {
     }
 
     private void readMsgAndComputeRequest(SelectionKey key)
-            throws IOException, BufferUnderflowException, TerminationException {
+            throws IOException, TerminationException
+    {
         SocketChannel cliCh     = (SocketChannel)   key.channel();
         TCPBuffersNIO bufs      = (TCPBuffersNIO)   key.attachment();
 
-
         // non-blocking read, writing into buffer
         cliCh.read(bufs.inputBuf);
+
         // since i want to read the buffer, "flip" it to reading mode
         bufs.inputBuf.flip();
+
         // get the operation code to distinguish the operation
         StringBuilder sbuilder = new StringBuilder();
 
@@ -44,9 +46,11 @@ public class ServerWorker implements Runnable {
                 break;
             sbuilder.append(charRead);
         }
+
         String operationString = sbuilder.toString();
-        System.out.println(operationString);
         CSOperations cso = CSOperations.valueOf(operationString);
+
+        // switch between operations
         switch(cso) {
             case LOGIN:
                 opLogin(bufs, cliCh);
@@ -60,6 +64,10 @@ public class ServerWorker implements Runnable {
                 opListProject(bufs, cliCh);
                 break;
 
+            case SHOW_MEMBERS:
+                opShowMemebers(bufs, cliCh);
+                break;
+
             case LOGOUT:
                 opLogout(bufs, cliCh);
                 throw new TerminationException();
@@ -71,13 +79,14 @@ public class ServerWorker implements Runnable {
                 break;
 
         }
+        // wait for other operations
         cliCh.register(key.selector(), SelectionKey.OP_READ, bufs);
     }
 
     public void run() {
 
         if(CSProtocol.DEBUG()) {
-            System.out.println("Worker creato, sto per runnare: " + Thread.currentThread().getName());
+            System.out.println("Worker creato, sta per essere avviato: " + Thread.currentThread().getName());
         }
 
         //while(!this.selector.keys().isEmpty()) {
@@ -100,18 +109,17 @@ public class ServerWorker implements Runnable {
                             // try yo read client request
                             readMsgAndComputeRequest(key);
                         }
-                        catch (BufferUnderflowException bue) {
-                            System.err.println("Non ci sono 4 byte da leggere nel " +
-                                    "buffer per comporre un «int»"); }
                         catch (TerminationException e) {
                             key.cancel();
                             System.err.println("Connessione con 1 client terminata!");
-                            // break outer_loop;
-                            // per avere un comportamento while(true) usare «break;»
+                                // break outer_loop;
+                                // per avere un comportamento while(true) usare «break;»
                             break;
                         }
-                        catch (IOException e) { System.err.println("errore durante la " +
-                                                "lettura di una richiesta dal client"); }
+                        catch (IOException e) {
+                            System.err.println("errore durante la lettura di una richiesta dal client");
+                            e.printStackTrace();
+                        }
 
                     }
                     // if(key.isWritable()) {}
@@ -124,40 +132,15 @@ public class ServerWorker implements Runnable {
         //System.out.println("[SERVER WORKER] sto terminando");
     }
 
-    /*
-        -LIST_PROJECTS
+
+    /**
+     * - OPERATIONS -
+     *     case LOGIN:
+     *     case CREATE_PROJECT:
+     *     case LIST_PROJECTS:
+     *     case SHOW_MEMBERS:
+     *     case LOGOUT:
      */
-    private void opListProject(TCPBuffersNIO bufs, SocketChannel cliCh) throws IOException {
-        bufs.inputBuf.clear();
-
-        Set<String> list = this.server.listProjects();
-
-        StringBuilder builder = new StringBuilder(CSReturnValues.LIST_PROJECTS_OK.toString());
-        for(String s : list) {
-            builder.append(";");
-            System.out.println(s);
-            builder.append(s);
-        }
-        String ret = builder.toString();
-        if(CSProtocol.DEBUG()) {
-            System.out.println("response: " + ret);
-        }
-        this.sendResponse(bufs.outputBuf, cliCh, ret);
-    }
-
-    /*
-    protocol for CREATE_PROJECT operation
-        - CREATE_PROJECT;projectName
-     */
-    private void opCreateProject(TCPBuffersNIO bufs, SocketChannel cliCh) throws IOException {
-        List<String> tokens = StringUtils.tokenizeRequest(bufs.inputBuf);
-        bufs.inputBuf.clear();
-
-        String projectName  = tokens.remove(0);
-
-        String ret = this.server.createProject(bufs.getUsername(), projectName);
-        this.sendResponse(bufs.outputBuf, cliCh, ret);
-    }
 
     /*
     protocol for LOGIN operation:
@@ -179,6 +162,82 @@ public class ServerWorker implements Runnable {
         sendResponse(bufs.outputBuf, cliCh, ret);
     }
 
+    /*
+    protocol for CREATE_PROJECT operation
+        - CREATE_PROJECT;projectName
+     */
+    private void opCreateProject(TCPBuffersNIO bufs, SocketChannel cliCh) throws IOException {
+        List<String> tokens = StringUtils.tokenizeRequest(bufs.inputBuf);
+        bufs.inputBuf.clear();
+
+        String projectName  = tokens.remove(0);
+
+        String ret = this.server.createProject(bufs.getUsername(), projectName);
+        this.sendResponse(bufs.outputBuf, cliCh, ret);
+    }
+
+    /*
+        -LIST_PROJECTS
+     */
+    private void opListProject(TCPBuffersNIO bufs, SocketChannel cliCh) throws IOException {
+        bufs.inputBuf.clear();
+
+        Set<String> list = null;
+        try {
+            list = this.server.listProjects(bufs.getUsername());
+        } catch (IllegalUsernameException e) {
+            this.sendResponse(bufs.outputBuf, cliCh, e.retval.toString());
+        }
+
+        StringBuilder builder = new StringBuilder(CSReturnValues.LIST_PROJECTS_OK.toString());
+        for(String s : list) {
+            builder.append(";");
+            System.out.println(s);
+            builder.append(s);
+        }
+        String ret = builder.toString();
+        if(CSProtocol.DEBUG()) {
+            System.out.println("response: " + ret);
+        }
+        this.sendResponse(bufs.outputBuf, cliCh, ret);
+    }
+
+    /*
+    protocol for SHOW MEMBERS:
+        - SHOW_MEMBERS;projectName
+     */
+    private void opShowMemebers(TCPBuffersNIO bufs, SocketChannel cliCh) throws IOException {
+        List<String> tokens = StringUtils.tokenizeRequest(bufs.inputBuf);
+        bufs.inputBuf.clear();
+
+        String projectName = tokens.remove(0);
+        StringBuilder builder = new StringBuilder();
+        String ret = null;
+
+        try {
+            List<String> projects = this.server.showMembers(bufs.getUsername(), projectName);
+
+            builder.append(CSReturnValues.SHOW_MEMBERS_OK.toString());
+            for(String s : projects) {
+                builder.append(";");
+                builder.append(s);
+            }
+            ret = builder.toString();
+
+        } catch (IllegalProjectException e) {
+            ret = e.retval.toString();
+        } catch (IllegalUsernameException e) {
+            ret = e.retval.toString();
+        }
+        finally {
+            sendResponse(bufs.outputBuf, cliCh, ret);
+        }
+    }
+
+
+/*
+ ******************************************** EXIT OPERATIONS
+ */
     /*
     protocol for LOGOUT operation:
         -   LOGOUT

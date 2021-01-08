@@ -10,16 +10,15 @@ import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
-import javafx.scene.control.Label;
-import javafx.scene.control.TableColumn;
-import javafx.scene.control.TableView;
-import javafx.scene.control.TextInputDialog;
+import javafx.scene.control.*;
 import javafx.scene.control.cell.PropertyValueFactory;
 import javafx.scene.input.MouseEvent;
 import javafx.scene.layout.Pane;
 import javafx.scene.layout.VBox;
 import javafx.stage.Stage;
 import server.data.UserInfo;
+import utils.exceptions.IllegalProjectException;
+import utils.exceptions.IllegalUsernameException;
 
 import java.io.IOException;
 import java.text.MessageFormat;
@@ -27,9 +26,11 @@ import java.util.List;
 import java.util.Optional;
 
 public class UserSceneController extends ClientController {
+    private String currentProject;
 
-    protected static Stage stage;
-
+/*
+    NODES
+ */
     @FXML
     private JFXTabPane tabPaneMain;
     @FXML
@@ -51,18 +52,21 @@ public class UserSceneController extends ClientController {
     @FXML
     private JFXButton btnExit;
 
+/*
+    controller FUNCTIONS
+ */
     public UserSceneController() {
         super();
     }
 
     public void initialize() {
+        updateComboBoxListProjects();
         tabPaneShowProject.getSelectionModel().selectedItemProperty().addListener((ov, oldTab, newTab) -> {
-            System.err.println("changed: " + newTab.getText());
+            System.err.println("tabPaneShowProject changed: " + newTab.getText());
 
             switch(newTab.getText()) {
                 case "PROGETTO":
-                    // @todo listProjects() here
-                    // comboChooseProject.getItems().add("gattini");
+                    updateComboBoxListProjects();
                     // JFXDepthManager.setDepth(tableViewTODOlist, 1);
 
                     break;
@@ -71,6 +75,7 @@ public class UserSceneController extends ClientController {
                     break;
 
                 case "MEMBRI":
+                    fillProjectMemeber();
                     break;
 
                 default:
@@ -81,11 +86,30 @@ public class UserSceneController extends ClientController {
         });
     }
 
+    @Override
+    public void handleCloseRequest() {
+        System.out.println("[CONTROLLER - UserScene] sto gestendo la chiusura");
+        try {
+            super.handleCloseRequest();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+
+/*
+    HANDLERS
+ */
+    /**
+     * retrieves new project name from dialog and asks server to create a new project.
+     * Then calls a routine to update list of projects which user can select in relative combo box
+     *
+     * @param event mouse click
+     */
     @FXML
     void handleClickBtnAddProject(MouseEvent event) {
         TextInputDialog dialog = new TextInputDialog("");
         dialog.setHeaderText("Inserisci il nome del progetto");
-        dialog.setTitle("Add project?");
+        dialog.setTitle("Aggiungi progetto");
 
         Optional<String> result = dialog.showAndWait();
 
@@ -104,50 +128,100 @@ public class UserSceneController extends ClientController {
         }
     }
 
-    void updateComboBoxListProjects() {
-        // ask for listProjects
-        List<String> projects = null;
-        try {
-            projects = clientLogic.listProjects();
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-
-        // once you have the list, populate combo box
-        comboChooseProject.getItems().clear();
-        comboChooseProject.getItems().addAll(projects);
-
-    }
-
+    /**
+     *
+     * @param event onAction
+     */
     @FXML
-    void handleExit(ActionEvent event) {
-        /*
-        try {
-            clientLogic.logout();
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-
-         */
-        stage = (Stage) btnExit.getScene().getWindow();
+    void handleExit(MouseEvent event) {
+        Stage stage = (Stage) btnExit.getScene().getWindow();
         stage.close();
     }
-
-    @FXML
-    void handleLabelOne(MouseEvent event) {
-
-    }
-    // for tables
-    // ObservableList<cardEntry> list = FXCollections.observableArrayList();
 
     @FXML
     void handleBtnAddCard(ActionEvent event) {
 
     }
 
+    @FXML
+    void handleComboChooseProject(ActionEvent event) {
+        this.currentProject = comboChooseProject.getValue();
+        labelChosenProject.setText(this.currentProject);
 
-    /*
+    }
+
+    @FXML
+    void handleLabelOne(MouseEvent event) {
+
+    }
+
+/*
+    UTILS
+ */
+    /**
+     * asks server to get list of projects, then updates combo box cells
+     */
+    private void updateComboBoxListProjects() {
+        // ask for listProjects
+        List<String> projects = null;
+        try {
+            projects = clientLogic.listProjects();
+
+            // once you have the list, populate combo box
+            comboChooseProject.getItems().clear();
+            comboChooseProject.getItems().addAll(projects);
+
+        } catch (IOException e) {
+            e.printStackTrace();
+        } catch (IllegalUsernameException e) {
+            showDialogUsernameNotPresentAndExit();
+        }
+    }
+
+    private void fillProjectMemeber() {
+        try {
+            List<String> members = clientLogic.showMembers(this.currentProject);
+
+            for(String s : members) {
+                System.out.println(s);
+            }
+
+        } catch (IOException e) {
+            e.printStackTrace();
+        } catch (IllegalUsernameException e) {
+            showDialogUsernameNotPresentAndExit();
+        } catch (IllegalProjectException e) {
+            showDialogProjectNotPresentAndExit();
+        }
+    }
+
+    private void showDialogProjectNotPresentAndExit() {
+        Alert info = new Alert(Alert.AlertType.INFORMATION);
+        info.setHeaderText("Progetto NON presente");
+        info.setContentText("C'è stato un problema, l'applicazione verrà chiusa");
+        info.showAndWait();
+
+        Stage stage = (Stage) btnExit.getScene().getWindow();
+        stage.close();
+    }
+
+    private void showDialogUsernameNotPresentAndExit() {
+        Alert info = new Alert(Alert.AlertType.INFORMATION);
+        info.setHeaderText("Nome utente NON presente");
+        info.setContentText("C'è stato un problema di autenticazione, l'applicazione verrà chiusa");
+        info.showAndWait();
+
+        Stage stage = (Stage) btnExit.getScene().getWindow();
+        stage.close();
+    }
+}
+
+
+ /*
     FOR TABLES
+
+    // for tables
+    // ObservableList<cardEntry> list = FXCollections.observableArrayList();
 
     private void initColumn() {
         tableColTODOlist.setCellValueFactory(new PropertyValueFactory<>("Name"));
@@ -174,21 +248,5 @@ public class UserSceneController extends ClientController {
         }
 
     }
-    */
 
-
-    @FXML
-    void handleComboChooseProject(ActionEvent event) {
-
-    }
-
-    @Override
-    public void handleCloseRequest() {
-        System.out.println("[CONTROLLER - UserScene] sto gestendo la chiusura");
-        try {
-            super.handleCloseRequest();
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-    }
-}
+*/

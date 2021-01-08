@@ -26,7 +26,21 @@ import java.rmi.RemoteException;
 import com.sun.javafx.scene.control.*;
 
 public class LoginController extends ClientController {
+/*
+    NODES
+ */
+    @FXML
+    private JFXTextField usernameTextField;
+    @FXML
+    private JFXPasswordField passwordTextField;
+    @FXML
+    private JFXButton loginButton;
+    @FXML
+    private JFXButton registerButton;
 
+/*
+    controller FUNCTIONS
+ */
     public LoginController() {
         super();
     }
@@ -52,18 +66,13 @@ public class LoginController extends ClientController {
         }
     }
 
-    @FXML
-    private JFXTextField usernameTextField;
-    @FXML
-    private JFXPasswordField passwordTextField;
-    @FXML
-    private JFXButton loginButton;
-    @FXML
-    private JFXButton registerButton;
-
+/*
+    HANDLERS
+ */
     @FXML
     void activateButtonsIfBothNotEmpty(KeyEvent event) {
-        if(usernameTextField.getText().isEmpty() || passwordTextField.getText().isEmpty()) {
+        if(usernameTextField.getText().isEmpty() || passwordTextField.getText().isEmpty() ||
+            passwordTextField.getText().length() < MIN_LENGTH_PSW) {
             loginButton.setDisable(Boolean.TRUE);
             registerButton.setDisable(Boolean.TRUE);
         }
@@ -86,17 +95,13 @@ public class LoginController extends ClientController {
             String  headerString    = null,
                     contentString   = null;
             final String loginError = "Il Login NON è andato a buon fine";
-            this.username = user;
 
             switch(retVal) {
 
                 case LOGIN_OK:
-                    //try {
-                        //loadUserScene();
-                        // closeStage(usernameTextField);
-                        loadInThisWindow((Stage) loginButton.getScene().getWindow(), "../userScene.fxml", "WORTH");
-                    //}
-                    //catch(IOException e) { e.printStackTrace(); }
+                        this.username = user;
+                        loadInThisWindow((Stage) loginButton.getScene().getWindow(),
+                                "../userScene.fxml", "WORTH");
                     return;
 
                 case USERNAME_NOT_PRESENT:
@@ -106,12 +111,12 @@ public class LoginController extends ClientController {
 
                 case PSW_INCORRECT:
                     headerString    = loginError;
-                    contentString   = "La password per l'utente " + username + " NON è valida";
+                    contentString   = "La password per l'utente " + user + " NON è valida";
                     break;
 
                 case ALREADY_LOGGED_IN:
                     headerString    = loginError;
-                    contentString   = "L'utente " + username + " è già loggato. " +
+                    contentString   = "L'utente " + user + " è già online " +
                             "Non puoi accedere contemporaneamente più volte a WORTH";
                     break;
             }
@@ -153,7 +158,7 @@ public class LoginController extends ClientController {
 
                     case REGISTRATION_OK:
                         headerString    = "La registrazione è andata a buon fine!";
-                        contentString   = "Accedi a WORTH tramite Login";
+                        contentString   = "Accedi a WORTH: reinserisci i dati e clicca su Login";
                         usernameTextField.setText("");
                         passwordTextField.setText("");
                         break;
@@ -172,14 +177,15 @@ public class LoginController extends ClientController {
                 info.setContentText(contentString);
                 info.showAndWait();
 
-                //@todo goto new Scene
-
             } catch (RemoteException e) {
                 showAlertNetworkError();
             }
         }
     }
 
+/*
+    UTILS
+ */
     private void showAlertNetworkError() {
         Alert info = new Alert(Alert.AlertType.INFORMATION);
 

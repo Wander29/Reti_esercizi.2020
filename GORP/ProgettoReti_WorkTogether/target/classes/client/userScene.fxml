@@ -53,7 +53,7 @@
                                                       </ImageView>
                                                    </graphic>
                                                 </JFXButton>
-                                                <JFXComboBox fx:id="comboChooseProject" prefWidth="347.0" promptText="Cambia progetto..." styleClass="combo-small" unFocusColor="WHITE" />
+                                                <JFXComboBox fx:id="comboChooseProject" onAction="#handleComboChooseProject" prefWidth="347.0" promptText="Cambia progetto..." styleClass="combo-small" unFocusColor="WHITE" />
                                              </children>
                                           </VBox>
                                           <JFXButton fx:id="btnCancel" disable="true" text="Cancella">
@@ -259,7 +259,7 @@
                                           <Label text="LABEL" />
                                        </children>
                                     </HBox>
-                                    <JFXButton fx:id="btnExit" onAction="#handleExit" text="EXIT" />
+                                    <JFXButton fx:id="btnExit" onMouseClicked="#handleExit" text="EXIT" />
                                  </children>
                               </VBox>
                            </center>

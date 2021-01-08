@@ -5,6 +5,8 @@ import protocol.CSReturnValues;
 import server.data.Project;
 import server.data.UserInfo;
 import server.data.WorthData;
+import utils.exceptions.IllegalProjectException;
+import utils.exceptions.IllegalUsernameException;
 
 import java.net.UnknownHostException;
 import java.util.*;
@@ -13,19 +15,13 @@ import java.security.NoSuchAlgorithmException;
 import java.util.concurrent.ConcurrentHashMap;
 
 /*
-    this object class will be managed by a manager, which will use the object as private
+    this object class will be managed by a manager, which will use an instance as private
  */
 
 public class ServerWT {
-    /*
-    PERSISTENZA:
-    una directory per ogni progetto
-    un file per ogni card del progetto (
-            sul file sono accodati gli eventi di spostamento relativi alla card).
-     */
-
     Map<String, Boolean> onlineStateUsers;  // users online state
     // when you start server every user is offline
+
     WorthData data;                     // useful for deserialization
     Map<String, UserInfo> users;        // users login info
     Map<String, Project> projects;      // project data
@@ -47,6 +43,9 @@ public class ServerWT {
         catch (NoSuchAlgorithmException e) { e.printStackTrace(); }
     }
 
+/*
+RMI
+ */
     /**
      * registers a user into the service, if not already present
      *
@@ -73,6 +72,9 @@ public class ServerWT {
         return CSReturnValues.REGISTRATION_OK;
     }
 
+/*
+TCP
+ */
     /**
      * Allow a user to login into the service, if he was already registered,
      *  the password is correct and he wasn't already online
@@ -103,16 +105,12 @@ public class ServerWT {
         return CSReturnValues.LOGIN_OK;
     }
 
-    public Set<String> listProjects() {
-        return this.projects.keySet();
-    }
-
     /*
-    try to create a new project
-    IF there is no projectName already in database
-        create new project and put the creatore as a member
-        Next assign a Multicast IP to the project
-     */
+   try to create a new project
+   IF there is no projectName already in database
+       create new project and put the creatore as a member
+       Next assign a Multicast IP to the project
+    */
     public CSReturnValues createProject(String username, String projectName)
             throws UnknownHostException, NoSuchElementException
     {
@@ -132,17 +130,30 @@ public class ServerWT {
         return CSReturnValues.CREATE_PROJECT_OK;
     }
 
-    /*
-        get the MulticastIP of a specific project and returns it as String
-        ex. -> "224.0.0.0"
-     */
-    public String getProjectMulticasIp(String projectName) {
-        if(this.projects.containsKey(projectName)) {
-            return this.projects.get(projectName).getChatMulticastIP().toString();
-        }
-        return null;
+    public Set<String> listProjects(String username) throws IllegalUsernameException {
+        if(!this.users.containsKey(username))
+            throw new IllegalUsernameException();
+
+        return this.projects.keySet();
     }
 
+    public List<String> showMembers(String username, String projectName)
+            throws IllegalUsernameException, IllegalProjectException
+    {
+        if(!this.users.containsKey(username))
+            throw new IllegalUsernameException();
+
+        if(!this.projects.containsKey(projectName)) {
+            throw new IllegalProjectException();
+        }
+
+        return this.projects.get(projectName).getMembers();
+    }
+
+
+/*
+ ******************************************** EXIT OPERATIONS
+ */
     /**
      * Allow a user to logout from the service
      */
@@ -160,12 +171,30 @@ public class ServerWT {
     }
 
     /*
+    UTILS
+     */
+     /*
+        get the MulticastIP of a specific project and returns it as String
+        ex. -> "224.0.0.0"
+     */
+    public String getProjectMulticasIp(String projectName) {
+        if(this.projects.containsKey(projectName)) {
+            return this.projects.get(projectName).getChatMulticastIP().toString();
+        }
+        return null;
+    }
+
+    /*
         returns an unmodifiable reference to the map of users and their state
      */
     public Map<String, Boolean> getStateUsers() {
         return Collections.unmodifiableMap(this.onlineStateUsers);
     }
 
+    public WorthData getWorthData() { return this.data; }
+}
+
+/*
     public Map<String, Project> getProjects() {
         return this.projects;
     }
@@ -173,6 +202,4 @@ public class ServerWT {
     public Map<String, UserInfo> getUsers() {
         return this.users;
     }
-
-    public WorthData getWorthData() { return this.data; }
-}
+ */

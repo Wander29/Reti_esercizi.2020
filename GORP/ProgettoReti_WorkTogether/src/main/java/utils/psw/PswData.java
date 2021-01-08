@@ -1,4 +1,4 @@
-package utils;
+package utils.psw;
 
 public class PswData {
     public byte[] salt;

@@ -5,14 +5,14 @@ import protocol.CSOperations;
 import protocol.CSProtocol;
 import protocol.CSReturnValues;
 import server.logic.rmi.ServerInterface;
+import utils.exceptions.IllegalProjectException;
+import utils.exceptions.IllegalUsernameException;
 import utils.StringUtils;
 
 import java.io.*;
 import java.net.InetAddress;
-import java.net.InetSocketAddress;
 import java.net.Socket;
 import java.net.UnknownHostException;
-import java.nio.ByteBuffer;
 import java.rmi.NotBoundException;
 import java.rmi.RemoteException;
 import java.rmi.registry.LocateRegistry;
@@ -40,6 +40,7 @@ public class ClientWT {
      */
     protected volatile static ClientWT instance = new ClientWT();
     /*
+    PROTECTED => can't be created outside package
     uses a daemon thread to manage tcp connection with server
      */
     protected ClientWT(){
@@ -58,7 +59,7 @@ public class ClientWT {
         }
     }
     /*
-    one instance shared
+    only one instance shared
      */
     public static synchronized ClientWT getInstance() throws RemoteException, NotBoundException {
         if(instance == null) {
@@ -68,36 +69,30 @@ public class ClientWT {
         return instance;
     }
 
+/*
+RMI
+ */
     private static void startRMI() throws RemoteException, NotBoundException {
         r = LocateRegistry.getRegistry(CSProtocol.RMI_SERVICE_PORT());
         serverStub = (ServerInterface) r.lookup(CSProtocol.RMI_SERVICE_NAME());
     }
 
-    private static List<String> tokenizeRequest(String s) {
-        ArrayList<String> tokens = new ArrayList<>();
-        StringTokenizer tokenizer = new StringTokenizer(s, ";");
-
-        while(tokenizer.hasMoreTokens()) {
-            tokens.add(tokenizer.nextToken());
-        }
-
-        return tokens;
-    }
-
-    private static String getFirstToken(String s) {
-        StringTokenizer tokenizer = new StringTokenizer(s, ";");
-
-        if(tokenizer.hasMoreTokens())
-            return tokenizer.nextToken();
-
-        return null;
-    }
-
-    // RMI operations
     public static CSReturnValues register(String username, String password) throws RemoteException {
         String ret = serverStub.register(username, password);
 
         return CSReturnValues.valueOf(ret);
+    }
+
+    public static void registerForCallbacks() throws RemoteException {
+        if(clientStub == null)
+            clientStub = new ClientNotify();
+
+        // registration for callbacks AND getting users state info
+        Map<String, Boolean> usersStateUnmodifiable =
+                serverStub.registerForCallback(clientStub);
+
+        clientStub.setUsersMap(
+                new ConcurrentHashMap<>(usersStateUnmodifiable) );
     }
 
     public static Set<String> listUsers() {
@@ -108,19 +103,14 @@ public class ClientWT {
        return clientStub.getOnlineUsers();
     }
 
-    /* TCP operation
+/*
+TCP
+ */
+    /*
     protocol for LOGIN operation:
-    -   LOGIN;username;psw
-
-    possible responses:
-    LOGIN_OK                if everything is ok
-
-    USERNAME_NOT_PRESENT    if the username is not registered
-    PSW_INCORRECT           if the password is incorrect for the given username
-    ALREADY_LOGGED_IN
-     */
+        -   LOGIN;username;psw
+    */
     public static CSReturnValues login(String username, String password) throws IOException {
-        // ask server to login
         StringBuilder sbuild = new StringBuilder(CSOperations.LOGIN.toString());
         sbuild.append(";");
         sbuild.append(username);
@@ -146,28 +136,104 @@ public class ClientWT {
         return CSReturnValues.valueOf(ret);
     }
 
-    public static void registerForCallbacks() throws RemoteException {
-        clientStub = new ClientNotify();
-        // registration for callbacks AND getting users state info
-        Map<String, Boolean> usersStateUnmodifiable =
-                serverStub.registerForCallback(clientStub);
+    /* protocol for CREATE PROJECT operation
+    -   CREATE_PROJECT;projectName
 
-        clientStub.setUsersMap(
-                new ConcurrentHashMap<>(usersStateUnmodifiable) );
+    possible responses:
+    CREATE_PROJECT_OK;ip            if everything is ok
+    PROJECT_ALREADY_PRESENT         if a project with the same name is already present in the server
+    SERVER_INTERNAL_NETWORK_ERROR   if server can't use a Multicast Ip
+*/
+    public static CSReturnValues createProject(String projName) throws IOException {
+        String req = CSOperations.CREATE_PROJECT.toString() + ";" + projName;
+
+        connThread.bOutput.write(req);
+        connThread.bOutput.flush();
+
+        if(CSProtocol.DEBUG()) {
+            System.out.println("req: CREATE PROJECT for " +  user + ": " + projName);
+        }
+
+        String ret = connThread.bInput.readLine();
+
+        // @todo CHAT: retrieve multicast IP for chat
+        String firstToken = StringUtils.tokenizeRequest(ret).get(0);
+        if(CSReturnValues.CREATE_PROJECT_OK.equals(CSReturnValues.valueOf(firstToken))) {
+            if(CSProtocol.DEBUG()) {
+                System.out.println("response: " + ret);
+            }
+        }
+
+        return CSReturnValues.valueOf(firstToken);
     }
 
-    /* TCP operation
-        protocol for LOGOUT operation:
-        -   LOGOUT;username
-
-        possible reponses:
-        LOGOUT_OK               if everything is ok
-
-        USERNAME_NOT_PRESENT    if the given username is not registered
-        USERNAME_NOT_ONLINE     if the user related to this username is not online
+    /*
+    protocol for LIST PROJECTS operation:
+        -   LIST_PROJECTS
      */
-    public static CSReturnValues logout()
-            throws IOException {
+    public static List<String> listProjects() throws IOException, IllegalUsernameException {
+        String req = CSOperations.LIST_PROJECTS.toString();
+
+        if(CSProtocol.DEBUG()) {
+            System.out.println("req: LIST PROJECT for " +  user);
+        }
+        connThread.bOutput.write(req);
+        connThread.bOutput.flush();
+
+        String ret = connThread.bInput.readLine();
+
+        List<String> tokens = StringUtils.tokenizeRequest(ret);
+        String firstToken = tokens.remove(0);
+        switch(CSReturnValues.valueOf(firstToken)) {
+            case LIST_PROJECTS_OK:
+                return tokens;
+
+            case USERNAME_NOT_PRESENT:
+                throw new IllegalUsernameException();
+        }
+
+        return null;
+    }
+
+    public static List<String> showMembers(String projectName) throws IOException, IllegalUsernameException, IllegalProjectException {
+        String req = CSOperations.SHOW_MEMBERS.toString() + ";" + projectName;
+
+        if(CSProtocol.DEBUG()) {
+            System.out.println("req: SHOW MEMBERS for " +  user + " proj: " + projectName);
+        }
+        connThread.bOutput.write(req);
+        connThread.bOutput.flush();
+
+        String ret = connThread.bInput.readLine();
+
+        List<String> tokens = StringUtils.tokenizeRequest(ret);
+        String firstToken = tokens.remove(0);
+
+        switch(CSReturnValues.valueOf(firstToken)) {
+            case SHOW_MEMBERS_OK:
+                return tokens;
+
+            case USERNAME_NOT_PRESENT:
+                throw new IllegalUsernameException();
+
+            case PROJECT_NOT_PRESENT:
+                throw new IllegalProjectException();
+
+            default:
+                System.out.println(firstToken);
+        }
+
+        return null;
+    }
+
+/*
+******************************************** EXIT OPERATIONS
+ */
+    /*
+    protocol for LOGOUT operation:
+        -   LOGOUT;username
+    */
+    public static CSReturnValues logout() throws IOException {
         serverStub.unregisterForCallback(clientStub);
 
         String req = CSOperations.LOGOUT.toString();
@@ -184,70 +250,14 @@ public class ClientWT {
         return CSReturnValues.valueOf(ret);
     }
 
-    /*
-
-     */
-    public static List<String> listProjects() throws IOException {
-        String req = CSOperations.LIST_PROJECTS.toString();
-
-        if(CSProtocol.DEBUG()) {
-            System.out.println("req: LIST PROJECT for " +  user);
-        }
-        connThread.bOutput.write(req);
-        connThread.bOutput.flush();
-
-        String ret = connThread.bInput.readLine();
-
-        List<String> tokens = StringUtils.tokenizeRequest(ret);
-        String firstToken = tokens.remove(0);
-        if(CSReturnValues.valueOf(firstToken).equals(CSReturnValues.LIST_PROJECTS_OK)) {
-            System.out.println("progetti listati: ");
-
-            for(String s : tokens) {
-                System.out.println(s);
-            }
-
-            return tokens;
-        }
-
-        return null;
-    }
-
     public static void exit() throws IOException {
         connThread.bOutput.write("EXIT");
         connThread.bOutput.flush();
     }
 
-    /* TCP operation
-        -   CREATE_PROJECT;projectName
-
-        possible responses:
-        CREATE_PROJECT_OK;ip            if everything is ok
-        PROJECT_ALREADY_PRESENT         if a project with the same name is already present in the server
-        SERVER_INTERNAL_NETWORK_ERROR   if server can't use a Multicast Ip
+/*
+    TCP connection handling
  */
-    public static CSReturnValues createProject(String projName) throws IOException {
-        String req = CSOperations.CREATE_PROJECT.toString() + ";" + projName;
-
-        connThread.bOutput.write(req);
-        connThread.bOutput.flush();
-
-        if(CSProtocol.DEBUG()) {
-            System.out.println("req: CREATE PROJECT for " +  user + ": " + projName);
-        }
-
-        String ret = connThread.bInput.readLine();
-        // retrieve multicast IP for chat
-        String firstToken = StringUtils.tokenizeRequest(ret).get(0);
-        if(CSReturnValues.CREATE_PROJECT_OK.equals(CSReturnValues.valueOf(firstToken))) {
-            if(CSProtocol.DEBUG()) {
-                System.out.println("response: " + ret);
-            }
-        }
-
-        return CSReturnValues.valueOf(firstToken);
-    }
-
     protected static String getServerIP() throws UnknownHostException {
         return InetAddress.getLocalHost().getHostName();
     }
@@ -264,6 +274,9 @@ public class ClientWT {
         connThread.socket.close();
     }
 
+    /*
+    private class used to establish a TCP connection in background
+     */
     private static class ConnectionThread extends Thread {
         private Socket socket;
         private BufferedReader bInput;
@@ -285,6 +298,10 @@ public class ClientWT {
                 System.out.println("[CLIENT] connessione TCP instaurata");
 
                 this.socket.setTcpNoDelay(true);
+                /*
+                    it wont'be waked up. It will sleep for the whole execution, client controllers
+                    will use its streams
+                 */
                 synchronized (this) {
                     this.wait();
                 }
@@ -294,6 +311,5 @@ public class ClientWT {
             catch(InterruptedException e) { e.printStackTrace(); }
         }
     }
-
 }
 

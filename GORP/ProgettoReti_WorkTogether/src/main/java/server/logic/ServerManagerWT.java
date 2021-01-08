@@ -1,10 +1,10 @@
 package server.logic;
 
 import protocol.CSReturnValues;
-import server.data.Project;
-import server.data.UserInfo;
 import server.data.WorthData;
 import server.logic.rmi.ServerManagerRMI;
+import utils.exceptions.IllegalProjectException;
+import utils.exceptions.IllegalUsernameException;
 
 import java.net.UnknownHostException;
 import java.rmi.RemoteException;
@@ -25,6 +25,12 @@ public class ServerManagerWT {
     public ServerManagerWT(WorthData data) {
         this.server = new ServerWT(data);
     }
+/*
+RMI
+ */
+    public void setRMIManager(ServerManagerRMI manager) {
+    this.manager = manager;
+}
 
     public String register(String username, String psw) throws RemoteException {
         String ret = this.server.register(username, psw).toString();
@@ -33,21 +39,18 @@ public class ServerManagerWT {
         return ret;
     }
 
+    public Map<String, Boolean> getStateUsers() {
+        return this.server.getStateUsers();
+    }
+/*
+TCP
+ */
     public String login(String username, String psw) throws RemoteException {
         String ret = this.server.login(username, psw).toString();
         this.manager.userIsOnlineCallbacks(username);
         return ret;
     }
 
-    public String logout(String username) throws RemoteException {
-        String ret = this.server.logout(username).toString();
-        this.manager.userIsOfflineCallbacks(username);
-        return ret;
-    }
-
-    /*
-        SYNCHRONIZED operations
-     */
     public synchronized String createProject(String username, String projectName) {
         try {
             String ret = this.server.createProject(username, projectName).toString();
@@ -61,23 +64,35 @@ public class ServerManagerWT {
 
     }
 
-    public synchronized Set<String> listProjects() {
-        return this.server.listProjects();
+    public synchronized Set<String> listProjects(String username) throws IllegalUsernameException {
+        return this.server.listProjects(username);
     }
 
-    public Map<String, Boolean> getStateUsers() {
-        return this.server.getStateUsers();
+    public synchronized List<String> showMembers(String username, String projName)
+            throws IllegalProjectException, IllegalUsernameException
+    {
+        return this.server.showMembers(username, projName);
     }
 
-    public void setRMIManager(ServerManagerRMI manager) {
-        this.manager = manager;
+/*
+ ******************************************** EXIT OPERATIONS
+ */
+    public String logout(String username) throws RemoteException {
+        String ret = this.server.logout(username).toString();
+        this.manager.userIsOfflineCallbacks(username);
+        return ret;
     }
 
+/*
+    SERIALIZATION
+ */
+    public synchronized WorthData getWorthData() { return this.server.getWorthData(); }
+}
+
+/*
     public Map<String, Project> getProjects() {
         return this.server.getProjects();
     }
 
     public Map<String, UserInfo> getUsers() { return this.server.getUsers(); }
-
-    public synchronized WorthData getWorthData() { return this.server.getWorthData(); }
-}
+     */

@@ -1,7 +1,7 @@
 package server;
 
-import utils.PasswordManager;
-import utils.PswData;
+import utils.psw.PasswordManager;
+import utils.psw.PswData;
 
 import java.security.NoSuchAlgorithmException;
 import java.security.spec.InvalidKeySpecException;

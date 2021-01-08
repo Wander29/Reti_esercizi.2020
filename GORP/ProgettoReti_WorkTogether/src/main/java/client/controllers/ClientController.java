@@ -14,10 +14,16 @@ import java.rmi.NotBoundException;
 import java.rmi.RemoteException;
 
 public abstract class ClientController {
+    protected final static int MIN_LENGTH_PSW = 2;
+
     protected static String username = null;
 
     protected static ClientWT clientLogic;
 
+    /*
+    modular exit: in future will be easy to implement
+        another login window instead of closing app
+     */
     public void handleCloseRequest() throws IOException {
         if(username != null) {
             clientLogic.logout();

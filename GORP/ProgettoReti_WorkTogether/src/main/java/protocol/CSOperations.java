@@ -10,6 +10,7 @@ public enum CSOperations {
     LOGIN,
     CREATE_PROJECT,
     LIST_PROJECTS,
+    SHOW_MEMBERS,
     LOGOUT,
     EXIT;
 }
