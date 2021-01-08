@@ -9,14 +9,19 @@ public abstract class StringUtils {
     /*
        tokenize request string
     */
-    public static List<String> tokenizeRequest(ByteBuffer buf) {
+
+    public static String byteToString(ByteBuffer buf) {
         StringBuilder sbuilder = new StringBuilder();
 
         while(buf.hasRemaining()) {
             char charRead = (char) buf.get();
             sbuilder.append(charRead);
         }
-        String received = sbuilder.toString();
+        return sbuilder.toString();
+    }
+
+    public static List<String> tokenizeRequest(ByteBuffer buf) {
+        String received = byteToString(buf);
 
         ArrayList<String> tokens = new ArrayList<>();
         StringTokenizer tokenizer = new StringTokenizer(received, ";");

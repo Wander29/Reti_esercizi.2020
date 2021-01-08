@@ -1,5 +1,6 @@
 package client.controllers;
 
+import client.model.ChatManager;
 import com.jfoenix.controls.JFXButton;
 import com.jfoenix.controls.JFXComboBox;
 import com.jfoenix.controls.JFXTabPane;
@@ -17,10 +18,16 @@ import javafx.scene.layout.Pane;
 import javafx.scene.layout.VBox;
 import javafx.stage.Stage;
 import server.data.UserInfo;
+import utils.StringUtils;
 import utils.exceptions.IllegalProjectException;
 import utils.exceptions.IllegalUsernameException;
 
 import java.io.IOException;
+import java.net.DatagramPacket;
+import java.net.DatagramSocket;
+import java.net.InetAddress;
+import java.nio.ByteBuffer;
+import java.nio.channels.Pipe;
 import java.text.MessageFormat;
 import java.util.List;
 import java.util.Optional;
@@ -59,7 +66,51 @@ public class UserSceneController extends ClientController {
         super();
     }
 
+
+    Pipe pipe;
+    Pipe.SinkChannel pipe_writeChannel;
+
     public void initialize() {
+
+
+        try {
+            pipe = Pipe.open();
+            pipe_writeChannel = pipe.sink();
+            pipe_writeChannel.configureBlocking(false);
+            ChatManager chatManager = new ChatManager(pipe);
+            chatManager.start();
+
+            String ip = "239.21.21.21;9999";
+            ByteBuffer bb = ByteBuffer.allocate(512);
+            bb.clear();
+            bb.put(ip.getBytes());
+            bb.flip();
+            //write the data into a sink channel.
+            while(bb.hasRemaining()) {
+                pipe_writeChannel.write(bb);
+            }
+
+            //write the data into a sink channel.
+            while(bb.hasRemaining()) {
+                pipe_writeChannel.write(bb);
+            }
+
+            Thread.sleep(3000);
+
+
+            InetAddress ia = InetAddress.getByName("239.21.21.21");
+            byte[] data;
+            data = "gattini".getBytes();
+
+            DatagramPacket dp = new DatagramPacket(data, data.length, ia, 9999);
+            DatagramSocket ms = new DatagramSocket();
+            ms.send(dp);
+
+        } catch (IOException e) {  e.printStackTrace(); }
+        catch (InterruptedException e) {
+            e.printStackTrace();
+        }
+
         updateComboBoxListProjects();
         tabPaneShowProject.getSelectionModel().selectedItemProperty().addListener((ov, oldTab, newTab) -> {
             System.err.println("tabPaneShowProject changed: " + newTab.getText());
