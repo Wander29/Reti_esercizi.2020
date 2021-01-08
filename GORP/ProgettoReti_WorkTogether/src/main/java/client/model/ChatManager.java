@@ -1,36 +1,54 @@
 package client.model;
 
+import client.data.DbHandler;
+import protocol.CSProtocol;
 import utils.StringUtils;
 
 import java.io.IOException;
 import java.net.*;
 import java.nio.ByteBuffer;
 import java.nio.channels.*;
+import java.sql.SQLException;
+import java.sql.Time;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Set;
 
+/*
+    this thread will listen on PIPE from
+         - UserSceneController which will write
+                into the pipe every time user is added to a project and
+                for every project the user is member to
+         - EVERY datagramChannel for UDP Multicast Chats
+ */
+
 public class ChatManager extends Thread {
 
     private final Pipe pipe;
-    private final Pipe.SourceChannel pipeReadChannel;
     private final Selector selector;
+    private DbHandler dbHandler = null; // used to store and retrieve chats
 
     public ChatManager(Pipe pipe) throws IOException {
         this.pipe = pipe;
-
-        this.pipeReadChannel = this.pipe.source();
         this.selector = Selector.open();
+
+        // register the sourceChannel (aka read channel) of pipe into selector
+        Pipe.SourceChannel pipeReadChannel = this.pipe.source();
+        pipeReadChannel.configureBlocking(false); // set non-blocking
+        ByteBuffer bb = ByteBuffer.allocate(CSProtocol.BUF_SIZE_CLIENT());
+        pipeReadChannel.register(this.selector, SelectionKey.OP_READ, bb);
+
+        try {
+            this.dbHandler = DbHandler.getInstance(); // instance shared between threads
+        } catch (SQLException throwables) {
+            throwables.printStackTrace();
+        }
     }
 
     public void run() {
         System.out.println("[THREAD CHAT-MANAGER] avviato");
 
-
         try {
-            this.pipeReadChannel.configureBlocking(false);
-            this.pipeReadChannel.register(this.selector, SelectionKey.OP_READ);
-
             while(true) {
                 if(this.selector.select() == 0)
                     continue;
@@ -43,40 +61,21 @@ public class ChatManager extends Thread {
                     it.remove();
 
                     if(key.isReadable()) {
-                        // try first reading from pipe
+                            // try first reading from pipe
                         if(key.channel() instanceof Pipe.SourceChannel) {
-                            System.out.println("sto per leggere");
-                            ByteBuffer bb = ByteBuffer.allocate(512);
                             try {
-                                System.out.println("prima");
-                                while (pipeReadChannel.read(bb) > 0) {
-                                    System.out.println("dopo");
-                                    bb.flip();
-
-                                    String ret = StringUtils.byteToString(bb);
-                                    System.out.println(ret);
-                                    List<String> tokens = StringUtils.tokenizeRequest(ret);
-                                    bb.clear();
-
-                                    String ip = tokens.remove(0);
-                                    int port = Integer.parseInt(tokens.remove(0));
-
-                                    registerMulticastConnection(ip, port);
-                                }
+                                readFromPipeNewMulticast(key);
                             } catch (IOException e) { e.printStackTrace(); }
                         }
-                        // else it's a datagramSocketChannel
-                        else {
-                            System.out.println("ELSE");
-                            DatagramChannel udpChannel = (DatagramChannel) key.channel() ;
-                            ByteBuffer buffer = ByteBuffer.allocate(8192);
-                            System.out.println("before receiving");
-                            while (udpChannel.receive(buffer)==null);
-                            buffer.flip();
-                            System.out.println(StringUtils.byteToString(buffer));
-                            buffer.clear();
+                        else { // it's a datagramSocketChannel
+                            try {
+                                readChatMsg(key);
+                            }
+                            catch (SQLException t)  { t.printStackTrace(); }
+                            catch (IOException e)   { e.printStackTrace(); }
                         }
                     }
+                    key.channel().register(this.selector, SelectionKey.OP_READ, key.attachment());
                 }
             }
         } catch (IOException e) {
@@ -84,37 +83,96 @@ public class ChatManager extends Thread {
         }
     }
 
-    private void registerMulticastConnection(String ip, int port)
-            throws UnknownHostException, IOException {
-        // establishes connection then registers to selector
-        InetAddress multicast_address;
-        System.out.println("start registerMulticast");
-        multicast_address = InetAddress.getByName(ip);
+    /*
+    read from messages of this form:
+        IP;port, for example 239.21.21.21:9999
 
-        if (!multicast_address.isMulticastAddress())
+    then calls function to register as new Multicas connection
+     */
+    private void readFromPipeNewMulticast(SelectionKey key) throws IOException {
+        Pipe.SourceChannel pipeReadEnd = (Pipe.SourceChannel) key.channel();
+        ByteBuffer bb = (ByteBuffer) key.attachment();
+
+        StringBuilder builder = new StringBuilder();
+        while (pipeReadEnd.read(bb) > 0) {
+            bb.flip();
+
+            String ret = StringUtils.byteBufferToString(bb);
+            bb.clear();
+
+            builder.append(ret);
+        }
+        List<String> tokens = StringUtils.tokenizeRequest(builder.toString());
+
+        String ip = tokens.remove(0);
+        int port = Integer.parseInt(tokens.remove(0));
+
+        registerMulticastConnection(ip, port);
+    }
+
+    /*
+        given IP and PORT of a Multicast communication
+            create a socket to listen on multicast messages
+            and registers it to selector
+     */
+    private void registerMulticastConnection(String ip, int port)
+            throws UnknownHostException, IOException, SocketException
+    {
+        // establishes connection
+        InetAddress multicastAddress;
+        multicastAddress = InetAddress.getByName(ip);
+
+        if (!multicastAddress.isMulticastAddress())
             throw new IllegalArgumentException();
 
+        // UDP channel
         DatagramChannel udpChannel = DatagramChannel.open();
-        System.out.println("udpChannel aperto");
-        udpChannel.configureBlocking(false);
-        // this?
-
-        try {
-            udpChannel.socket().setReuseAddress(true);
-        }
-        catch (SocketException se) { se.printStackTrace(); }
+        udpChannel.configureBlocking(false); // non-blocking
+            // reusable in order to allow more connections from same JVM
+        udpChannel.socket().setReuseAddress(true);
+        // binds channel to a Socket on specific port
         udpChannel.socket().bind(new InetSocketAddress(port));
-
-        System.out.println("bindato");
-        // or this?
+        // needed to have Multicast NIO
+         // see: @https://stackoverflow.com/questions/59718752/java-nio-join-to-multicast-channel-on-the-default-network-interface
         NetworkInterface ni;
         try (MulticastSocket s = new MulticastSocket()) {
             ni = s.getNetworkInterface();
         }
-        MembershipKey key = udpChannel.join(multicast_address, ni);
-        System.out.println("joinato");
+        // join on Multicast group
+        MembershipKey key = udpChannel.join(multicastAddress, ni);
 
-        udpChannel.register(this.selector, SelectionKey.OP_READ);
-        System.out.println("registrato");
+        // registers to selector
+        ByteBuffer buf = ByteBuffer.allocate(CSProtocol.BUF_SIZE_CLIENT());
+        udpChannel.register(this.selector, SelectionKey.OP_READ, buf);
+
+    }
+
+    /*
+        reads a chat message from UDP channel and stores it into local DB
+       CHAT_MSG;username;project;timeSent;msg
+    */
+    private void readChatMsg(SelectionKey key) throws IOException, SQLException {
+        DatagramChannel udpChannel = (DatagramChannel) key.channel();
+        ByteBuffer buf = (ByteBuffer) key.attachment();
+        // read message
+        buf.clear();
+        while (udpChannel.receive(buf) == null) { }
+
+        buf.flip();
+        String udpMessageRead = StringUtils.byteBufferToString(buf);
+        buf.clear();
+
+        // System.out.println("UDP CHAT MSG: " + udpMessageRead);
+        List<String> tokens = StringUtils.tokenizeRequest(udpMessageRead);
+
+        tokens.remove(0); // throw header
+        String username = tokens.remove(0);
+        String project = tokens.remove(0);
+        String timeSentString = tokens.remove(0);
+        Long timeSent = Long.parseLong(timeSentString);
+        String msg = tokens.remove(0);
+
+        // save into local DB
+        this.dbHandler.saveChat(username, project, timeSent, msg);
     }
 }

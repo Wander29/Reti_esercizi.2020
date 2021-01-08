@@ -11,6 +11,7 @@
 /home/ludo/UNIVERSITY/UNI_current/___UNI_WORKSPACE/RETI/GORP/ProgettoReti_WorkTogether/src/main/java/server/logic/rmi/ServerInterface.java
 /home/ludo/UNIVERSITY/UNI_current/___UNI_WORKSPACE/RETI/GORP/ProgettoReti_WorkTogether/src/main/java/client/controllers/LoginController.java
 /home/ludo/UNIVERSITY/UNI_current/___UNI_WORKSPACE/RETI/GORP/ProgettoReti_WorkTogether/src/main/java/server/data/Project.java
+/home/ludo/UNIVERSITY/UNI_current/___UNI_WORKSPACE/RETI/GORP/ProgettoReti_WorkTogether/src/main/java/client/data/ChatMsg.java
 /home/ludo/UNIVERSITY/UNI_current/___UNI_WORKSPACE/RETI/GORP/ProgettoReti_WorkTogether/src/main/java/utils/exceptions/IllegalUsernameException.java
 /home/ludo/UNIVERSITY/UNI_current/___UNI_WORKSPACE/RETI/GORP/ProgettoReti_WorkTogether/src/main/java/server/data/Card.java
 /home/ludo/UNIVERSITY/UNI_current/___UNI_WORKSPACE/RETI/GORP/ProgettoReti_WorkTogether/src/main/java/utils/exceptions/TerminationException.java
@@ -30,4 +31,6 @@
 /home/ludo/UNIVERSITY/UNI_current/___UNI_WORKSPACE/RETI/GORP/ProgettoReti_WorkTogether/src/main/java/protocol/CSReturnValues.java
 /home/ludo/UNIVERSITY/UNI_current/___UNI_WORKSPACE/RETI/GORP/ProgettoReti_WorkTogether/src/main/java/server/testSwitch.java
 /home/ludo/UNIVERSITY/UNI_current/___UNI_WORKSPACE/RETI/GORP/ProgettoReti_WorkTogether/src/main/java/utils/StringUtils.java
+/home/ludo/UNIVERSITY/UNI_current/___UNI_WORKSPACE/RETI/GORP/ProgettoReti_WorkTogether/src/main/java/client/data/DbHandler.java
 /home/ludo/UNIVERSITY/UNI_current/___UNI_WORKSPACE/RETI/GORP/ProgettoReti_WorkTogether/src/main/java/utils/psw/PasswordManager.java
+/home/ludo/UNIVERSITY/UNI_current/___UNI_WORKSPACE/RETI/GORP/ProgettoReti_WorkTogether/src/main/java/client/model/ChatManager.java

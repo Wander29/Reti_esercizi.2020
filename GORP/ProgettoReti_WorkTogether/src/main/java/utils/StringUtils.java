@@ -1,6 +1,9 @@
 package utils;
 
+import protocol.CSProtocol;
+
 import java.nio.ByteBuffer;
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.StringTokenizer;
@@ -10,6 +13,17 @@ public abstract class StringUtils {
        tokenize request string
     */
 
+    public static String byteBufferToString(ByteBuffer buf) {
+        String utf8EncodedString = CSProtocol.CHARSET().decode(buf).toString();
+
+        return utf8EncodedString;
+    }
+
+    public static byte[] stringToBytes(String s) {
+        return s.getBytes(CSProtocol.CHARSET());
+    }
+
+    /*
     public static String byteToString(ByteBuffer buf) {
         StringBuilder sbuilder = new StringBuilder();
 
@@ -19,9 +33,10 @@ public abstract class StringUtils {
         }
         return sbuilder.toString();
     }
+     */
 
     public static List<String> tokenizeRequest(ByteBuffer buf) {
-        String received = byteToString(buf);
+        String received = byteBufferToString(buf);
 
         ArrayList<String> tokens = new ArrayList<>();
         StringTokenizer tokenizer = new StringTokenizer(received, ";");

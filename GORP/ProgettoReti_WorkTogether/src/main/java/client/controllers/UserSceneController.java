@@ -1,5 +1,7 @@
 package client.controllers;
 
+import client.data.ChatMsg;
+import client.data.DbHandler;
 import client.model.ChatManager;
 import com.jfoenix.controls.JFXButton;
 import com.jfoenix.controls.JFXComboBox;
@@ -28,7 +30,10 @@ import java.net.DatagramSocket;
 import java.net.InetAddress;
 import java.nio.ByteBuffer;
 import java.nio.channels.Pipe;
+import java.sql.SQLException;
+import java.text.DateFormat;
 import java.text.MessageFormat;
+import java.text.SimpleDateFormat;
 import java.util.List;
 import java.util.Optional;
 
@@ -95,16 +100,36 @@ public class UserSceneController extends ClientController {
                 pipe_writeChannel.write(bb);
             }
 
-            Thread.sleep(3000);
+            Thread.sleep(1000);
 
 
             InetAddress ia = InetAddress.getByName("239.21.21.21");
-            byte[] data;
-            data = "gattini".getBytes();
+            String send = "CHAT_MSG;wander;Rancore;" + Long.toString(System.currentTimeMillis()) +
+                    ";la chat è avviata!";
+
+            byte[] data = StringUtils.stringToBytes(send);
 
             DatagramPacket dp = new DatagramPacket(data, data.length, ia, 9999);
             DatagramSocket ms = new DatagramSocket();
             ms.send(dp);
+
+            Thread.sleep(1000);
+
+            try {
+                List<ChatMsg> messages = DbHandler.getInstance().readChat("Rancore");
+                for(ChatMsg msg : messages) {
+                    DateFormat df = new SimpleDateFormat("HH:mm");
+
+                    System.out.println(
+                            "USERNAME: " + msg.username +
+                            " - PROJECT: " + msg.project +
+                            " - TIMESENT: " + df.format(msg.sentTime) +
+                            "\n" + msg.msg);
+                }
+
+            } catch (SQLException throwables) {
+                throwables.printStackTrace();
+            }
 
         } catch (IOException e) {  e.printStackTrace(); }
         catch (InterruptedException e) {

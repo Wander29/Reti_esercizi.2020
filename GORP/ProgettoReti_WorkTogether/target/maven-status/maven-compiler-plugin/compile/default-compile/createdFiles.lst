@@ -1,5 +1,6 @@
 protocol/CSProtocol.class
 server/logic/ServerWorker$1.class
+client/data/DbHandler.class
 server/data/Card.class
 server/data/UserInfo.class
 server/logic/WelcomingServer.class
@@ -14,6 +15,7 @@ client/controllers/ClientController.class
 server/HelloJavaDb.class
 server/DaemonSaver.class
 server/logic/rmi/ServerInterface.class
+client/data/ChatMsg.class
 client/model/rmi/ClientNotify.class
 server/logic/ServerWT.class
 client/controllers/UserSceneController.class
@@ -31,6 +33,7 @@ protocol/CSReturnValues.class
 server/data/Project.class
 server/logic/ServerManagerWT.class
 server/logic/SerializeHelper$1.class
+client/model/ChatManager.class
 utils/TCPBuffersNIO.class
 client/model/ClientWT$1.class
 server/data/CardStatus.class

@@ -49,6 +49,13 @@ Client->Server: SHOW_MEMBERS;projectName
 Server-->Client: SHOW_MEMBERS_OK;member1;..;.. || USERNAME_NOT_PRESENT || PROJECT_NOT_PRESENT
 ```
 
+```sequence
+title: CHAT MULTICAST UDP
+Sender->Multicast Group: CHAT_MSG;username;project;timeSent;msg
+Note left of Multicast Group: (timeSent : LONG as String)
+Note left of Multicast Group: (msg : max 2048 chars)
+```
+
 
 
 # Ipotesi
