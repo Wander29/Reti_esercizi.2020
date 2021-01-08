@@ -103,6 +103,10 @@ public class ServerWT {
         return CSReturnValues.LOGIN_OK;
     }
 
+    public Set<String> listProjects() {
+        return this.projects.keySet();
+    }
+
     /*
     try to create a new project
     IF there is no projectName already in database
@@ -120,8 +124,9 @@ public class ServerWT {
         }
 
         this.projects.put(projectName, new Project(projectName, username));
+
         if(CSProtocol.DEBUG()) {
-            System.out.println(projectName + " è statoc creato");
+            System.out.println(projectName + " è stato creato");
         }
 
         return CSReturnValues.CREATE_PROJECT_OK;

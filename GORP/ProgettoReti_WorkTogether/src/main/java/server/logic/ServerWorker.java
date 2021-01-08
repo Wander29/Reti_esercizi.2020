@@ -2,6 +2,8 @@ package server.logic;
 
 import protocol.CSOperations;
 import protocol.CSProtocol;
+import protocol.CSReturnValues;
+import utils.StringUtils;
 import utils.TCPBuffersNIO;
 import utils.TerminationException;
 
@@ -42,17 +44,20 @@ public class ServerWorker implements Runnable {
                 break;
             sbuilder.append(charRead);
         }
-
-        CSOperations cso = CSOperations.valueOf(sbuilder.toString());
+        String operationString = sbuilder.toString();
+        System.out.println(operationString);
+        CSOperations cso = CSOperations.valueOf(operationString);
         switch(cso) {
             case LOGIN:
                 opLogin(bufs, cliCh);
-                cliCh.register(key.selector(), SelectionKey.OP_READ, bufs);
                 break;
 
             case CREATE_PROJECT:
                 opCreateProject(bufs, cliCh);
-                cliCh.register(key.selector(), SelectionKey.OP_READ, bufs);
+                break;
+
+            case LIST_PROJECTS:
+                opListProject(bufs, cliCh);
                 break;
 
             case LOGOUT:
@@ -66,6 +71,7 @@ public class ServerWorker implements Runnable {
                 break;
 
         }
+        cliCh.register(key.selector(), SelectionKey.OP_READ, bufs);
     }
 
     public void run() {
@@ -74,8 +80,8 @@ public class ServerWorker implements Runnable {
             System.out.println("Worker creato, sto per runnare: " + Thread.currentThread().getName());
         }
 
-        while(!this.selector.keys().isEmpty()) {
-        // while(true) {
+        //while(!this.selector.keys().isEmpty()) {
+         while(true) {
             try {
                 // @todo change timeuout to constant
                 if(this.selector.select(5000) == 0)
@@ -111,24 +117,45 @@ public class ServerWorker implements Runnable {
                     // if(key.isWritable()) {}
 
                 } //; end while(it.hasNExt())
-                System.out.println("[SERVER WORKER] sto terminando");
+
             }
             catch (IOException e)           { e.printStackTrace(); }
         }
+        //System.out.println("[SERVER WORKER] sto terminando");
+    }
+
+    /*
+        -LIST_PROJECTS
+     */
+    private void opListProject(TCPBuffersNIO bufs, SocketChannel cliCh) throws IOException {
+        bufs.inputBuf.clear();
+
+        Set<String> list = this.server.listProjects();
+
+        StringBuilder builder = new StringBuilder(CSReturnValues.LIST_PROJECTS_OK.toString());
+        for(String s : list) {
+            builder.append(";");
+            System.out.println(s);
+            builder.append(s);
+        }
+        String ret = builder.toString();
+        if(CSProtocol.DEBUG()) {
+            System.out.println("response: " + ret);
+        }
+        this.sendResponse(bufs.outputBuf, cliCh, ret);
     }
 
     /*
     protocol for CREATE_PROJECT operation
-        - CREATE_PROJECT;username;projectName
+        - CREATE_PROJECT;projectName
      */
     private void opCreateProject(TCPBuffersNIO bufs, SocketChannel cliCh) throws IOException {
-        List<String> tokens = tokenizeRequest(bufs.inputBuf);
+        List<String> tokens = StringUtils.tokenizeRequest(bufs.inputBuf);
         bufs.inputBuf.clear();
 
-        String username     = tokens.remove(0);
         String projectName  = tokens.remove(0);
 
-        String ret = this.server.createProject(username, projectName);
+        String ret = this.server.createProject(bufs.getUsername(), projectName);
         this.sendResponse(bufs.outputBuf, cliCh, ret);
     }
 
@@ -138,56 +165,34 @@ public class ServerWorker implements Runnable {
      */
     private void opLogin(TCPBuffersNIO bufs, SocketChannel cliCh) throws IOException {
 
-        List<String> tokens = tokenizeRequest(bufs.inputBuf);
+        List<String> tokens = StringUtils.tokenizeRequest(bufs.inputBuf);
         bufs.inputBuf.clear();
 
         String username = tokens.remove(0);
         String psw = tokens.remove(0);
 
         String ret = this.server.login(username, psw);
+        if(CSReturnValues.valueOf(ret) == CSReturnValues.LOGIN_OK) {
+            bufs.setUsername(username);
+        }
+
         sendResponse(bufs.outputBuf, cliCh, ret);
     }
 
     /*
     protocol for LOGOUT operation:
-        -   LOGOUT;username
+        -   LOGOUT
      */
     private void opLogout(TCPBuffersNIO bufs, SocketChannel cliCh) throws IOException {
-
-        List<String> tokens = tokenizeRequest(bufs.inputBuf);
         bufs.inputBuf.clear();
 
-        String username = tokens.remove(0);
-
-        String ret = this.server.logout(username);
+        String ret = this.server.logout(bufs.getUsername());
         sendResponse(bufs.outputBuf, cliCh, ret);
     }
 
     /**
      * UTILS
      */
-    /*
-       tokenize request string
-    */
-    private List<String> tokenizeRequest(ByteBuffer buf) {
-        StringBuilder sbuilder = new StringBuilder();
-
-        while(buf.hasRemaining()) {
-            char charRead = (char) buf.get();
-            sbuilder.append(charRead);
-        }
-        String received = sbuilder.toString();
-
-        ArrayList<String> tokens = new ArrayList<>();
-        StringTokenizer tokenizer = new StringTokenizer(received, ";");
-
-        while(tokenizer.hasMoreTokens()) {
-            tokens.add(tokenizer.nextToken());
-        }
-
-        return tokens;
-    }
-
     private void sendResponse(ByteBuffer buf, SocketChannel channel, String toSend)
             throws IOException
     {

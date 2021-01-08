@@ -26,6 +26,7 @@ public class DaemonSaver extends Thread {
             }
 
             try {
+                System.out.println("[DAEMON] going to save");
                 SerializeHelper.saveData(manager.getWorthData());
             } catch (IOException e) {
                 e.printStackTrace();

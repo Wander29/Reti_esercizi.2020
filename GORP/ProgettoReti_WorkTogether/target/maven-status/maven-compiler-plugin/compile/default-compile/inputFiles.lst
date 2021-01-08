@@ -5,6 +5,7 @@
 /home/ludo/UNIVERSITY/UNI_current/___UNI_WORKSPACE/RETI/GORP/ProgettoReti_WorkTogether/src/main/java/server/WorthServer.java
 /home/ludo/UNIVERSITY/UNI_current/___UNI_WORKSPACE/RETI/GORP/ProgettoReti_WorkTogether/src/main/java/protocol/CSProtocol.java
 /home/ludo/UNIVERSITY/UNI_current/___UNI_WORKSPACE/RETI/GORP/ProgettoReti_WorkTogether/src/main/java/server/data/WorthData.java
+/home/ludo/UNIVERSITY/UNI_current/___UNI_WORKSPACE/RETI/GORP/ProgettoReti_WorkTogether/src/main/java/server/HelloJavaDb.java
 /home/ludo/UNIVERSITY/UNI_current/___UNI_WORKSPACE/RETI/GORP/ProgettoReti_WorkTogether/src/main/java/client/controllers/ClientController.java
 /home/ludo/UNIVERSITY/UNI_current/___UNI_WORKSPACE/RETI/GORP/ProgettoReti_WorkTogether/src/main/java/server/logic/rmi/ServerInterface.java
 /home/ludo/UNIVERSITY/UNI_current/___UNI_WORKSPACE/RETI/GORP/ProgettoReti_WorkTogether/src/main/java/client/controllers/LoginController.java
@@ -18,8 +19,13 @@
 /home/ludo/UNIVERSITY/UNI_current/___UNI_WORKSPACE/RETI/GORP/ProgettoReti_WorkTogether/src/main/java/server/data/CardStatus.java
 /home/ludo/UNIVERSITY/UNI_current/___UNI_WORKSPACE/RETI/GORP/ProgettoReti_WorkTogether/src/main/java/server/logic/ServerWorker.java
 /home/ludo/UNIVERSITY/UNI_current/___UNI_WORKSPACE/RETI/GORP/ProgettoReti_WorkTogether/src/main/java/client/controllers/UserSceneController.java
+/home/ludo/UNIVERSITY/UNI_current/___UNI_WORKSPACE/RETI/GORP/ProgettoReti_WorkTogether/src/main/java/utils/PswData.java
 /home/ludo/UNIVERSITY/UNI_current/___UNI_WORKSPACE/RETI/GORP/ProgettoReti_WorkTogether/src/main/java/client/model/rmi/NotifyInterface.java
 /home/ludo/UNIVERSITY/UNI_current/___UNI_WORKSPACE/RETI/GORP/ProgettoReti_WorkTogether/src/main/java/utils/TerminationException.java
 /home/ludo/UNIVERSITY/UNI_current/___UNI_WORKSPACE/RETI/GORP/ProgettoReti_WorkTogether/src/main/java/client/model/ClientWT.java
 /home/ludo/UNIVERSITY/UNI_current/___UNI_WORKSPACE/RETI/GORP/ProgettoReti_WorkTogether/src/main/java/server/logic/rmi/ServerManagerRMI.java
+/home/ludo/UNIVERSITY/UNI_current/___UNI_WORKSPACE/RETI/GORP/ProgettoReti_WorkTogether/src/main/java/server/DaemonSaver.java
 /home/ludo/UNIVERSITY/UNI_current/___UNI_WORKSPACE/RETI/GORP/ProgettoReti_WorkTogether/src/main/java/protocol/CSReturnValues.java
+/home/ludo/UNIVERSITY/UNI_current/___UNI_WORKSPACE/RETI/GORP/ProgettoReti_WorkTogether/src/main/java/server/testSwitch.java
+/home/ludo/UNIVERSITY/UNI_current/___UNI_WORKSPACE/RETI/GORP/ProgettoReti_WorkTogether/src/main/java/utils/StringUtils.java
+/home/ludo/UNIVERSITY/UNI_current/___UNI_WORKSPACE/RETI/GORP/ProgettoReti_WorkTogether/src/main/java/utils/PasswordManager.java

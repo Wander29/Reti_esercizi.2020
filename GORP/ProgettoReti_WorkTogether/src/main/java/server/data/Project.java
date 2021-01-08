@@ -41,11 +41,13 @@ public class Project implements Serializable {
         this.members.add(creator);
     }
 
+    private static int
+            a = START_MULTICAST_FIRST_OCTET,
+            b = 0,
+            c = 0,
+            d = 0;
+
     private InetAddress generateMulticastIP() throws UnknownHostException {
-        int     a = START_MULTICAST_FIRST_OCTET,
-                b = 0,
-                c = 0,
-                d = 0;
 
         InetAddress currIP;
         String currentIPString;

@@ -24,8 +24,13 @@ public class WorthClient extends Application {
     public void start(Stage stage) throws IOException {
         this.loader = this.getFXMLLoader("login");
 
-        scene = new Scene(this.loadFXML("login"));
+        scene = new Scene(this.loadFXML());
         scene.getStylesheets().add(getClass().getResource("../css/main_style.css"   ).toExternalForm());
+        /*
+        scene.getStylesheets().add(getClass().getResource("../css/cardListTable.css"   ).toExternalForm());
+        scene.getStylesheets().add(getClass().getResource("../css/usersTable.css"   ).toExternalForm());
+        scene.getStylesheets().add(getClass().getResource("../css/chatTable.css"   ).toExternalForm());
+        */
 
         // logic
         ClientController controller = this.loader.getController();
@@ -47,24 +52,26 @@ public class WorthClient extends Application {
         });
         // view
         stage.setScene(scene);
-        stage.setMaximized(true);
+        stage.setMaximized(false);
         stage.setTitle("WORTH - Work Together");
 
         stage.getIcons().add(new Image(
-                WorthClient.class.getResourceAsStream("../icons/notebook.png")));
+                WorthClient.class.getResourceAsStream("../images/notebook.png")));
 
         stage.show();
+
+        // link logic for login
     }
 
     void setRoot(String fxml) throws IOException {
-        scene.setRoot(loadFXML(fxml));
+        scene.setRoot(loadFXML());
     }
 
     private FXMLLoader getFXMLLoader(String fxml) {
         return new FXMLLoader(WorthClient.class.getResource(fxml + ".fxml"));
     }
 
-    private Parent loadFXML(String fxml) throws IOException {
+    private Parent loadFXML() throws IOException {
         // FXMLLoader fxmlLoader = new FXMLLoader(WorthClient.class.getResource(fxml + ".fxml"));
         return this.loader.load();
     }

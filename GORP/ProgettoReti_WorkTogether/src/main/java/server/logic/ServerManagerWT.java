@@ -8,8 +8,10 @@ import server.logic.rmi.ServerManagerRMI;
 
 import java.net.UnknownHostException;
 import java.rmi.RemoteException;
+import java.util.List;
 import java.util.Map;
 import java.util.NoSuchElementException;
+import java.util.Set;
 
 /*
     gestisce la concorrenza ecc.. del SERVER REALE
@@ -57,6 +59,10 @@ public class ServerManagerWT {
             return CSReturnValues.SERVER_INTERNAL_NETWORK_ERROR.toString();
         }
 
+    }
+
+    public synchronized Set<String> listProjects() {
+        return this.server.listProjects();
     }
 
     public Map<String, Boolean> getStateUsers() {

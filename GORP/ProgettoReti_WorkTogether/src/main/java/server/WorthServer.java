@@ -42,7 +42,7 @@ public class WorthServer {
         Thread serverThread = new Thread( new WelcomingServer(server) );
         serverThread.start();
 
-        // daemon thread for updating database
+        // daemon thread updating database
         DaemonSaver daemonSaver = new DaemonSaver(UPDATE_INTERVAL * 1000, server);
         daemonSaver.start();
 

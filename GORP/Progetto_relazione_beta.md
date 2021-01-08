@@ -39,10 +39,12 @@ Server-->Client: REGISTRATION_OK || USERNAME_ALREADY_PRESENT
 title: COMUNICAZIONE CLIENT-SERVER: Protocollo, operazioni
 Client->Server: LOGIN;username;password
 Server-->Client: LOGIN_OK \n USERNAME_NOT_PRESENT || PSW_INCORRECT || ALREADY_LOGGED_IN
-Client->Server: LOGOUT;username
+Client->Server: LOGOUT
 Server-->Client: LOGOUT_OK || USERNAME_NOT_PRESENT || USER_NOT_ONLINE
-Client->Server: CREATE_PROJECT;username;projectName
+Client->Server: CREATE_PROJECT;projectName
 Server-->Client: CREATE_PROJECT_OK;MulticastIP || PROJECT_ALREADY_PRESENT || \n SERVER_INTERNAL_NETWORK_ERROR
+Client->Server: LIST_PROJECTS;
+Server-->Client: CREATE_PROJECT_OK;MulticastIP || PROJECT_ALREADY_PRESENT || \
 ```
 
 
@@ -58,3 +60,5 @@ Server-->Client: CREATE_PROJECT_OK;MulticastIP || PROJECT_ALREADY_PRESENT || \n 
 quando la finestra della GUI del client viene chiusa viene una mandata una richiesta di **EXIT** che informa il server di chiudere quella connessione TCP in quanto non verranno effettuati altri login. 
 
 Se il client aveva effettuato l'accesso in aggiunta viene inviato una richiesta di **LOGOUT**.
+
+Comunicazione TCP stateful, lo stato di utente loggato è registrato durante la comunicazione, infatti non si ha bisogno di passare nuovamente il proprio username.

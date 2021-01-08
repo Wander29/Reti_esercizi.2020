@@ -1,0 +1,7 @@
+- aggiungere ID utente nei buffer TCP dopo login
+
+- listUsers() GUI
+- listOnlineUsers() GUI
+
+
+- 1 istanza -> getInstance()

@@ -1,10 +1,15 @@
 package client.controllers;
 
+import client.WorthClient;
 import client.model.ClientWT;
 import com.jfoenix.controls.JFXButton;
 import com.jfoenix.controls.JFXPasswordField;
 import com.jfoenix.controls.JFXTextField;
 import javafx.fxml.FXML;
+import javafx.fxml.FXMLLoader;
+import javafx.scene.Node;
+import javafx.scene.Parent;
+import javafx.scene.Scene;
 import javafx.scene.control.Alert;
 import javafx.scene.control.ButtonType;
 import javafx.scene.input.KeyEvent;
@@ -18,6 +23,8 @@ import java.io.IOException;
 import java.rmi.NotBoundException;
 import java.rmi.RemoteException;
 
+import com.sun.javafx.scene.control.*;
+
 public class LoginController extends ClientController {
 
     public LoginController() {
@@ -27,7 +34,7 @@ public class LoginController extends ClientController {
     public void initialize() {
         try {
             System.out.println("[CONTROLLER - Login] initialize");
-            ClientController.clientLogic.startConnection();
+            this.clientLogic.startConnection();
         } catch (Exception e) {
             e.printStackTrace();
         }
@@ -68,24 +75,29 @@ public class LoginController extends ClientController {
 
     @FXML
     void loginOnMouseClicked(MouseEvent event) {
-        String username = usernameTextField.getText();
+        String user = usernameTextField.getText();
         String password = passwordTextField.getText();
 
         try {
             // ask server to login
-            CSReturnValues retVal = clientLogic.login(username, password);
+            CSReturnValues retVal = clientLogic.login(user, password);
 
             // compute server response
             String  headerString    = null,
                     contentString   = null;
             final String loginError = "Il Login NON è andato a buon fine";
+            this.username = user;
 
             switch(retVal) {
 
                 case LOGIN_OK:
-                    headerString    = "Login corretto. Bentornato " + username + "!";
-                    contentString   = "Stai per accedere a WORTH";
-                    break;
+                    //try {
+                        //loadUserScene();
+                        // closeStage(usernameTextField);
+                        loadInThisWindow((Stage) loginButton.getScene().getWindow(), "../userScene.fxml", "WORTH");
+                    //}
+                    //catch(IOException e) { e.printStackTrace(); }
+                    return;
 
                 case USERNAME_NOT_PRESENT:
                     headerString    = loginError;
@@ -109,8 +121,6 @@ public class LoginController extends ClientController {
             info.setHeaderText(headerString);
             info.setContentText(contentString);
             info.showAndWait();
-
-            //@todo goto new Scene
 
         } catch (IOException e) {
             e.printStackTrace();
@@ -143,7 +153,9 @@ public class LoginController extends ClientController {
 
                     case REGISTRATION_OK:
                         headerString    = "La registrazione è andata a buon fine!";
-                        contentString   = "Stai per accedere a WORTH";
+                        contentString   = "Accedi a WORTH tramite Login";
+                        usernameTextField.setText("");
+                        passwordTextField.setText("");
                         break;
 
                     case USERNAME_ALREADY_PRESENT:

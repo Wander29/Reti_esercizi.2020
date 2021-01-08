@@ -5,6 +5,7 @@ import protocol.CSOperations;
 import protocol.CSProtocol;
 import protocol.CSReturnValues;
 import server.logic.rmi.ServerInterface;
+import utils.StringUtils;
 
 import java.io.*;
 import java.net.InetAddress;
@@ -19,57 +20,60 @@ import java.rmi.registry.Registry;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 
-public class ClientWT implements Runnable {
+public class ClientWT {
 
     // RMI
-    private ClientNotify clientStub;
-    private Registry r = null;
-    private ServerInterface serverStub = null;
+    private static ClientNotify clientStub;
+    private static Registry r = null;
+    private static ServerInterface serverStub = null;
+    private static String user;
     // TCP
-    private ConnectionThread connThread = new ConnectionThread();
+    private static ConnectionThread connThread = new ConnectionThread();
 
+    /*
+    every read of a volatile variable will be read
+    from the computer's main memory,
+    and not from the CPU cache,
+
+    every write to a volatile variable will be written to main memory,
+    and not just to the CPU cache.
+     */
+    protected volatile static ClientWT instance = new ClientWT();
     /*
     uses a daemon thread to manage tcp connection with server
      */
-    public ClientWT() throws RemoteException, NotBoundException {
-        this.connThread.setDaemon(true);
-        this.startRMI();
+    protected ClientWT(){
+        connThread.setDaemon(true);
+        try {
+            startRMI();
+        }
+        catch(RemoteException re) {
+            re.printStackTrace();
+            System.exit(-1);
+        }
+        catch (NotBoundException e) {
+            System.out.println("Servizio" +
+                    CSProtocol.RMI_SERVICE_NAME() + " non presente");
+            System.exit(-1);
+        }
+    }
+    /*
+    one instance shared
+     */
+    public static synchronized ClientWT getInstance() throws RemoteException, NotBoundException {
+        if(instance == null) {
+            instance = new ClientWT();
+        }
+
+        return instance;
     }
 
-    private void startRMI() throws RemoteException, NotBoundException {
+    private static void startRMI() throws RemoteException, NotBoundException {
         r = LocateRegistry.getRegistry(CSProtocol.RMI_SERVICE_PORT());
         serverStub = (ServerInterface) r.lookup(CSProtocol.RMI_SERVICE_NAME());
     }
 
-    public void run() {
-        // TCP connection
-        /*
-
-                // 3) Create Project
-                this.createProject("Wander29", "ProjectWander", bos);
-                System.out.println(bis.readLine());
-
-                Thread.sleep(10000);
-
-
-                // LAST) LOGOUT
-                this.logout("Wander29", bos, serverStub);
-                System.out.println(bis.readLine());
-
-
-            }
-            catch (IOException e) {
-                e.printStackTrace();
-            }
-        }
-        catch (IOException e) {
-            e.printStackTrace();
-        }
-        */
-
-    }
-
-    private List<String> tokenizeRequest(String s) {
+    private static List<String> tokenizeRequest(String s) {
         ArrayList<String> tokens = new ArrayList<>();
         StringTokenizer tokenizer = new StringTokenizer(s, ";");
 
@@ -80,7 +84,7 @@ public class ClientWT implements Runnable {
         return tokens;
     }
 
-    private String getFirstToken(String s) {
+    private static String getFirstToken(String s) {
         StringTokenizer tokenizer = new StringTokenizer(s, ";");
 
         if(tokenizer.hasMoreTokens())
@@ -90,18 +94,18 @@ public class ClientWT implements Runnable {
     }
 
     // RMI operations
-    public CSReturnValues register(String username, String password) throws RemoteException {
+    public static CSReturnValues register(String username, String password) throws RemoteException {
         String ret = serverStub.register(username, password);
 
         return CSReturnValues.valueOf(ret);
     }
 
-    public Set<String> listUsers() {
-        return this.clientStub.getAllUsers();
+    public static Set<String> listUsers() {
+        return clientStub.getAllUsers();
     }
 
-    public Set<String> listOnlineUsers() {
-       return this.clientStub.getOnlineUsers();
+    public static Set<String> listOnlineUsers() {
+       return clientStub.getOnlineUsers();
     }
 
     /* TCP operation
@@ -115,7 +119,7 @@ public class ClientWT implements Runnable {
     PSW_INCORRECT           if the password is incorrect for the given username
     ALREADY_LOGGED_IN
      */
-    public CSReturnValues login(String username, String password) throws IOException {
+    public static CSReturnValues login(String username, String password) throws IOException {
         // ask server to login
         StringBuilder sbuild = new StringBuilder(CSOperations.LOGIN.toString());
         sbuild.append(";");
@@ -123,19 +127,30 @@ public class ClientWT implements Runnable {
         sbuild.append(";");
         sbuild.append(password);
 
+        if(CSProtocol.DEBUG()) {
+            System.out.println("trying LOGIN for " + username);
+        }
+
         connThread.bOutput.write(sbuild.toString());
         connThread.bOutput.flush();
 
         String ret = connThread.bInput.readLine();
 
+        if(CSProtocol.DEBUG()) {
+            System.out.println("response: " + ret);
+        }
+        if(CSReturnValues.valueOf(ret).equals(CSReturnValues.LOGIN_OK)) {
+            user =  username;
+        }
+
         return CSReturnValues.valueOf(ret);
     }
 
-    public void registerForCallbacks() throws RemoteException {
+    public static void registerForCallbacks() throws RemoteException {
         clientStub = new ClientNotify();
         // registration for callbacks AND getting users state info
         Map<String, Boolean> usersStateUnmodifiable =
-                this.serverStub.registerForCallback(clientStub);
+                serverStub.registerForCallback(clientStub);
 
         clientStub.setUsersMap(
                 new ConcurrentHashMap<>(usersStateUnmodifiable) );
@@ -151,54 +166,105 @@ public class ClientWT implements Runnable {
         USERNAME_NOT_PRESENT    if the given username is not registered
         USERNAME_NOT_ONLINE     if the user related to this username is not online
      */
-    public void logout(String username)
+    public static CSReturnValues logout()
             throws IOException {
-        this.serverStub.unregisterForCallback(this.clientStub);
+        serverStub.unregisterForCallback(clientStub);
 
-        String req = CSOperations.LOGOUT.toString() + ';' + username;
+        String req = CSOperations.LOGOUT.toString();
+
+        if(CSProtocol.DEBUG()) {
+            System.out.println("req: LOGOUT for " + user);
+        }
 
         connThread.bOutput.write(req);
         connThread.bOutput.flush();
+
+        String ret = connThread.bInput.readLine();
+
+        return CSReturnValues.valueOf(ret);
     }
 
-    public void exit() throws IOException {
+    /*
+
+     */
+    public static List<String> listProjects() throws IOException {
+        String req = CSOperations.LIST_PROJECTS.toString();
+
+        if(CSProtocol.DEBUG()) {
+            System.out.println("req: LIST PROJECT for " +  user);
+        }
+        connThread.bOutput.write(req);
+        connThread.bOutput.flush();
+
+        String ret = connThread.bInput.readLine();
+
+        List<String> tokens = StringUtils.tokenizeRequest(ret);
+        String firstToken = tokens.remove(0);
+        if(CSReturnValues.valueOf(firstToken).equals(CSReturnValues.LIST_PROJECTS_OK)) {
+            System.out.println("progetti listati: ");
+
+            for(String s : tokens) {
+                System.out.println(s);
+            }
+
+            return tokens;
+        }
+
+        return null;
+    }
+
+    public static void exit() throws IOException {
         connThread.bOutput.write("EXIT");
         connThread.bOutput.flush();
     }
 
     /* TCP operation
-        -   CREATE_PROJECT;username;projectName
+        -   CREATE_PROJECT;projectName
 
         possible responses:
         CREATE_PROJECT_OK;ip            if everything is ok
         PROJECT_ALREADY_PRESENT         if a project with the same name is already present in the server
         SERVER_INTERNAL_NETWORK_ERROR   if server can't use a Multicast Ip
  */
-    public void createProject(String username, String projName, BufferedWriter stream) throws IOException {
-        String req = CSOperations.CREATE_PROJECT.toString()
-                + ";" + username + ";" + projName;
+    public static CSReturnValues createProject(String projName) throws IOException {
+        String req = CSOperations.CREATE_PROJECT.toString() + ";" + projName;
 
-        stream.write(req);
-        stream.flush();
+        connThread.bOutput.write(req);
+        connThread.bOutput.flush();
+
+        if(CSProtocol.DEBUG()) {
+            System.out.println("req: CREATE PROJECT for " +  user + ": " + projName);
+        }
+
+        String ret = connThread.bInput.readLine();
+        // retrieve multicast IP for chat
+        String firstToken = StringUtils.tokenizeRequest(ret).get(0);
+        if(CSReturnValues.CREATE_PROJECT_OK.equals(CSReturnValues.valueOf(firstToken))) {
+            if(CSProtocol.DEBUG()) {
+                System.out.println("response: " + ret);
+            }
+        }
+
+        return CSReturnValues.valueOf(firstToken);
     }
 
-    protected String getServerIP() throws UnknownHostException {
+    protected static String getServerIP() throws UnknownHostException {
         return InetAddress.getLocalHost().getHostName();
     }
 
-    protected int getServerPort() {
+    protected static int getServerPort() {
         return CSProtocol.SERVER_PORT();
     }
 
-    public void startConnection() throws Exception {
+    public static void startConnection() throws Exception {
         connThread.start();
     }
 
-    public void closeConnection() throws IOException {
+    public static void closeConnection() throws IOException {
         connThread.socket.close();
     }
 
-    private class ConnectionThread extends Thread {
+    private static class ConnectionThread extends Thread {
         private Socket socket;
         private BufferedReader bInput;
         private BufferedWriter bOutput;

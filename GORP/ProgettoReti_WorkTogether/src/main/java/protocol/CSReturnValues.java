@@ -3,6 +3,7 @@ package protocol;
 public enum CSReturnValues {
     REGISTRATION_OK,
     LOGIN_OK,
+    LIST_PROJECTS_OK,
     USERNAME_NOT_PRESENT,
     USERNAME_INVALID,
     USERNAME_ALREADY_PRESENT,

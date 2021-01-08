@@ -25,7 +25,7 @@
    <top>
       <StackPane prefHeight="213.0" prefWidth="1280.0">
          <children>
-            <Label text="WORTH.   WORkTogetHer" StackPane.alignment="CENTER">
+            <Label styleClass="app-title" text="WORTH.   WORkTogetHer" StackPane.alignment="CENTER">
                <font>
                   <Font name="Roboto Bold" size="63.0" />
                </font>
@@ -34,12 +34,12 @@
                      <stops>
                         <Stop>
                            <color>
-                              <Color red="0.7105262875556946" green="0.05921052768826485" blue="0.4065789580345154" />
+                              <Color red="0.7098039388656616" green="0.05882352963089943" blue="0.40784314274787903" />
                            </color>
                         </Stop>
                         <Stop offset="1.0">
                            <color>
-                              <Color red="0.9473684430122375" green="0.8296783566474915" blue="0.24122807383537292" />
+                              <Color red="0.2631579041481018" green="0.23026315867900848" blue="0.09868421405553818" />
                            </color>
                         </Stop>
                      </stops>
@@ -71,7 +71,7 @@
                               </Stop>
                               <Stop offset="1.0">
                                  <color>
-                                    <Color red="1.0" green="1.0" blue="1.0" />
+                                    <Color red="0.35686275362968445" green="0.3490196168422699" blue="0.3333333432674408" />
                                  </color>
                               </Stop>
                            </stops>
@@ -97,7 +97,7 @@
                               </Stop>
                               <Stop offset="1.0">
                                  <color>
-                                    <Color red="1.0" green="1.0" blue="1.0" />
+                                    <Color red="0.35686275362968445" green="0.3490196168422699" blue="0.3333333432674408" />
                                  </color>
                               </Stop>
                            </stops>
