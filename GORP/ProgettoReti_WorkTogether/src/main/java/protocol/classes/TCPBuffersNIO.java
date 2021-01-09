@@ -1,10 +1,12 @@
-package utils;
+package protocol.classes;
+
+import protocol.CSProtocol;
 
 import java.nio.ByteBuffer;
 
 public class TCPBuffersNIO {
 
-    private final static int BUF_SIZE = 2048;
+    private final static int BUF_SIZE = CSProtocol.BUF_SIZE_SERVER();
 
     public ByteBuffer inputBuf;
     public ByteBuffer outputBuf;

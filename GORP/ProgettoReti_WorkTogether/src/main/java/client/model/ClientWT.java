@@ -4,6 +4,8 @@ import client.model.rmi.ClientNotify;
 import protocol.CSOperations;
 import protocol.CSProtocol;
 import protocol.CSReturnValues;
+import protocol.IllegalProtocolMessageException;
+import protocol.classes.ListProjectEntry;
 import server.logic.rmi.ServerInterface;
 import utils.exceptions.IllegalProjectException;
 import utils.exceptions.IllegalUsernameException;
@@ -13,6 +15,8 @@ import java.io.*;
 import java.net.InetAddress;
 import java.net.Socket;
 import java.net.UnknownHostException;
+import java.nio.ByteBuffer;
+import java.nio.channels.Pipe;
 import java.rmi.NotBoundException;
 import java.rmi.RemoteException;
 import java.rmi.registry.LocateRegistry;
@@ -104,6 +108,36 @@ RMI
     }
 
 /*
+UDP
+ */
+    private ByteBuffer bb = ByteBuffer.allocate(CSProtocol.BUF_SIZE_CLIENT());
+
+    private Pipe pipe;
+    private Pipe.SinkChannel pipe_writeChannel;
+
+    public void startChatManager() throws IOException {
+
+        // opens an unnamed pipe
+        pipe = Pipe.open();
+        pipe_writeChannel = pipe.sink();
+        pipe_writeChannel.configureBlocking(false);
+
+        // starts a thread: chatManager
+        ChatManager chatManager = new ChatManager(pipe);
+        chatManager.start();
+    }
+
+    public void startChatConnection(ListProjectEntry project) throws IOException {
+        bb.clear();
+        bb.put(StringUtils.stringToBytes(project.ip));
+        bb.flip();
+        // writes the data into a sink channel.
+        while(bb.hasRemaining()) {
+            pipe_writeChannel.write(bb);
+        }
+    }
+
+/*
 TCP
  */
     /*
@@ -171,7 +205,8 @@ TCP
     protocol for LIST PROJECTS operation:
         -   LIST_PROJECTS
      */
-    public static List<String> listProjects() throws IOException, IllegalUsernameException {
+    public static List<ListProjectEntry> listProjects()
+            throws IOException, IllegalUsernameException, IllegalProtocolMessageException {
         String req = CSOperations.LIST_PROJECTS.toString();
 
         if(CSProtocol.DEBUG()) {
@@ -180,13 +215,30 @@ TCP
         connThread.bOutput.write(req);
         connThread.bOutput.flush();
 
+
         String ret = connThread.bInput.readLine();
 
-        List<String> tokens = StringUtils.tokenizeRequest(ret);
-        String firstToken = tokens.remove(0);
+
+        StringTokenizer tokenizer = new StringTokenizer(ret, ";");
+        String firstToken = tokenizer.nextToken();
+
         switch(CSReturnValues.valueOf(firstToken)) {
+
             case LIST_PROJECTS_OK:
-                return tokens;
+                List<ListProjectEntry> list = new ArrayList<>();
+
+                while(tokenizer.hasMoreTokens()) {
+
+                    String projectName = tokenizer.nextToken();
+                    if(tokenizer.hasMoreTokens())
+                    {
+                        String ip = tokenizer.nextToken();
+                        list.add(new ListProjectEntry(projectName, ip));
+                    }
+                    else throw new IllegalProtocolMessageException();
+                }
+
+                return list;
 
             case USERNAME_NOT_PRESENT:
                 throw new IllegalUsernameException();
@@ -266,7 +318,7 @@ TCP
         return CSProtocol.SERVER_PORT();
     }
 
-    public static void startConnection() throws Exception {
+    public static void startConnection() throws IOException {
         connThread.start();
     }
 

@@ -2,6 +2,7 @@ package server.logic;
 
 import protocol.CSProtocol;
 import protocol.CSReturnValues;
+import protocol.classes.ListProjectEntry;
 import server.data.Project;
 import server.data.UserInfo;
 import server.data.WorthData;
@@ -130,11 +131,26 @@ TCP
         return CSReturnValues.CREATE_PROJECT_OK;
     }
 
-    public Set<String> listProjects(String username) throws IllegalUsernameException {
+    /*
+    lists only projects where username is member
+     */
+    public List<ListProjectEntry> listProjects(String username) throws IllegalUsernameException {
         if(!this.users.containsKey(username))
             throw new IllegalUsernameException();
 
-        return this.projects.keySet();
+        List<ListProjectEntry> listProject = new ArrayList<>();
+
+        for(Map.Entry<String, Project> projEntry : projects.entrySet()) {
+            Project project = projEntry.getValue();
+
+            if(project.getMembers().contains(username)) {
+
+                String projName = project.getProjectName();
+                listProject.add(new ListProjectEntry(projName, getProjectMulticasIp(projName)));
+            }
+        }
+
+        return listProject;
     }
 
     public List<String> showMembers(String username, String projectName)
@@ -150,6 +166,18 @@ TCP
         return this.projects.get(projectName).getMembers();
     }
 
+    public CSReturnValues deleteProject(String username, String projectName) throws IllegalUsernameException, IllegalProjectException {
+        if(!this.users.containsKey(username))
+            throw new IllegalUsernameException();
+
+        if(!this.projects.containsKey(projectName)) {
+            throw new IllegalProjectException();
+        }
+
+        this.projects.remove(projectName).delete();
+        // add project ip to ipFree list
+        return null;
+    }
 
 /*
  ******************************************** EXIT OPERATIONS
@@ -179,7 +207,7 @@ TCP
      */
     public String getProjectMulticasIp(String projectName) {
         if(this.projects.containsKey(projectName)) {
-            return this.projects.get(projectName).getChatMulticastIP().toString();
+            return this.projects.get(projectName).getChatMulticastIP().toString().substring(1);
         }
         return null;
     }

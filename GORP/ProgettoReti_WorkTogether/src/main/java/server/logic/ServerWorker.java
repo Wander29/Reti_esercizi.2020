@@ -3,6 +3,8 @@ package server.logic;
 import protocol.CSOperations;
 import protocol.CSProtocol;
 import protocol.CSReturnValues;
+import protocol.classes.ListProjectEntry;
+import protocol.classes.TCPBuffersNIO;
 import utils.*;
 import utils.exceptions.IllegalProjectException;
 import utils.exceptions.IllegalUsernameException;
@@ -37,7 +39,7 @@ public class ServerWorker implements Runnable {
         // since i want to read the buffer, "flip" it to reading mode
         bufs.inputBuf.flip();
 
-        // get the operation code to distinguish the operation
+        // gets the operation code to distinguish the operation
         StringBuilder sbuilder = new StringBuilder();
 
         while(bufs.inputBuf.hasRemaining()) {
@@ -79,7 +81,7 @@ public class ServerWorker implements Runnable {
                 break;
 
         }
-        // wait for other operations
+
         cliCh.register(key.selector(), SelectionKey.OP_READ, bufs);
     }
 
@@ -178,11 +180,11 @@ public class ServerWorker implements Runnable {
 
     /*
         -LIST_PROJECTS
-     */
+    */
     private void opListProject(TCPBuffersNIO bufs, SocketChannel cliCh) throws IOException {
         bufs.inputBuf.clear();
 
-        Set<String> list = null;
+        List<ListProjectEntry> list = null;
         try {
             list = this.server.listProjects(bufs.getUsername());
         } catch (IllegalUsernameException e) {
@@ -190,12 +192,14 @@ public class ServerWorker implements Runnable {
         }
 
         StringBuilder builder = new StringBuilder(CSReturnValues.LIST_PROJECTS_OK.toString());
-        for(String s : list) {
+        for(ListProjectEntry proj : list) {
             builder.append(";");
-            System.out.println(s);
-            builder.append(s);
+            System.out.println(proj.project);
+            builder.append(";");
+            builder.append(proj.ip);
         }
         String ret = builder.toString();
+
         if(CSProtocol.DEBUG()) {
             System.out.println("response: " + ret);
         }

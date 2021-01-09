@@ -1,6 +1,7 @@
 package server.logic;
 
 import protocol.CSReturnValues;
+import protocol.classes.ListProjectEntry;
 import server.data.WorthData;
 import server.logic.rmi.ServerManagerRMI;
 import utils.exceptions.IllegalProjectException;
@@ -11,7 +12,6 @@ import java.rmi.RemoteException;
 import java.util.List;
 import java.util.Map;
 import java.util.NoSuchElementException;
-import java.util.Set;
 
 /*
     gestisce la concorrenza ecc.. del SERVER REALE
@@ -64,7 +64,9 @@ TCP
 
     }
 
-    public synchronized Set<String> listProjects(String username) throws IllegalUsernameException {
+    public synchronized List<ListProjectEntry> listProjects(String username)
+            throws IllegalUsernameException
+    {
         return this.server.listProjects(username);
     }
 

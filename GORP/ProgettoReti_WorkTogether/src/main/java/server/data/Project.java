@@ -11,7 +11,7 @@ public class Project implements Serializable {
 
     private final static int FIRST_FREE_PORT = 1024;
     private final static int MAX_PORT_NUM = 65535;
-    private final static int START_MULTICAST_FIRST_OCTET = 224;
+    private final static int START_MULTICAST_FIRST_OCTET = 239;
     private final static int END_MULTICAST_FIRST_OCTET = 239;
 
     private String projectName;
@@ -25,11 +25,17 @@ public class Project implements Serializable {
     private InetAddress chatMulticastIP;
     private int chatMulticastPort;
 
+    private static List<InetAddress> ipFree = new ArrayList<>();
+
     public Project(String s, String creator) throws UnknownHostException, NoSuchElementException {
         this.projectName = s;
 
         // assign a MulticastIP and port to this project
-        this.chatMulticastIP = this.generateMulticastIP();
+        if(ipFree.isEmpty())
+            this.chatMulticastIP = this.generateMulticastIP();
+        else
+            this.chatMulticastIP = ipFree.remove(0);
+
         this.chatMulticastPort = this.portScannerFindFreePort(this.chatMulticastIP);
 
         this.members            = new ArrayList<String>();
@@ -50,6 +56,7 @@ public class Project implements Serializable {
     private InetAddress generateMulticastIP() throws UnknownHostException {
 
         InetAddress currIP;
+
         String currentIPString;
 
         do {
@@ -132,5 +139,9 @@ public class Project implements Serializable {
 
     public int getChatMulticastPort() {
         return chatMulticastPort;
+    }
+
+    public void delete() {
+        ipFree.add(this.getChatMulticastIP());
     }
 }

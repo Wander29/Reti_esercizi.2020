@@ -8,6 +8,7 @@ import com.jfoenix.controls.JFXComboBox;
 import com.jfoenix.controls.JFXTabPane;
 import com.jfoenix.effects.JFXDepthManager;
 import javafx.application.Platform;
+import javafx.beans.InvalidationListener;
 import javafx.beans.property.SimpleStringProperty;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
@@ -19,6 +20,8 @@ import javafx.scene.input.MouseEvent;
 import javafx.scene.layout.Pane;
 import javafx.scene.layout.VBox;
 import javafx.stage.Stage;
+import protocol.CSProtocol;
+import protocol.classes.ListProjectEntry;
 import server.data.UserInfo;
 import utils.StringUtils;
 import utils.exceptions.IllegalProjectException;
@@ -28,6 +31,7 @@ import java.io.IOException;
 import java.net.DatagramPacket;
 import java.net.DatagramSocket;
 import java.net.InetAddress;
+import java.net.UnknownHostException;
 import java.nio.ByteBuffer;
 import java.nio.channels.Pipe;
 import java.sql.SQLException;
@@ -39,7 +43,6 @@ import java.util.Optional;
 
 public class UserSceneController extends ClientController {
     private String currentProject;
-
 /*
     NODES
  */
@@ -71,78 +74,25 @@ public class UserSceneController extends ClientController {
         super();
     }
 
-
-    Pipe pipe;
-    Pipe.SinkChannel pipe_writeChannel;
-
     public void initialize() {
 
+        // adds listener for list projects
+        projectNames.addListener((InvalidationListener) observable -> {
+            System.out.println("spara");
+        });
+        comboChooseProject.setItems(this.projectNames);
 
         try {
-            pipe = Pipe.open();
-            pipe_writeChannel = pipe.sink();
-            pipe_writeChannel.configureBlocking(false);
-            ChatManager chatManager = new ChatManager(pipe);
-            chatManager.start();
-
-            String ip = "239.21.21.21;9999";
-            ByteBuffer bb = ByteBuffer.allocate(512);
-            bb.clear();
-            bb.put(ip.getBytes());
-            bb.flip();
-            //write the data into a sink channel.
-            while(bb.hasRemaining()) {
-                pipe_writeChannel.write(bb);
-            }
-
-            //write the data into a sink channel.
-            while(bb.hasRemaining()) {
-                pipe_writeChannel.write(bb);
-            }
-
-            Thread.sleep(1000);
-
-
-            InetAddress ia = InetAddress.getByName("239.21.21.21");
-            String send = "CHAT_MSG;wander;Rancore;" + Long.toString(System.currentTimeMillis()) +
-                    ";la chat è avviata!";
-
-            byte[] data = StringUtils.stringToBytes(send);
-
-            DatagramPacket dp = new DatagramPacket(data, data.length, ia, 9999);
-            DatagramSocket ms = new DatagramSocket();
-            ms.send(dp);
-
-            Thread.sleep(1000);
-
-            try {
-                List<ChatMsg> messages = DbHandler.getInstance().readChat("Rancore");
-                for(ChatMsg msg : messages) {
-                    DateFormat df = new SimpleDateFormat("HH:mm");
-
-                    System.out.println(
-                            "USERNAME: " + msg.username +
-                            " - PROJECT: " + msg.project +
-                            " - TIMESENT: " + df.format(msg.sentTime) +
-                            "\n" + msg.msg);
-                }
-
-            } catch (SQLException throwables) {
-                throwables.printStackTrace();
-            }
-
+            clientLogic.startChatManager();
         } catch (IOException e) {  e.printStackTrace(); }
-        catch (InterruptedException e) {
-            e.printStackTrace();
-        }
 
-        updateComboBoxListProjects();
+        // listeners for TabPanes
         tabPaneShowProject.getSelectionModel().selectedItemProperty().addListener((ov, oldTab, newTab) -> {
             System.err.println("tabPaneShowProject changed: " + newTab.getText());
 
             switch(newTab.getText()) {
                 case "PROGETTO":
-                    updateComboBoxListProjects();
+                    listProjects();
                     // JFXDepthManager.setDepth(tableViewTODOlist, 1);
 
                     break;
@@ -198,7 +148,7 @@ public class UserSceneController extends ClientController {
         // we have new project name
         try {
             clientLogic.createProject(projName);
-            updateComboBoxListProjects();
+            listProjects();
         } catch (IOException e) {
             e.printStackTrace();
         }
@@ -231,22 +181,23 @@ public class UserSceneController extends ClientController {
 
     }
 
+
 /*
     UTILS
  */
-    /**
-     * asks server to get list of projects, then updates combo box cells
-     */
-    private void updateComboBoxListProjects() {
-        // ask for listProjects
-        List<String> projects = null;
+    private List<ListProjectEntry> projects = null;
+    private ObservableList<String> projectNames = FXCollections.observableArrayList();
+
+    private void listProjects() {
         try {
-            projects = clientLogic.listProjects();
-
-            // once you have the list, populate combo box
-            comboChooseProject.getItems().clear();
-            comboChooseProject.getItems().addAll(projects);
-
+            List<ListProjectEntry> updatedProjects = clientLogic.listProjects();
+            for(ListProjectEntry entry : updatedProjects)
+            {
+                if(!this.projects.contains(entry)) {
+                    clientLogic.startConnection();
+                    this.projectNames.add(entry.project);
+                }
+            }
         } catch (IOException e) {
             e.printStackTrace();
         } catch (IllegalUsernameException e) {
@@ -291,6 +242,55 @@ public class UserSceneController extends ClientController {
         stage.close();
     }
 }
+
+/*
+// NUOVO PROGETTO
+            String ip = "239.21.21.21;9999";
+            ByteBuffer bb = ByteBuffer.allocate(512);
+            bb.clear();
+            bb.put(ip.getBytes());
+            bb.flip();
+            // writes the data into a sink channel.
+            while(bb.hasRemaining()) {
+                pipe_writeChannel.write(bb);
+            }
+
+            // writes the data into a sink channel.
+            while(bb.hasRemaining()) {
+                pipe_writeChannel.write(bb);
+            }
+
+// INVIO UDP CHAT
+
+            InetAddress ia = InetAddress.getByName("239.21.21.21");
+            String send = "CHAT_MSG;wander;Rancore;" + Long.toString(System.currentTimeMillis()) +
+                    ";la chat è avviata!";
+
+            byte[] data = StringUtils.stringToBytes(send);
+
+            DatagramPacket dp = new DatagramPacket(data, data.length, ia, 9999);
+            DatagramSocket ms = new DatagramSocket();
+            ms.send(dp);
+
+            Thread.sleep(1000);
+
+// RECUPERO MESSAGGI CHAT
+            try {
+                List<ChatMsg> messages = DbHandler.getInstance().readChat("Rancore");
+                for(ChatMsg msg : messages) {
+                    DateFormat df = new SimpleDateFormat("HH:mm");
+
+                    System.out.println(
+                            "USERNAME: " + msg.username +
+                            " - PROJECT: " + msg.project +
+                            " - TIMESENT: " + df.format(msg.sentTime) +
+                            "\n" + msg.msg);
+                }
+
+            } catch (SQLException throwables) {
+                throwables.printStackTrace();
+            }
+ */
 
 
  /*

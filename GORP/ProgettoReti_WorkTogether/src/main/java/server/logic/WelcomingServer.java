@@ -1,9 +1,8 @@
 package server.logic;
 
-import client.model.ClientWT;
 import protocol.CSProtocol;
 import server.logic.rmi.ServerManagerRMI;
-import utils.TCPBuffersNIO;
+import protocol.classes.TCPBuffersNIO;
 
 import java.io.IOException;
 import java.net.InetSocketAddress;

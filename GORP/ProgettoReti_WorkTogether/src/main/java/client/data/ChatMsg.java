@@ -11,13 +11,14 @@ public class ChatMsg {
     public String msg;
 
     public ChatMsg(String us, String pr, Time t, String m) {
-        /*
-        DateFormat df = new SimpleDateFormat("HH:mm");
-        df.format(sentTime);
-         */
         this.username = us;
         this.project = pr;
         this.sentTime = t;
         this.msg = m;
     }
 }
+
+/* for printing Time in HH:mm
+    DateFormat df = new SimpleDateFormat("HH:mm");
+    df.format(sentTime);
+ */

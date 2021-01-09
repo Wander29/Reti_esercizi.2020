@@ -1,30 +1,19 @@
+/*
+    NOTE on language I used:
+    every sentence relative to specific rows of code is intended to be read with the the initial
+    sentence, ex: «[the code below] opens an unnamed pipe»
+ */
+
 package server;
 
 import java.io.BufferedReader;
 import java.io.IOException;
-import java.io.InputStream;
 import java.io.InputStreamReader;
-import java.net.InetSocketAddress;
-import java.net.ServerSocket;
-import java.nio.channels.SelectionKey;
-import java.nio.channels.Selector;
-import java.nio.channels.ServerSocketChannel;
-import java.nio.channels.SocketChannel;
-import java.rmi.AlreadyBoundException;
-import java.rmi.RemoteException;
-import java.rmi.registry.LocateRegistry;
-import java.rmi.registry.Registry;
-import java.util.concurrent.Executors;
-import java.util.concurrent.ThreadPoolExecutor;
 
-import protocol.CSProtocol;
 import server.data.WorthData;
 import server.logic.SerializeHelper;
 import server.logic.WelcomingServer;
-import server.logic.rmi.ServerManagerRMI;
 import server.logic.ServerManagerWT;
-import server.logic.ServerWorker;
-import utils.TCPBuffersNIO;
 
 public class WorthServer {
     private final static String EXIT_STRING = "exit";
