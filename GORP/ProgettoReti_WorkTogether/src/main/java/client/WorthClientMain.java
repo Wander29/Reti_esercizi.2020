@@ -1,7 +1,6 @@
 package client;
 
 import client.controllers.ClientController;
-import client.controllers.LoginController;
 import javafx.application.Application;
 import javafx.application.Platform;
 import javafx.fxml.FXMLLoader;
@@ -13,9 +12,9 @@ import javafx.stage.Stage;
 import java.io.IOException;
 
 /**
- * JavaFX WorthClient
+ * JavaFX WorthClientMain
  */
-public class WorthClient extends Application {
+public class WorthClientMain extends Application {
 
     private Scene scene;
     private FXMLLoader loader;
@@ -42,13 +41,14 @@ public class WorthClient extends Application {
 
          */
 
-        stage.setOnHiding(event -> {
+        stage.setOnCloseRequest(event -> {
             try {
                 controller.handleCloseRequest();
             } catch (IOException e) {
                 e.printStackTrace();
             }
             Platform.exit();
+            System.exit(0);
         });
         // view
         stage.setScene(scene);
@@ -56,7 +56,7 @@ public class WorthClient extends Application {
         stage.setTitle("WORTH - Work Together");
 
         stage.getIcons().add(new Image(
-                WorthClient.class.getResourceAsStream("../images/notebook.png")));
+                WorthClientMain.class.getResourceAsStream("../images/notebook.png")));
 
         stage.show();
 
@@ -68,11 +68,11 @@ public class WorthClient extends Application {
     }
 
     private FXMLLoader getFXMLLoader(String fxml) {
-        return new FXMLLoader(WorthClient.class.getResource(fxml + ".fxml"));
+        return new FXMLLoader(WorthClientMain.class.getResource(fxml + ".fxml"));
     }
 
     private Parent loadFXML() throws IOException {
-        // FXMLLoader fxmlLoader = new FXMLLoader(WorthClient.class.getResource(fxml + ".fxml"));
+        // FXMLLoader fxmlLoader = new FXMLLoader(WorthClientMain.class.getResource(fxml + ".fxml"));
         return this.loader.load();
     }
 

@@ -5,6 +5,7 @@ import javafx.fxml.FXMLLoader;
 import javafx.scene.Node;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
+import javafx.scene.control.Alert;
 import javafx.stage.Stage;
 import javafx.stage.StageStyle;
 import protocol.CSProtocol;
@@ -12,6 +13,7 @@ import protocol.CSProtocol;
 import java.io.IOException;
 import java.rmi.NotBoundException;
 import java.rmi.RemoteException;
+import java.sql.SQLException;
 
 public abstract class ClientController {
     protected final static int MIN_LENGTH_PSW = 2;
@@ -46,6 +48,9 @@ public abstract class ClientController {
                     CSProtocol.RMI_SERVICE_NAME() + " non presente");
             System.exit(-1);
         }
+        catch (SQLException t) {
+            t.printStackTrace();
+        }
     }
 
     protected void loadNewWindow(String loc, String title) {
@@ -77,5 +82,11 @@ public abstract class ClientController {
     protected void closeStage(Node node) {
         Stage st = (Stage) node.getScene().getWindow();
         st.close();
+    }
+
+    protected void showAlertNetworkError() {
+        Alert info = new Alert(Alert.AlertType.INFORMATION);
+        info.setHeaderText("ERRORE DI RETE");
+        info.showAndWait();
     }
 }

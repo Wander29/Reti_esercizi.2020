@@ -6,8 +6,8 @@ import protocol.classes.ListProjectEntry;
 import server.data.Project;
 import server.data.UserInfo;
 import server.data.WorthData;
-import utils.exceptions.IllegalProjectException;
-import utils.exceptions.IllegalUsernameException;
+import protocol.exceptions.IllegalProjectException;
+import protocol.exceptions.IllegalUsernameException;
 
 import java.net.UnknownHostException;
 import java.util.*;
@@ -40,8 +40,21 @@ public class ServerWT {
         users       = data.getUsers();
         projects    = data.getProjects();
 
+        try {
+            insertSampleData();
+        } catch (UnknownHostException e) {
+            e.printStackTrace();
+        }
+
         try { this.md = MessageDigest.getInstance("SHA-256"); }
         catch (NoSuchAlgorithmException e) { e.printStackTrace(); }
+    }
+
+    private void insertSampleData() throws UnknownHostException {
+        Project p = new Project("Rancore", "wander");
+        p.addMember("aa");
+        p.addMember("bb");
+        this.projects.put("Rancore", p);
     }
 
 /*
@@ -146,7 +159,11 @@ TCP
             if(project.getMembers().contains(username)) {
 
                 String projName = project.getProjectName();
-                listProject.add(new ListProjectEntry(projName, getProjectMulticasIp(projName)));
+                listProject.add(new ListProjectEntry(
+                        projName,
+                        getProjectMulticasIp(projName),
+                        project.getChatMulticastPort()
+                ));
             }
         }
 
@@ -164,6 +181,27 @@ TCP
         }
 
         return this.projects.get(projectName).getMembers();
+    }
+
+    public CSReturnValues addMember(String username, String projectName, String newMember) {
+        if(!this.users.containsKey(username))
+            return CSReturnValues.USERNAME_INVALID;
+
+        if(!this.users.containsKey(newMember))
+            return CSReturnValues.USERNAME_NOT_PRESENT;
+
+        if(!this.projects.containsKey(projectName)) {
+            return CSReturnValues.PROJECT_NOT_PRESENT;
+        }
+
+        Project proj = this.projects.get(projectName);
+        if(proj.getMembers().contains(newMember)) {
+            return CSReturnValues.USERNAME_ALREADY_PRESENT;
+        }
+
+        proj.addMember(newMember);
+
+        return CSReturnValues.ADD_MEMBER_OK;
     }
 
     public CSReturnValues deleteProject(String username, String projectName) throws IllegalUsernameException, IllegalProjectException {

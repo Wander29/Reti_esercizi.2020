@@ -2,8 +2,10 @@
 
 <?import com.jfoenix.controls.JFXButton?>
 <?import com.jfoenix.controls.JFXComboBox?>
+<?import com.jfoenix.controls.JFXListView?>
 <?import com.jfoenix.controls.JFXTabPane?>
 <?import com.jfoenix.controls.JFXTextArea?>
+<?import com.jfoenix.controls.JFXToggleButton?>
 <?import javafx.geometry.Insets?>
 <?import javafx.scene.control.Label?>
 <?import javafx.scene.control.ScrollPane?>
@@ -17,6 +19,10 @@
 <?import javafx.scene.layout.HBox?>
 <?import javafx.scene.layout.StackPane?>
 <?import javafx.scene.layout.VBox?>
+<?import javafx.scene.paint.Color?>
+<?import javafx.scene.paint.RadialGradient?>
+<?import javafx.scene.paint.Stop?>
+<?import javafx.scene.text.Font?>
 
 <StackPane maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="720.0" prefWidth="1280.0" stylesheets="@../css/main_style.css" xmlns="http://javafx.com/javafx/15.0.1" xmlns:fx="http://javafx.com/fxml/1" fx:controller="client.controllers.UserSceneController">
    <children>
@@ -30,9 +36,28 @@
                             <content>
                                 <BorderPane>
                                  <top>
-                                    <HBox alignment="CENTER" prefHeight="100.0" prefWidth="200.0" spacing="30.0" BorderPane.alignment="CENTER">
+                                    <HBox alignment="CENTER" prefHeight="100.0" prefWidth="200.0" spacing="40.0" BorderPane.alignment="CENTER">
                                        <children>
-                                          <Label fx:id="labelChosenProject" text="ProjectName" textFill="WHITE" />
+                                          <Label fx:id="labelChosenProject" prefHeight="63.0" prefWidth="289.0" text="ProjectName" textAlignment="CENTER">
+                                             <textFill>
+                                                <RadialGradient centerX="0.5" centerY="0.5" radius="0.5">
+                                                   <stops>
+                                                      <Stop>
+                                                         <color>
+                                                            <Color red="0.7699999809265137" green="0.05389999970793724" blue="0.32621970772743225" />
+                                                         </color>
+                                                      </Stop>
+                                                      <Stop offset="1.0">
+                                                         <color>
+                                                            <Color red="0.46052631735801697" green="0.17056530714035034" blue="0.2768843472003937" />
+                                                         </color>
+                                                      </Stop>
+                                                   </stops>
+                                                </RadialGradient>
+                                             </textFill>
+                                             <font>
+                                                <Font name="URWGothic-BookOblique" size="41.0" />
+                                             </font></Label>
                                           <JFXButton fx:id="btnAddCArd" onAction="#handleBtnAddCard" text="Card">
                                              <graphic>
                                                 <ImageView fitHeight="36.0" fitWidth="44.0" pickOnBounds="true" preserveRatio="true">
@@ -53,7 +78,7 @@
                                                       </ImageView>
                                                    </graphic>
                                                 </JFXButton>
-                                                <JFXComboBox fx:id="comboChooseProject" onAction="#handleComboChooseProject" prefWidth="347.0" promptText="Cambia progetto..." styleClass="combo-small" unFocusColor="WHITE" />
+                                                <JFXComboBox fx:id="comboChooseProject" onAction="#handleComboChooseProject" prefHeight="39.0" prefWidth="205.0" promptText="Cambia progetto..." styleClass="combo-small" unFocusColor="WHITE" />
                                              </children>
                                           </VBox>
                                           <JFXButton fx:id="btnCancel" disable="true" text="Cancella">
@@ -77,10 +102,10 @@
                                  <center>
                                     <HBox BorderPane.alignment="CENTER">
                                        <children>
-                                          <VBox alignment="TOP_CENTER" prefHeight="600.0" prefWidth="500.0">
+                                          <VBox alignment="TOP_CENTER" prefHeight="600.0" prefWidth="500.0" HBox.hgrow="ALWAYS">
                                              <children>
                                                 <Label text="TODO" textFill="WHITE" />
-                                                <ScrollPane prefHeight="509.0" prefWidth="300.0">
+                                                <ScrollPane prefHeight="509.0" prefWidth="300.0" VBox.vgrow="ALWAYS">
                                                    <content>
                                                       <StackPane styleClass="cardListVBox">
                                                          <children>
@@ -101,7 +126,14 @@
                                                 </ScrollPane>
                                              </children>
                                           </VBox>
-                                          <VBox prefHeight="600.0" prefWidth="500.0" />
+                                          <VBox alignment="CENTER" prefHeight="600.0" prefWidth="500.0" spacing="5.0" HBox.hgrow="ALWAYS">
+                                             <children>
+                                                <Label text="TO BE REVISED" textFill="WHITE" />
+                                                <JFXListView id="toBeRevisedList" prefHeight="267.0" prefWidth="91.0" VBox.vgrow="ALWAYS" />
+                                             </children>
+                                             <padding>
+                                                <Insets bottom="20.0" left="10.0" right="10.0" top="10.0" />
+                                             </padding></VBox>
                                           <VBox prefHeight="600.0" prefWidth="500.0" />
                                           <VBox prefHeight="600.0" prefWidth="500.0" />
                                        </children>
@@ -136,11 +168,11 @@
                                     </HBox>
                                  </bottom>
                                  <center>
-                                    <TableView prefHeight="540.0" prefWidth="1043.0" stylesheets="@../css/chatTable.css" BorderPane.alignment="CENTER">
+                                    <TableView fx:id="chatTableView" prefHeight="540.0" prefWidth="1043.0" stylesheets="@../css/chatTable.css" BorderPane.alignment="CENTER">
                                       <columns>
-                                        <TableColumn prefWidth="161.0" text="USERNAME" />
-                                        <TableColumn minWidth="0.0" prefWidth="886.0" text="MESSAGGIO" />
-                                          <TableColumn minWidth="0.0" prefWidth="153.0" text="ORARIO" />
+                                        <TableColumn fx:id="chatUsernameCol" editable="false" prefWidth="161.0" sortable="false" text="USERNAME" />
+                                        <TableColumn fx:id="chatMessageCol" editable="false" minWidth="0.0" prefWidth="886.0" sortable="false" text="MESSAGGIO" />
+                                          <TableColumn fx:id="chatSentTimeCol" editable="false" minWidth="0.0" prefWidth="153.0" sortType="DESCENDING" text="ORARIO" />
                                       </columns>
                                     </TableView>
                                  </center>
@@ -153,10 +185,10 @@
                                  <center>
                                     <AnchorPane BorderPane.alignment="TOP_CENTER">
                                        <children>
-                                          <TableView prefHeight="641.0" prefWidth="1200.0" stylesheets="@../css/usersTable.css" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0">
+                                          <TableView fx:id="membersProjectTableView" prefHeight="641.0" prefWidth="1200.0" stylesheets="@../css/usersTable.css" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0">
                                             <columns>
-                                              <TableColumn prefWidth="650.0" text="USERNAME" />
-                                              <TableColumn prefWidth="650.0" text="STATO" />
+                                              <TableColumn fx:id="usernameMemberProjectColumn" prefWidth="650.0" text="USERNAME" />
+                                              <TableColumn fx:id="stateMemberProjectColumn" prefWidth="650.0" text="STATO" />
                                             </columns>
                                           </TableView>
                                        </children>
@@ -167,7 +199,7 @@
                                        <children>
                                           <HBox prefHeight="54.0" prefWidth="414.0">
                                              <children>
-                                                <JFXButton accessibleHelp="Aggiungi un utente al progetto corrente, inserendo il suo Username" accessibleRoleDescription="Aggiungi un utente al progetto corrente, inserendo il suo Username" accessibleText="Aggiungi un utente al progetto corrente, inserendo il suo Username" text="utente">
+                                                <JFXButton fx:id="bntAddMember" accessibleHelp="Aggiungi un utente al progetto corrente, inserendo il suo Username" accessibleRoleDescription="Aggiungi un utente al progetto corrente, inserendo il suo Username" accessibleText="Aggiungi un utente al progetto corrente, inserendo il suo Username" onMouseClicked="#handleAddMember" text="utente">
                                                    <graphic>
                                                       <ImageView fitHeight="36.0" fitWidth="44.0" pickOnBounds="true" preserveRatio="true">
                                                          <image>
@@ -178,7 +210,7 @@
                                                 </JFXButton>
                                              </children>
                                           </HBox>
-                                          <JFXButton text="solo ONLINE " HBox.hgrow="NEVER">
+                                          <JFXToggleButton fx:id="toggleOnlineMembersOnly" styleClass="button" text="Solo ONLINE">
                                              <graphic>
                                                 <ImageView fitHeight="37.0" fitWidth="44.0" pickOnBounds="true" preserveRatio="true">
                                                    <image>
@@ -186,7 +218,7 @@
                                                    </image>
                                                 </ImageView>
                                              </graphic>
-                                          </JFXButton>
+                                          </JFXToggleButton>
                                        </children>
                                        <padding>
                                           <Insets bottom="3.0" right="100.0" top="3.0" />

@@ -47,6 +47,17 @@ public class Project implements Serializable {
         this.members.add(creator);
     }
 
+    public void addMember(String username) {
+        this.members.add(username);
+    }
+
+    public void delete() {
+        ipFree.add(this.getChatMulticastIP());
+    }
+
+/*
+    Multicast IP related
+ */
     private static int
             a = START_MULTICAST_FIRST_OCTET,
             b = 0,
@@ -109,6 +120,9 @@ public class Project implements Serializable {
         return -1;
     }
 
+/*
+    GETTERs
+ */
     public String getProjectName() {
         return projectName;
     }
@@ -116,6 +130,7 @@ public class Project implements Serializable {
     public List<String> getMembers() {
         return members;
     }
+
 
     public List<Card> getToDoCards() {
         return toDoCards;
@@ -139,9 +154,5 @@ public class Project implements Serializable {
 
     public int getChatMulticastPort() {
         return chatMulticastPort;
-    }
-
-    public void delete() {
-        ipFree.add(this.getChatMulticastIP());
     }
 }

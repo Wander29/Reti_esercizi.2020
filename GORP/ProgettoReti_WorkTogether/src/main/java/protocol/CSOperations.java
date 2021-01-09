@@ -11,6 +11,7 @@ public enum CSOperations {
     CREATE_PROJECT,
     LIST_PROJECTS,
     SHOW_MEMBERS,
+    ADD_MEMBER,
     LOGOUT,
     EXIT;
 }

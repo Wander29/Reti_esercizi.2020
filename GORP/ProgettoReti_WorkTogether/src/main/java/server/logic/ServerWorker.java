@@ -1,14 +1,15 @@
 package server.logic;
 
+import com.google.gson.Gson;
 import protocol.CSOperations;
 import protocol.CSProtocol;
 import protocol.CSReturnValues;
 import protocol.classes.ListProjectEntry;
 import protocol.classes.TCPBuffersNIO;
 import utils.*;
-import utils.exceptions.IllegalProjectException;
-import utils.exceptions.IllegalUsernameException;
-import utils.exceptions.TerminationException;
+import protocol.exceptions.IllegalProjectException;
+import protocol.exceptions.IllegalUsernameException;
+import protocol.exceptions.TerminationException;
 
 import java.io.IOException;
 import java.nio.ByteBuffer;
@@ -67,7 +68,11 @@ public class ServerWorker implements Runnable {
                 break;
 
             case SHOW_MEMBERS:
-                opShowMemebers(bufs, cliCh);
+                opShowMembers(bufs, cliCh);
+                break;
+
+            case ADD_MEMBER:
+                opAddMember(bufs, cliCh);
                 break;
 
             case LOGOUT:
@@ -190,27 +195,33 @@ public class ServerWorker implements Runnable {
         } catch (IllegalUsernameException e) {
             this.sendResponse(bufs.outputBuf, cliCh, e.retval.toString());
         }
-
+        /*
         StringBuilder builder = new StringBuilder(CSReturnValues.LIST_PROJECTS_OK.toString());
         for(ListProjectEntry proj : list) {
             builder.append(";");
-            System.out.println(proj.project);
+            builder.append(proj.project);
             builder.append(";");
             builder.append(proj.ip);
+            builder.append(";");
+            builder.append(String.valueOf(proj.port));
         }
         String ret = builder.toString();
 
         if(CSProtocol.DEBUG()) {
             System.out.println("response: " + ret);
-        }
-        this.sendResponse(bufs.outputBuf, cliCh, ret);
+        }*/
+
+        Gson gson = new Gson();
+        String toSend = CSReturnValues.LIST_PROJECTS_OK.toString() + ";" + gson.toJson(list);
+
+        this.sendResponse(bufs.outputBuf, cliCh, toSend);
     }
 
     /*
     protocol for SHOW MEMBERS:
         - SHOW_MEMBERS;projectName
      */
-    private void opShowMemebers(TCPBuffersNIO bufs, SocketChannel cliCh) throws IOException {
+    private void opShowMembers(TCPBuffersNIO bufs, SocketChannel cliCh) throws IOException {
         List<String> tokens = StringUtils.tokenizeRequest(bufs.inputBuf);
         bufs.inputBuf.clear();
 
@@ -238,8 +249,24 @@ public class ServerWorker implements Runnable {
         }
     }
 
+    /*
+        protocol for ADD MEMBER operation
+        -   ADD_MEMBER;projectName;newMember
+     */
+    private void opAddMember(TCPBuffersNIO bufs, SocketChannel cliCh) throws IOException {
+        List<String> tokens = StringUtils.tokenizeRequest(bufs.inputBuf);
+        bufs.inputBuf.clear();
 
-/*
+        String projectName  = tokens.remove(0);
+        String newMember    = tokens.remove(0);
+
+        String ret = this.server.addMember(bufs.getUsername(), projectName, newMember);
+
+        sendResponse(bufs.outputBuf, cliCh, ret);
+    }
+
+
+    /*
  ******************************************** EXIT OPERATIONS
  */
     /*

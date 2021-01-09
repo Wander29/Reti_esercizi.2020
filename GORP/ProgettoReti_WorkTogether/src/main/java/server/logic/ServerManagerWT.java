@@ -4,9 +4,10 @@ import protocol.CSReturnValues;
 import protocol.classes.ListProjectEntry;
 import server.data.WorthData;
 import server.logic.rmi.ServerManagerRMI;
-import utils.exceptions.IllegalProjectException;
-import utils.exceptions.IllegalUsernameException;
+import protocol.exceptions.IllegalProjectException;
+import protocol.exceptions.IllegalUsernameException;
 
+import java.io.IOException;
 import java.net.UnknownHostException;
 import java.rmi.RemoteException;
 import java.util.List;
@@ -54,7 +55,7 @@ TCP
     public synchronized String createProject(String username, String projectName) {
         try {
             String ret = this.server.createProject(username, projectName).toString();
-            String ip = this.server.getProjectMulticasIp(projectName).substring(1);
+            String ip = this.server.getProjectMulticasIp(projectName);
 
             return ret + ";" + ip;
         }
@@ -74,6 +75,10 @@ TCP
             throws IllegalProjectException, IllegalUsernameException
     {
         return this.server.showMembers(username, projName);
+    }
+
+    public synchronized String addMember(String username, String projectName, String newMember) throws IOException {
+        return this.server.addMember(username, projectName, newMember).toString();
     }
 
 /*

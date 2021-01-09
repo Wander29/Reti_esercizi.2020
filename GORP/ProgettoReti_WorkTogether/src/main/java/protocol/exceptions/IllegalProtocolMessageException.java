@@ -1,4 +1,4 @@
-package protocol;
+package protocol.exceptions;
 
 public class IllegalProtocolMessageException extends Exception {
 

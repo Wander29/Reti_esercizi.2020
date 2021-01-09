@@ -132,3 +132,12 @@
 .text-area .scroll-bar:vertical .thumb{
     -fx-background-color:  linear-gradient(to bottom, -fx-us-color-light, -fx-us-color-strong);
 }
+
+#toBeRevisedList {
+    -fx-background-color:  linear-gradient(to bottom, -fx-us-color-light, -fx-us-color-strong);
+}
+
+.jfx-toggle-node {
+    /* This is the color once toggled on. */
+    -jfx-toggle-color: deepskyblue;
+}

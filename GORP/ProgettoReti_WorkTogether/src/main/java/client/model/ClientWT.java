@@ -1,17 +1,22 @@
 package client.model;
 
+import client.data.DbHandler;
 import client.model.rmi.ClientNotify;
+import com.google.gson.Gson;
+import com.google.gson.reflect.TypeToken;
 import protocol.CSOperations;
 import protocol.CSProtocol;
 import protocol.CSReturnValues;
-import protocol.IllegalProtocolMessageException;
+import protocol.exceptions.IllegalProtocolMessageException;
+import protocol.classes.ChatMsg;
 import protocol.classes.ListProjectEntry;
 import server.logic.rmi.ServerInterface;
-import utils.exceptions.IllegalProjectException;
-import utils.exceptions.IllegalUsernameException;
+import protocol.exceptions.IllegalProjectException;
+import protocol.exceptions.IllegalUsernameException;
 import utils.StringUtils;
 
 import java.io.*;
+import java.lang.reflect.Type;
 import java.net.InetAddress;
 import java.net.Socket;
 import java.net.UnknownHostException;
@@ -21,6 +26,7 @@ import java.rmi.NotBoundException;
 import java.rmi.RemoteException;
 import java.rmi.registry.LocateRegistry;
 import java.rmi.registry.Registry;
+import java.sql.SQLException;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 
@@ -42,12 +48,12 @@ public class ClientWT {
     every write to a volatile variable will be written to main memory,
     and not just to the CPU cache.
      */
-    protected volatile static ClientWT instance = new ClientWT();
+    protected volatile static ClientWT instance;
     /*
     PROTECTED => can't be created outside package
     uses a daemon thread to manage tcp connection with server
      */
-    protected ClientWT(){
+    protected ClientWT() throws SQLException {
         connThread.setDaemon(true);
         try {
             startRMI();
@@ -65,7 +71,7 @@ public class ClientWT {
     /*
     only one instance shared
      */
-    public static synchronized ClientWT getInstance() throws RemoteException, NotBoundException {
+    public static synchronized ClientWT getInstance() throws RemoteException, NotBoundException, SQLException {
         if(instance == null) {
             instance = new ClientWT();
         }
@@ -110,12 +116,11 @@ RMI
 /*
 UDP
  */
-    private ByteBuffer bb = ByteBuffer.allocate(CSProtocol.BUF_SIZE_CLIENT());
-
     private Pipe pipe;
     private Pipe.SinkChannel pipe_writeChannel;
+    private DbHandler dbHandler;
 
-    public void startChatManager() throws IOException {
+    public void startChatManager() throws IOException, SQLException {
 
         // opens an unnamed pipe
         pipe = Pipe.open();
@@ -124,19 +129,32 @@ UDP
 
         // starts a thread: chatManager
         ChatManager chatManager = new ChatManager(pipe);
+        chatManager.setDaemon(true);
         chatManager.start();
+
+        // link to dbHandler
+        dbHandler = DbHandler.getInstance();
     }
 
+    private ByteBuffer bbPipe = ByteBuffer.allocate(CSProtocol.BUF_SIZE_CLIENT());
+
     public void startChatConnection(ListProjectEntry project) throws IOException {
-        bb.clear();
-        bb.put(StringUtils.stringToBytes(project.ip));
-        bb.flip();
+
+        bbPipe.clear();
+
+        String sendToPipe = project.ip + ";" + project.port;
+        bbPipe.put(StringUtils.stringToBytes(sendToPipe));
+        bbPipe.flip();
+
         // writes the data into a sink channel.
-        while(bb.hasRemaining()) {
-            pipe_writeChannel.write(bb);
+        while(bbPipe.hasRemaining()) {
+            pipe_writeChannel.write(bbPipe);
         }
     }
 
+    public List<ChatMsg> readChat(String projectName) throws SQLException {
+        return dbHandler.readChat(projectName);
+    }
 /*
 TCP
  */
@@ -217,7 +235,7 @@ TCP
 
 
         String ret = connThread.bInput.readLine();
-
+        System.out.println("ret: " + ret);
 
         StringTokenizer tokenizer = new StringTokenizer(ret, ";");
         String firstToken = tokenizer.nextToken();
@@ -227,17 +245,29 @@ TCP
             case LIST_PROJECTS_OK:
                 List<ListProjectEntry> list = new ArrayList<>();
 
-                while(tokenizer.hasMoreTokens()) {
+                // deserialization
+                Gson gson = new Gson();
+                Type listType = new TypeToken<List<ListProjectEntry>>() {}.getType();
+                list = gson.fromJson(tokenizer.nextToken(), listType);
+                /*
 
+                while(tokenizer.hasMoreTokens()) {
                     String projectName = tokenizer.nextToken();
+                    System.out.println("name: " + projectName);
                     if(tokenizer.hasMoreTokens())
                     {
                         String ip = tokenizer.nextToken();
-                        list.add(new ListProjectEntry(projectName, ip));
+                        System.out.println("ip: " + ip);
+
+                        if(tokenizer.hasMoreTokens()) {
+                            int port = Integer.parseInt(tokenizer.nextToken());
+                            list.add(new ListProjectEntry(projectName, ip, port));
+                        }
+                        else throw new IllegalProtocolMessageException();
                     }
                     else throw new IllegalProtocolMessageException();
                 }
-
+                */
                 return list;
 
             case USERNAME_NOT_PRESENT:
@@ -247,7 +277,8 @@ TCP
         return null;
     }
 
-    public static List<String> showMembers(String projectName) throws IOException, IllegalUsernameException, IllegalProjectException {
+    public static List<String> showMembers(String projectName)
+            throws IOException, IllegalUsernameException, IllegalProjectException {
         String req = CSOperations.SHOW_MEMBERS.toString() + ";" + projectName;
 
         if(CSProtocol.DEBUG()) {
@@ -276,6 +307,26 @@ TCP
         }
 
         return null;
+    }
+
+    /*
+        protocol for ADD MEMBER operation
+        -   ADD_MEMBER;projectName;newMember
+     */
+    public static CSReturnValues addMember(String projectName, String newMember) throws IOException {
+        String req = CSOperations.ADD_MEMBER.toString() + ";" +
+                projectName + ";" + newMember;
+
+        if(CSProtocol.DEBUG()) {
+            System.out.println("req: ADD MEMBER for " +  user + " proj: " +
+                    projectName + " newMember: " + newMember);
+        }
+        connThread.bOutput.write(req);
+        connThread.bOutput.flush();
+
+        String ret = connThread.bInput.readLine();
+
+        return CSReturnValues.valueOf(ret);
     }
 
 /*

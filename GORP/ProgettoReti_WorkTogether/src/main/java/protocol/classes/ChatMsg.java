@@ -1,4 +1,4 @@
-package client.data;
+package protocol.classes;
 
 import java.sql.Time;
 import java.text.DateFormat;
@@ -16,9 +16,10 @@ public class ChatMsg {
         this.sentTime = t;
         this.msg = m;
     }
-}
 
-/* for printing Time in HH:mm
-    DateFormat df = new SimpleDateFormat("HH:mm");
-    df.format(sentTime);
- */
+    // ex: HH:mm -> 22:34
+    public String getTimeFormatted() {
+        DateFormat df = new SimpleDateFormat("HH:mm");
+        return df.format(sentTime);
+    }
+}

@@ -1,4 +1,4 @@
-package utils.exceptions;
+package protocol.exceptions;
 
 public class TerminationException extends Exception {
     public TerminationException(String s)   { super(s); }

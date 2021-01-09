@@ -89,7 +89,7 @@
                         <option>--add-exports</option>
                         <option>javafx.base/com.sun.javafx.event=com.jfoenix</option>
                     </options>
-                    <mainClass>client.WorthClient</mainClass>
+                    <mainClass>client.WorthClientMain</mainClass>
                 </configuration>
             </plugin>
         </plugins>

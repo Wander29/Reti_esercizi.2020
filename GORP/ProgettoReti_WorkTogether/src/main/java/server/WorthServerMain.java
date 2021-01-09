@@ -15,7 +15,7 @@ import server.logic.SerializeHelper;
 import server.logic.WelcomingServer;
 import server.logic.ServerManagerWT;
 
-public class WorthServer {
+public class WorthServerMain {
     private final static String EXIT_STRING = "exit";
     private final static int UPDATE_INTERVAL = 30; // seconds
 
@@ -33,7 +33,7 @@ public class WorthServer {
 
         // daemon thread updating database
         DaemonSaver daemonSaver = new DaemonSaver(UPDATE_INTERVAL * 1000, server);
-        daemonSaver.start();
+        //daemonSaver.start();
 
         // waiting for closure: manual handling
         System.out.println("Enter \"" + EXIT_STRING + "\" to stop server");
