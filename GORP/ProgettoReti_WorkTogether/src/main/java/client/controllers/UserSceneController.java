@@ -2,7 +2,7 @@ package client.controllers;
 
 import client.data.ChatMsgObservable;
 import client.data.UserObservable;
-import com.jfoenix.controls.JFXToggleButton;
+import com.jfoenix.controls.*;
 import javafx.beans.binding.Bindings;
 import javafx.beans.property.SimpleStringProperty;
 import javafx.beans.property.StringProperty;
@@ -13,12 +13,10 @@ import javafx.scene.Node;
 import javafx.scene.control.cell.PropertyValueFactory;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
+import javafx.scene.input.KeyEvent;
 import javafx.scene.layout.HBox;
 import protocol.CSReturnValues;
 import protocol.classes.ChatMsg;
-import com.jfoenix.controls.JFXButton;
-import com.jfoenix.controls.JFXComboBox;
-import com.jfoenix.controls.JFXTabPane;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.event.ActionEvent;
@@ -61,6 +59,8 @@ public class UserSceneController extends ClientController {
     private JFXToggleButton toggleOnlineMembersOnly;
     @FXML
     private JFXButton bntAddMember;
+    @FXML
+    private Label labelYourUsername;
 
 /*
     Members
@@ -85,6 +85,10 @@ public class UserSceneController extends ClientController {
     private TableColumn<ChatMsgObservable, String> chatMessageCol;
     @FXML
     private TableColumn<ChatMsgObservable, String> chatSentTimeCol;
+    @FXML
+    private JFXTextArea chatTextArea;
+    @FXML
+    private JFXButton btnSendChat;
 
 /*
   PROJECTS list
@@ -137,6 +141,9 @@ public class UserSceneController extends ClientController {
 
         // listeners for TabPanes
         tabPaneShowProjectInit();
+
+        // sets username in app
+        labelYourUsername.setText(this.username);
     }
 
 /*
@@ -340,6 +347,12 @@ public class UserSceneController extends ClientController {
 /*
     HANDLERS
  */
+    /*
+    PROJECTS
+     */
+    /*
+    Project
+     */
     @FXML
     private JFXButton btnAddProject;
     @FXML
@@ -456,6 +469,14 @@ public class UserSceneController extends ClientController {
         } catch (IOException e) {
             e.printStackTrace();
         }
+    }
+
+    /*
+    Chat
+     */
+    @FXML
+    void enableSendButton(KeyEvent event) {
+
     }
 }
 

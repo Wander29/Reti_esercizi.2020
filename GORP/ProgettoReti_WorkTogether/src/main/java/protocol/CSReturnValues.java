@@ -14,6 +14,7 @@ public enum CSReturnValues {
     PROJECT_NOT_PRESENT,
     SHOW_MEMBERS_OK,
     ADD_MEMBER_OK,
+    CHAT_STOP,
     SERVER_INTERNAL_NETWORK_ERROR,
     LOGOUT_OK;
 }

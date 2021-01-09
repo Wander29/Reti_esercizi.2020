@@ -147,12 +147,12 @@
                                  <bottom>
                                     <HBox alignment="CENTER" prefHeight="100.0" prefWidth="200.0" BorderPane.alignment="CENTER">
                                        <children>
-                                          <JFXTextArea focusColor="#ffffff00" prefHeight="96.0" prefWidth="830.0" promptText="Scrivi qui..." styleClass="chatTextArea" HBox.hgrow="ALWAYS">
+                                          <JFXTextArea fx:id="chatTextArea" focusColor="#ffffff00" onKeyTyped="#enableSendButton" prefHeight="96.0" prefWidth="830.0" promptText="Scrivi qui..." styleClass="chatTextArea" HBox.hgrow="ALWAYS">
                                              <HBox.margin>
                                                 <Insets bottom="2.0" left="40.0" right="40.0" top="2.0" />
                                              </HBox.margin>
                                           </JFXTextArea>
-                                          <JFXButton text="Invia">
+                                          <JFXButton fx:id="btnSendChat" disable="true" onMouseClicked="#handleSendChat" text="Invia">
                                              <graphic>
                                                 <ImageView fitHeight="36.0" fitWidth="44.0" pickOnBounds="true" preserveRatio="true">
                                                    <image>
@@ -199,7 +199,7 @@
                                        <children>
                                           <HBox prefHeight="54.0" prefWidth="414.0">
                                              <children>
-                                                <JFXButton fx:id="bntAddMember" accessibleHelp="Aggiungi un utente al progetto corrente, inserendo il suo Username" accessibleRoleDescription="Aggiungi un utente al progetto corrente, inserendo il suo Username" accessibleText="Aggiungi un utente al progetto corrente, inserendo il suo Username" onMouseClicked="#handleAddMember" text="utente">
+                                                <JFXButton fx:id="bntAddMember" accessibleHelp="Aggiungi un utente al progetto corrente, inserendo il suo Username" accessibleRoleDescription="Aggiungi un utente al progetto corrente, inserendo il suo Username" accessibleText="Aggiungi un utente al progetto corrente, inserendo il suo Username" onMouseClicked="#handleAddMember" text="Utente">
                                                    <graphic>
                                                       <ImageView fitHeight="36.0" fitWidth="44.0" pickOnBounds="true" preserveRatio="true">
                                                          <image>
@@ -288,7 +288,7 @@
                                     <HBox alignment="CENTER" spacing="50.0">
                                        <children>
                                           <Label text="Tuo Username" textFill="#906262" />
-                                          <Label text="LABEL" />
+                                          <Label fx:id="labelYourUsername" text="Username" />
                                        </children>
                                     </HBox>
                                     <JFXButton fx:id="btnExit" onMouseClicked="#handleExit" text="EXIT" />

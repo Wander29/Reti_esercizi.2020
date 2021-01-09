@@ -2,6 +2,8 @@ package client.model;
 
 import client.data.DbHandler;
 import protocol.CSProtocol;
+import protocol.CSReturnValues;
+import protocol.exceptions.TerminationException;
 import utils.StringUtils;
 
 import java.io.IOException;
@@ -61,7 +63,7 @@ public class ChatManager extends Thread {
                     it.remove();
 
                     if(key.isReadable()) {
-                            // try first reading from pipe
+                            // first trying to read from pipe
                         if(key.channel() instanceof Pipe.SourceChannel) {
                             try {
                                 readFromPipeNewMulticast(key);
@@ -73,6 +75,13 @@ public class ChatManager extends Thread {
                             }
                             catch (SQLException t)  { t.printStackTrace(); }
                             catch (IOException e)   { e.printStackTrace(); }
+                            catch (TerminationException e) {
+                                System.out.println("Chat Terminata, chiusura Socket");
+                                DatagramChannel udpChannel = (DatagramChannel) key.channel();
+                                udpChannel.socket().close();
+
+                                key.cancel();
+                            }
                         }
                     }
                     key.channel().register(this.selector, SelectionKey.OP_READ, key.attachment());
@@ -133,7 +142,7 @@ public class ChatManager extends Thread {
         // binds channel to a Socket on specific port
         udpChannel.socket().bind(new InetSocketAddress(port));
         // needed to have Multicast NIO
-         // see: @https://stackoverflow.com/questions/59718752/java-nio-join-to-multicast-channel-on-the-default-network-interface
+            // see: @https://stackoverflow.com/questions/59718752/java-nio-join-to-multicast-channel-on-the-default-network-interface
         NetworkInterface ni;
         try (MulticastSocket s = new MulticastSocket()) {
             ni = s.getNetworkInterface();
@@ -144,28 +153,33 @@ public class ChatManager extends Thread {
         // registers to selector
         ByteBuffer buf = ByteBuffer.allocate(CSProtocol.BUF_SIZE_CLIENT());
         udpChannel.register(this.selector, SelectionKey.OP_READ, buf);
-
     }
 
     /*
         reads a chat message from UDP channel and stores it into local DB
        CHAT_MSG;username;project;timeSent;msg
     */
-    private void readChatMsg(SelectionKey key) throws IOException, SQLException {
+    private void readChatMsg(SelectionKey key) throws IOException, SQLException, TerminationException {
         DatagramChannel udpChannel = (DatagramChannel) key.channel();
         ByteBuffer buf = (ByteBuffer) key.attachment();
+
         // read message
         buf.clear();
         while (udpChannel.receive(buf) == null) { }
 
+        // translate into String
         buf.flip();
         String udpMessageRead = StringUtils.byteBufferToString(buf);
         buf.clear();
 
-        // System.out.println("UDP CHAT MSG: " + udpMessageRead);
+        System.out.println("UDP CHAT MSG: " + udpMessageRead);
         List<String> tokens = StringUtils.tokenizeRequest(udpMessageRead);
 
-        tokens.remove(0); // throw header
+        // analyze it
+        String firstToken = tokens.remove(0); // throw header
+        if(CSReturnValues.valueOf(firstToken) == CSReturnValues.CHAT_STOP)
+            throw new TerminationException();
+
         String username = tokens.remove(0);
         String project = tokens.remove(0);
         String timeSentString = tokens.remove(0);
