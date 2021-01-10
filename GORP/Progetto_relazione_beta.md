@@ -49,6 +49,8 @@ Client->Server: SHOW_MEMBERS;projectName
 Server-->Client: SHOW_MEMBERS_OK;member1;..;.. || USERNAME_NOT_PRESENT || PROJECT_NOT_PRESENT
 Client->Server: ADD_MEMBER;projectName;newMember
 Server-->Client: ADD_MEMBER_OK || USERNAME_NOT_PRESENT || USERNAME_INVALID ||\n USERNAME_ALREADY_PRESENT || PROJECT_NOT_PRESENT
+Client->Server: SHOW_PROJECT;projectName
+Server-->Client: SHOW_PROJECT_OK;JSON || PROJECT_NOT_PRESENT || USERNAME_NOT_PRESENT \n JSON content: [projName, toDoList..., cards history..]
 ```
 
 ```sequence
@@ -73,3 +75,23 @@ quando la finestra della GUI del client viene chiusa viene una mandata una richi
 Se il client aveva effettuato l'accesso in aggiunta viene inviato una richiesta di **LOGOUT**.
 
 Comunicazione TCP stateful, lo stato di utente loggato è registrato durante la comunicazione, infatti non si ha bisogno di passare nuovamente il proprio username.
+
+
+
+? é importante che threadChatManager e ClientWT usino dbHandler che non è sincronizzato
+
+
+
+- Java DB Developer's Guide
+
+Multi-Connection
+From an application, using
+multiple connections to a
+Derby database and issuing
+requests against those
+connections on multiple
+threads.
+
+«If thread
+A does database work that is not transactionally related to thread B, assign them to
+different Connections»

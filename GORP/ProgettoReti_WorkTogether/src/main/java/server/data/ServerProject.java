@@ -1,5 +1,8 @@
 package server.data;
 
+import protocol.classes.Card;
+import protocol.classes.Project;
+
 import java.io.IOException;
 import java.io.Serializable;
 import java.net.InetAddress;
@@ -7,27 +10,21 @@ import java.net.Socket;
 import java.net.UnknownHostException;
 import java.util.*;
 
-public class Project implements Serializable {
+public class ServerProject extends Project implements Serializable {
 
     private final static int FIRST_FREE_PORT = 1024;
     private final static int MAX_PORT_NUM = 65535;
     private final static int START_MULTICAST_FIRST_OCTET = 239;
     private final static int END_MULTICAST_FIRST_OCTET = 239;
 
-    private String projectName;
     private List<String> members;
-
-    private List<Card> toDoCards;
-    private List<Card> inProgressCards;
-    private List<Card> toBeRevisedCards;
-    private List<Card> doneCards;
 
     private InetAddress chatMulticastIP;
     private int chatMulticastPort;
 
     private static List<InetAddress> ipFree = new ArrayList<>();
 
-    public Project(String s, String creator) throws UnknownHostException, NoSuchElementException {
+    public ServerProject(String s, String creator) throws UnknownHostException, NoSuchElementException {
         this.projectName = s;
 
         // assign a MulticastIP and port to this project
@@ -38,7 +35,7 @@ public class Project implements Serializable {
 
         this.chatMulticastPort = this.portScannerFindFreePort(this.chatMulticastIP);
 
-        this.members            = new ArrayList<String>();
+        this.members            = new ArrayList<>();
         this.toDoCards          = new ArrayList<>();
         this.inProgressCards    = new ArrayList<>();
         this.toBeRevisedCards   = new ArrayList<>();
@@ -46,6 +43,27 @@ public class Project implements Serializable {
         // add creator as member
         this.members.add(creator);
     }
+
+    /*** TEST
+     */
+    public void addCard(String name, String descr) {
+        this.toDoCards.add(new Card(name, descr));
+    }
+
+    public void addInProgressCard(String name, String descr) {
+        this.inProgressCards.add(new Card(name, descr));
+    }
+
+    public void addToBeRevisedCard(String name, String descr) {
+        this.toBeRevisedCards.add(new Card(name, descr));
+    }
+
+    public void addDoneCard(String name, String descr) {
+        this.doneCards.add(new Card(name, descr));
+    }
+    /*
+
+     */
 
     public void addMember(String username) {
         this.members.add(username);

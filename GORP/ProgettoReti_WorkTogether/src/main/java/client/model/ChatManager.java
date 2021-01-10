@@ -1,6 +1,7 @@
 package client.model;
 
 import client.data.DbHandler;
+import protocol.CSOperations;
 import protocol.CSProtocol;
 import protocol.CSReturnValues;
 import protocol.exceptions.TerminationException;
@@ -30,7 +31,7 @@ public class ChatManager extends Thread {
     private final Selector selector;
     private DbHandler dbHandler = null; // used to store and retrieve chats
 
-    public ChatManager(Pipe pipe) throws IOException {
+    public ChatManager(Pipe pipe, String username) throws IOException {
         this.pipe = pipe;
         this.selector = Selector.open();
 
@@ -38,10 +39,11 @@ public class ChatManager extends Thread {
         Pipe.SourceChannel pipeReadChannel = this.pipe.source();
         pipeReadChannel.configureBlocking(false); // set non-blocking
         ByteBuffer bb = ByteBuffer.allocate(CSProtocol.BUF_SIZE_CLIENT());
+
         pipeReadChannel.register(this.selector, SelectionKey.OP_READ, bb);
 
         try {
-            this.dbHandler = DbHandler.getInstance(); // instance shared between threads
+            this.dbHandler = new DbHandler(username);
         } catch (SQLException throwables) {
             throwables.printStackTrace();
         }
@@ -113,6 +115,9 @@ public class ChatManager extends Thread {
         }
         List<String> tokens = StringUtils.tokenizeRequest(builder.toString());
 
+        if(tokens.size() != 2)
+            throw new IOException();
+
         String ip = tokens.remove(0);
         int port = Integer.parseInt(tokens.remove(0));
 
@@ -139,6 +144,7 @@ public class ChatManager extends Thread {
         udpChannel.configureBlocking(false); // non-blocking
             // reusable in order to allow more connections from same JVM
         udpChannel.socket().setReuseAddress(true);
+
         // binds channel to a Socket on specific port
         udpChannel.socket().bind(new InetSocketAddress(port));
         // needed to have Multicast NIO
@@ -177,7 +183,7 @@ public class ChatManager extends Thread {
 
         // analyze it
         String firstToken = tokens.remove(0); // throw header
-        if(CSReturnValues.valueOf(firstToken) == CSReturnValues.CHAT_STOP)
+        if(firstToken.equals(CSReturnValues.CHAT_STOP.toString()))
             throw new TerminationException();
 
         String username = tokens.remove(0);

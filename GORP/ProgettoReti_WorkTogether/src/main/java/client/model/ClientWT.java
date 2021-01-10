@@ -7,6 +7,7 @@ import com.google.gson.reflect.TypeToken;
 import protocol.CSOperations;
 import protocol.CSProtocol;
 import protocol.CSReturnValues;
+import protocol.ChatUtils;
 import protocol.exceptions.IllegalProtocolMessageException;
 import protocol.classes.ChatMsg;
 import protocol.classes.ListProjectEntry;
@@ -17,9 +18,7 @@ import utils.StringUtils;
 
 import java.io.*;
 import java.lang.reflect.Type;
-import java.net.InetAddress;
-import java.net.Socket;
-import java.net.UnknownHostException;
+import java.net.*;
 import java.nio.ByteBuffer;
 import java.nio.channels.Pipe;
 import java.rmi.NotBoundException;
@@ -71,7 +70,9 @@ public class ClientWT {
     /*
     only one instance shared
      */
-    public static synchronized ClientWT getInstance() throws RemoteException, NotBoundException, SQLException {
+    public static synchronized ClientWT getInstance()
+            throws RemoteException, NotBoundException, SQLException
+    {
         if(instance == null) {
             instance = new ClientWT();
         }
@@ -127,17 +128,20 @@ UDP
         pipe_writeChannel = pipe.sink();
         pipe_writeChannel.configureBlocking(false);
 
-        // starts a thread: chatManager
-        ChatManager chatManager = new ChatManager(pipe);
+        // link to dbHandler
+        dbHandler = new DbHandler(this.user);
+        dbHandler.createDB();
+
+        // starts a daemon thread: chatManager
+        ChatManager chatManager = new ChatManager(pipe, this.user);
         chatManager.setDaemon(true);
         chatManager.start();
-
-        // link to dbHandler
-        dbHandler = DbHandler.getInstance();
     }
 
-    private ByteBuffer bbPipe = ByteBuffer.allocate(CSProtocol.BUF_SIZE_CLIENT());
+    // used to send chat messages, it has to know ip and port
+    Map<String, ListProjectEntry> projectsInfo = new HashMap<>();
 
+    private ByteBuffer bbPipe = ByteBuffer.allocate(CSProtocol.BUF_SIZE_CLIENT());
     public void startChatConnection(ListProjectEntry project) throws IOException {
 
         bbPipe.clear();
@@ -150,10 +154,28 @@ UDP
         while(bbPipe.hasRemaining()) {
             pipe_writeChannel.write(bbPipe);
         }
+
+        // add to map info
+        this.projectsInfo.put(project.project, project);
+        System.out.println("aggiunto alle INFO: " + project.project + " IP: " + project.ip);
     }
 
     public List<ChatMsg> readChat(String projectName) throws SQLException {
         return dbHandler.readChat(projectName);
+    }
+
+    /*
+    protocol for SEND CHAT MSG operation
+        -   CHAT_MSG;username;project;timeSent;msg
+
+                (timeSent : LONG as String)
+                (msg : max 2048 chars)
+     */
+    public void sendChatMsg(String projectName, String text) throws IOException {
+        ListProjectEntry project = this.projectsInfo.get(projectName);
+        InetAddress multicastAddress = InetAddress.getByName(project.ip);
+
+        ChatUtils.sendChatMsg(user, projectName, text, multicastAddress, project.port);
     }
 /*
 TCP
@@ -349,6 +371,7 @@ TCP
         connThread.bOutput.flush();
 
         String ret = connThread.bInput.readLine();
+        user = null;
 
         return CSReturnValues.valueOf(ret);
     }

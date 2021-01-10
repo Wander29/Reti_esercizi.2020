@@ -7,7 +7,7 @@ import java.util.concurrent.ConcurrentHashMap;
 
 public class WorthData {
     private Map<String, UserInfo> users;    // users login info
-    private Map<String, Project> projects;  // project data
+    private Map<String, ServerProject> projects;  // project data
 
     public WorthData() {
         this.users      = new ConcurrentHashMap<String, UserInfo>();
@@ -36,11 +36,11 @@ public class WorthData {
         return this.users;
     }
 
-    public void setProjects(Map<String, Project> projects) {
+    public void setProjects(Map<String, ServerProject> projects) {
         this.projects = projects;
     }
 
-    public Map<String, Project> getProjects() {
+    public Map<String, ServerProject> getProjects() {
         return this.projects;
     }
 }

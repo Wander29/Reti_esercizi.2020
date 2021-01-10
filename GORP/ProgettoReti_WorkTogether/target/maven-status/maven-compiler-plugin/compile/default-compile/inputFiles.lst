@@ -23,6 +23,7 @@
 /home/ludo/UNIVERSITY/UNI_current/___UNI_WORKSPACE/RETI/GORP/ProgettoReti_WorkTogether/src/main/java/server/data/UserInfo.java
 /home/ludo/UNIVERSITY/UNI_current/___UNI_WORKSPACE/RETI/GORP/ProgettoReti_WorkTogether/src/main/java/server/data/CardStatus.java
 /home/ludo/UNIVERSITY/UNI_current/___UNI_WORKSPACE/RETI/GORP/ProgettoReti_WorkTogether/src/main/java/server/logic/ServerWorker.java
+/home/ludo/UNIVERSITY/UNI_current/___UNI_WORKSPACE/RETI/GORP/ProgettoReti_WorkTogether/src/main/java/protocol/ChatUtils.java
 /home/ludo/UNIVERSITY/UNI_current/___UNI_WORKSPACE/RETI/GORP/ProgettoReti_WorkTogether/src/main/java/client/controllers/UserSceneController.java
 /home/ludo/UNIVERSITY/UNI_current/___UNI_WORKSPACE/RETI/GORP/ProgettoReti_WorkTogether/src/main/java/client/model/rmi/NotifyInterface.java
 /home/ludo/UNIVERSITY/UNI_current/___UNI_WORKSPACE/RETI/GORP/ProgettoReti_WorkTogether/src/main/java/client/model/ClientWT.java

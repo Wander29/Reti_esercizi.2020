@@ -18,6 +18,7 @@ server/logic/rmi/ServerInterface.class
 client/model/rmi/ClientNotify.class
 server/logic/ServerWT.class
 client/data/UserObservable.class
+protocol/ChatUtils.class
 client/controllers/UserSceneController.class
 client/controllers/LoginController.class
 utils/StringUtils.class

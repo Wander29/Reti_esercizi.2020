@@ -1,6 +1,8 @@
 package protocol.classes;
 
-public class ListProjectEntry {
+import java.io.Serializable;
+
+public class ListProjectEntry implements Serializable {
     public String project;
     public String ip;
     public int port;

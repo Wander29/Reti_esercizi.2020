@@ -2,10 +2,8 @@ package server.logic;
 
 import com.google.gson.Gson;
 import com.google.gson.reflect.TypeToken;
-import com.google.gson.stream.JsonReader;
-import com.google.gson.stream.JsonToken;
-import server.data.Card;
-import server.data.Project;
+import protocol.classes.Card;
+import server.data.ServerProject;
 import server.data.UserInfo;
 import server.data.WorthData;
 
@@ -29,7 +27,7 @@ public abstract class SerializeHelper {
 
     public static void saveData(WorthData data) throws IOException {
 
-        Map<String, Project> projectsMap = data.getProjects();
+        Map<String, ServerProject> projectsMap = data.getProjects();
         Map<String, UserInfo> usersMap = data.getUsers();
         // create directory to act as database
         File dirMain = new File(MAIN_DIR);
@@ -41,9 +39,9 @@ public abstract class SerializeHelper {
         File dirProj = new File(PROJ_DIR);
         dirProj.mkdir();
 
-        for(Map.Entry<String, Project> projectEntry: projectsMap.entrySet()) {
+        for(Map.Entry<String, ServerProject> projectEntry: projectsMap.entrySet()) {
 
-            Project project = projectEntry.getValue();
+            ServerProject project = projectEntry.getValue();
 
             System.out.println(project.getProjectName());
             // creo una directory

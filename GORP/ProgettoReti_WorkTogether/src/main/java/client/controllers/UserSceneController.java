@@ -39,7 +39,6 @@ import java.util.Optional;
 import java.util.Set;
 
 public class UserSceneController extends ClientController {
-    private SimpleStringProperty currentProject = new SimpleStringProperty(null);
 /*
     NODES
  */
@@ -52,20 +51,41 @@ public class UserSceneController extends ClientController {
     @FXML
     private JFXButton btnCancel;
     @FXML
-    private VBox toDoVBox;
-    @FXML
-    private Label labelOne;
-    @FXML
     private JFXToggleButton toggleOnlineMembersOnly;
     @FXML
     private JFXButton bntAddMember;
     @FXML
+    private JFXButton btnAddProject;
+    @FXML
+    private JFXButton btnAddCArd;
+    @FXML
+    private JFXComboBox<String> comboChooseProject;
+    @FXML
+    private JFXButton btnExit;
+    @FXML
     private Label labelYourUsername;
+
+/*
+    Cards
+ */
+    ObservableList<String> toDoList         = FXCollections.observableArrayList();
+    ObservableList<String> inProgressList   = FXCollections.observableArrayList();
+    ObservableList<String> toBeRevisedList  = FXCollections.observableArrayList();
+    ObservableList<String> doneList         = FXCollections.observableArrayList();
+
+    @FXML
+    private JFXListView<String> toDoListView;
+    @FXML
+    private JFXListView<String> inProgressListView;
+    @FXML
+    private JFXListView<String> toBeRevisedListView;
+    @FXML
+    private JFXListView<String> doneListView;
 
 /*
     Members
  */
-    private final ObservableList<UserObservable> currProjectMembers = FXCollections.observableArrayList();
+    private ObservableList<UserObservable> currProjectMembers = FXCollections.observableArrayList();
     @FXML
     private TableView<UserObservable> membersProjectTableView;
     @FXML
@@ -95,6 +115,7 @@ public class UserSceneController extends ClientController {
 */
     private List<ListProjectEntry> projects = null;
     private ObservableList<String> projectNames = FXCollections.observableArrayList();
+    private SimpleStringProperty currentProject = new SimpleStringProperty(null);
 
 /*
     controller FUNCTIONS
@@ -126,9 +147,18 @@ public class UserSceneController extends ClientController {
         catch (IOException e)   {  e.printStackTrace(); closeStage(comboChooseProject); }
         catch (SQLException t)  { t.printStackTrace(); }
 
+        // listeners for TabPanes
+        tabPaneShowProjectInit();
+
+    /*
+    PROJECTS
+     */
         // binds combobox items to list of project names
         listProjects();
         comboChooseProject.setItems(projectNames);
+
+        // starts card lists
+        listViewsInit();
 
         // starts chat table
         chatInitTable();
@@ -139,9 +169,13 @@ public class UserSceneController extends ClientController {
         // listeners for toggleButtons
         toggleMembersInit();
 
-        // listeners for TabPanes
-        tabPaneShowProjectInit();
+    /*
+    USERS
+     */
 
+    /*
+    SETTINGS
+     */
         // sets username in app
         labelYourUsername.setText(this.username);
     }
@@ -162,11 +196,18 @@ public class UserSceneController extends ClientController {
                     break;
 
                 case "CHAT":
-                    fillChatTable();
+                    if(this.currentProject.get() == null) {
+                        showDialogNoProjectSelected();
+                    }
+                    else fillChatTable();
                     break;
 
                 case "MEMBRI":
-                    fillProjectMembers();
+                    if(this.currentProject.get() == null) {
+                        showDialogNoProjectSelected();
+                        return;
+                    }
+                    else fillProjectMembers();
                     break;
 
                 default:
@@ -200,6 +241,7 @@ public class UserSceneController extends ClientController {
         });
     }
 
+    //@todo not used
     private void setOnlineImageColumn(TableColumn column) {
         column.setCellFactory(col -> {
             TableCell<UserObservable, String> cell = new TableCell<>();
@@ -219,8 +261,8 @@ public class UserSceneController extends ClientController {
         chatMessageCol.setCellValueFactory(new PropertyValueFactory<>("message"));
         chatSentTimeCol.setCellValueFactory(new PropertyValueFactory<>("timeSent"));
 
-        chatMessagesCurrentProject.clear();
-        chatTableView.getItems().addAll(chatMessagesCurrentProject);
+        chatTableView.setItems(chatMessagesCurrentProject);
+        chatTableView.getSelectionModel().setSelectionMode(SelectionMode.MULTIPLE);
     }
 
     private void memberProjectTableInitTable() {
@@ -230,6 +272,13 @@ public class UserSceneController extends ClientController {
 
         membersProjectTableView.setItems(currProjectMembers);
         membersProjectTableView.getSelectionModel().setSelectionMode(SelectionMode.MULTIPLE);
+    }
+
+    private void listViewsInit() {
+        toDoListView.setItems(toDoList);
+        inProgressListView.setItems(inProgressList);
+        toBeRevisedListView.setItems(toBeRevisedList);
+        doneListView.setItems(doneList);
     }
 
 /*
@@ -259,6 +308,7 @@ public class UserSceneController extends ClientController {
         {
             System.out.println(s);
         }
+
         this.projects = updatedProjects;
 
     } catch (IOException e) {
@@ -271,10 +321,11 @@ public class UserSceneController extends ClientController {
 }
 
     private void fillChatTable() {
-        if(this.currentProject != null) {
+        if(this.currentProject.get() != null) {
             try {
-                List<ChatMsg> msgs = clientLogic.readChat(this.currentProject.getName());
+                List<ChatMsg> msgs = clientLogic.readChat(this.currentProject.get());
                 chatMessagesCurrentProject.clear();
+
                 for(ChatMsg msg : msgs) {
                     chatMessagesCurrentProject.add(new ChatMsgObservable(
                             msg.username,
@@ -290,7 +341,7 @@ public class UserSceneController extends ClientController {
     }
 
     private void fillProjectMembers() {
-        if(this.currentProject == null)
+        if(this.currentProject.get() == null)
             return;
 
         try {
@@ -350,11 +401,10 @@ public class UserSceneController extends ClientController {
     /*
     PROJECTS
      */
-    /*
-    Project
-     */
-    @FXML
-    private JFXButton btnAddProject;
+        /*
+        Project
+         */
+
     @FXML
     void handleClickBtnAddProject(MouseEvent event) {
         TextInputDialog dialog = new TextInputDialog("");
@@ -362,6 +412,8 @@ public class UserSceneController extends ClientController {
         dialog.setTitle("Aggiungi progetto");
 
         Optional<String> result = dialog.showAndWait();
+        if(result.isEmpty())
+            return;
 
         String projName = result.get();
         if(projName == null || projName == "")
@@ -396,32 +448,19 @@ public class UserSceneController extends ClientController {
     }
 
     @FXML
-    private JFXButton btnExit;
-    @FXML
-    void handleExit(MouseEvent event) {
-        Stage stage = (Stage) btnExit.getScene().getWindow();
-        stage.close();
-    }
-
-    @FXML
-    private JFXButton btnAddCArd;
-    @FXML
     void handleBtnAddCard(ActionEvent event) {
 
     }
 
-    @FXML
-    private JFXComboBox<String> comboChooseProject;
     @FXML
     void handleComboChooseProject(ActionEvent event) {
         this.currentProject.set(comboChooseProject.getValue());
         labelChosenProject.textProperty().bind(this.currentProject);
 
         System.out.println("COMBO BOX: " + this.currentProject.get());
-    }
+        // @todo showCards()
 
-    @FXML
-    void handleLabelOne(MouseEvent event) {
+        // List<Cards> clientLogic.showCards(this.currentProject.get());
 
     }
 
@@ -432,6 +471,9 @@ public class UserSceneController extends ClientController {
         dialog.setTitle("Aggiungi membro al progetto: " + this.currentProject.get());
 
         Optional<String> result = dialog.showAndWait();
+
+        if(result.isEmpty())
+            return;
 
         String member = result.get();
         if(member == null || member == "")
@@ -471,12 +513,59 @@ public class UserSceneController extends ClientController {
         }
     }
 
-    /*
-    Chat
-     */
+        /*
+        Chat
+         */
     @FXML
     void enableSendButton(KeyEvent event) {
+        if(!chatTextArea.getText().isEmpty())
+            btnSendChat.setDisable(false);
+        else
+            btnSendChat.setDisable(true);
+    }
 
+    void showDialogNoProjectSelected() {
+        Alert info = new Alert(Alert.AlertType.INFORMATION);
+        info.setHeaderText("NON è stato selezionato alcun Progetto");
+        info.setContentText("Scegli un progetto dal menù a tendina nella schermata «PROGETTO»");
+        info.showAndWait();
+    }
+
+    @FXML
+    void handleSendChat(MouseEvent event) {
+        if(this.currentProject.get() == null) {
+            showDialogNoProjectSelected();
+            return;
+        }
+
+        String textMsg = chatTextArea.getText();
+
+        try {
+            clientLogic.sendChatMsg(this.currentProject.get(), textMsg);
+
+            chatTextArea.setText("");
+            btnSendChat.setDisable(true);
+        }
+        catch (IOException e)       { e.printStackTrace(); }
+    }
+
+        /*
+        Members
+         */
+
+
+    /*
+    USERS
+     */
+
+
+    /*
+   SETTINGS
+    */
+    @FXML
+    void handleExit(MouseEvent event) {
+        Stage stage = (Stage) btnExit.getScene().getWindow();
+        stage.close();
     }
 }
 

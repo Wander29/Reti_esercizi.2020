@@ -1,12 +1,13 @@
+@import "main_style.css";
+
 .table-view .column-header-background{
     /*
     -fx-background-color: linear-gradient(to right, -fx-us-color-white, -fx-us-color-strong);
      */
-    -fx-background-color:  #00897B;
+    -fx-background-color:  -fx-us-green;
 }
 .table-view .column-header-background .filler {
-    -fx-background-color: red;
-    -fx-background-color:  #00897B;
+    -fx-background-color:  -fx-us-green;
 }
 
 .table-view .column-header {

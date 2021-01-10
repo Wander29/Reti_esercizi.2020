@@ -1,7 +1,5 @@
 package server.data;
 
-import server.data.Project;
-
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Collections;

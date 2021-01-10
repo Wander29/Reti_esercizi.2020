@@ -9,6 +9,10 @@
     -fx-us-color-white: #F5F5F5;
     -fx-us-color-strong: #880E4F;
     -fx-us-color-light: #ef9a9a;
+    /*
+    -fx-us-green: #00897B;
+     */
+    -fx-us-green: #4CAF50;
 }
 
 .root{
@@ -133,11 +137,52 @@
     -fx-background-color:  linear-gradient(to bottom, -fx-us-color-light, -fx-us-color-strong);
 }
 
-#toBeRevisedList {
+#inProgressList {
+    -fx-background-color:  linear-gradient(to bottom, -fx-us-color-light, #ffcdd2);
+}
+
+#toDoList{
     -fx-background-color:  linear-gradient(to bottom, -fx-us-color-light, -fx-us-color-strong);
+}
+
+#toBeRevisedList {
+    -fx-background-color:  linear-gradient(to top, -fx-us-color-light, #DCEDC8);
+}
+
+#doneList{
+    -fx-background-color:  linear-gradient(to bottom, #DCEDC8, #4CAF50);
 }
 
 .jfx-toggle-node {
     /* This is the color once toggled on. */
     -jfx-toggle-color: deepskyblue;
+}
+
+.cardsList .list-view {
+    -fx-padding: 10px 10px;
+    -fx-font-size: 17pt;
+    -fx-text-alignment: center;
+}
+
+.cardsList .list-view .list-cell {
+    -fx-text-fill: black;
+    -fx-background-color: rgba(255, 255, 255, 0.4);
+    -fx-padding: 15px 15px;
+    -fx-text-alignment: center;
+}
+
+.cardsList .list-view  .list-cell:even {
+    -fx-text-fill: black;
+    -fx-background-color: rgba(255, 255, 255, 0.6);
+}
+
+#project-name {
+    -fx-font-family: "Inconsolata Semi Condensed";
+    -fx-font-style: italic;
+    -fx-font-size: 30pt;
+}
+
+#about-label {
+    -fx-font-size: 14pt;
+    -fx-text-fill: #F48FB1;
 }

@@ -3,7 +3,7 @@ package server.logic;
 import protocol.CSProtocol;
 import protocol.CSReturnValues;
 import protocol.classes.ListProjectEntry;
-import server.data.Project;
+import server.data.ServerProject;
 import server.data.UserInfo;
 import server.data.WorthData;
 import protocol.exceptions.IllegalProjectException;
@@ -25,7 +25,7 @@ public class ServerWT {
 
     WorthData data;                     // useful for deserialization
     Map<String, UserInfo> users;        // users login info
-    Map<String, Project> projects;      // project data
+    Map<String, ServerProject > projects;      // project data
 
     MessageDigest md = null;            // useful to hash psws
 
@@ -51,10 +51,21 @@ public class ServerWT {
     }
 
     private void insertSampleData() throws UnknownHostException {
-        Project p = new Project("Rancore", "wander");
+        ServerProject  p = new ServerProject("Musica per Bambini", "Rancore");
+        p.addMember("Orqestra");
+        p.addMember("Rinquore");
+        // add cards, 2 each column
+        p.addCard("1 - Underman", "Il titolo è un gioco di parole in contrapposizione a «super-uomo».");
+        p.addInProgressCard("2 - Giocattoli", "Nella traccia, l'artista impersona e dà voce a 3 oggetti, 3 “giocattoli” se vogliamo, di cui la ragazza narrata usufruisce nel corso della sua vita, della sua crescita, rispettivamente: un pupazzo, un rossetto ed una sigaretta.");
+        p.addToBeRevisedCard("3 - Beep Beep", "“Beep Beep”, in parte un extrabeat, è un brano in cui Rancore riprende metaforicamente i personaggi animati Beep Beep e Willy il Coyote: il primo rappresenta Rancore stesso, inseguito dai problemi e dai fantasmi (Willy il Coyote) del suo passato.");
+
+        p.addDoneCard("4 - Depressissimo", "La canzone affronta il tema della depressione in maniera auto-ironica.");
+        p.addDoneCard("5 - Sangue di drago", "“Sangue di drago” racconta, seguendo gli schemi cavallereschi medievali, di un principe trasformato inconsapevolmente in drago da un mago, affinché un altro principe, sostenuto da quest'ultimo, possa eliminarlo e ottenere potere e onore. Metafora che probabilmente ricostruisce le modalità con le quali molte volte viene preso il potere: con l'inganno. Il principe che ha ordinato l'incantesimo infatti ottiene l'appoggio del popolo, in quanto ha creato un problema e si è proposto come principe buono che deve salvare la principessa dal drago malvagio (soluzione) che in realtà è il virtuoso principe colpito dal sotterfugio.");
+
         p.addMember("aa");
-        p.addMember("bb");
-        this.projects.put("Rancore", p);
+        p.addMember("wander");
+
+        this.projects.put("Musica per Bambini", p);
     }
 
 /*
@@ -135,7 +146,7 @@ TCP
             return CSReturnValues.PROJECT_ALREADY_PRESENT;
         }
 
-        this.projects.put(projectName, new Project(projectName, username));
+        this.projects.put(projectName, new ServerProject(projectName, username));
 
         if(CSProtocol.DEBUG()) {
             System.out.println(projectName + " è stato creato");
@@ -153,8 +164,8 @@ TCP
 
         List<ListProjectEntry> listProject = new ArrayList<>();
 
-        for(Map.Entry<String, Project> projEntry : projects.entrySet()) {
-            Project project = projEntry.getValue();
+        for(Map.Entry<String, ServerProject> projEntry : projects.entrySet()) {
+            ServerProject project = projEntry.getValue();
 
             if(project.getMembers().contains(username)) {
 
@@ -194,7 +205,7 @@ TCP
             return CSReturnValues.PROJECT_NOT_PRESENT;
         }
 
-        Project proj = this.projects.get(projectName);
+        ServerProject proj = this.projects.get(projectName);
         if(proj.getMembers().contains(newMember)) {
             return CSReturnValues.USERNAME_ALREADY_PRESENT;
         }

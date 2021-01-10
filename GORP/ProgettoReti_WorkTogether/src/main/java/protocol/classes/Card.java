@@ -1,7 +1,8 @@
-package server.data;
+package protocol.classes;
 
 import java.io.Serializable;
 import java.sql.Date;
+import java.util.ArrayList;
 import java.util.List;
 
 public class Card implements Serializable {
@@ -17,19 +18,14 @@ public class Card implements Serializable {
         return cardHistory;
     }
 
-    String cardName; // univoco in tutto il progetto
-    String description;
+    private String cardName;
+    private String description;
+    protected List<CardMovement> cardHistory;
 
-    public class CardMovement {
-        Date movementDate;
-        CardStatus fromStatus;
-        CardStatus toStatus;
-        String user; // user who moved this card
-    }
+    public Card(String name, String descr, String username) {
+        this.cardName       = name;
+        this.description    = descr;
 
-    List<CardMovement> cardHistory;
-
-    public Card() {
-
+        this.cardHistory = new ArrayList<>();
     }
 }

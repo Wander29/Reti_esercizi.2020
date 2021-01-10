@@ -22,4 +22,12 @@ public class ChatMsg {
         DateFormat df = new SimpleDateFormat("HH:mm");
         return df.format(sentTime);
     }
+
+    public void printMsg() {
+        System.out.println(
+                "USERNAME: " + this.username +
+                " - PROJECT: " + this.project +
+                " - TIMESENT: " + this.getTimeFormatted() +
+                "\n" + this.msg + "\n");
+    }
 }

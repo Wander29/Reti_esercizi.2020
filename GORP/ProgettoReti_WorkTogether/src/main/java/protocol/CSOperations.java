@@ -12,6 +12,7 @@ public enum CSOperations {
     LIST_PROJECTS,
     SHOW_MEMBERS,
     ADD_MEMBER,
+    CHAT_MSG,
     LOGOUT,
     EXIT;
 }

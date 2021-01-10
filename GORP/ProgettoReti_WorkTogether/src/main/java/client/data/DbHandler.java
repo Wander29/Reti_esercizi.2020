@@ -8,18 +8,21 @@ import java.util.List;
 
 public class DbHandler {
 
-    private static DbHandler instance;
+    private String dbUrl = null;
+    private Connection conn = null;
+    private String username = null;
 
-    private static final String dbUrl = "jdbc:derby:memory:client/db;create=true";
-    private static Connection conn = null;
+    public DbHandler(String username) throws SQLException {
+        this.username = username;
+        dbUrl = "jdbc:derby:memory:client/" + this.username + "/db;create=true";
 
-    protected DbHandler() throws SQLException {
         // connect to DB
         conn = DriverManager.getConnection(dbUrl);
+    }
 
+    public void createDB() throws SQLException {
         // create
         Statement stmt = conn.createStatement();
-
         stmt.executeUpdate(
                 "CREATE TABLE Chats (" +
                         "ID INT PRIMARY KEY GENERATED ALWAYS AS IDENTITY (START WITH 1, INCREMENT BY 1), " +
@@ -32,17 +35,9 @@ public class DbHandler {
 
         stmt.executeUpdate("CREATE INDEX projIndex ON Chats (Project)");
         System.out.println("[DB-HANDLER] indice creato");
-
     }
 
-    public static synchronized DbHandler getInstance() throws SQLException {
-        if(instance == null)
-            instance = new DbHandler();
-
-        return instance;
-    }
-
-    public static void saveChat(String username, String projectName, long timestamp, String msg)
+    public void saveChat(String username, String projectName, long timestamp, String msg)
             throws SQLException
     {
             PreparedStatement pstmnt = conn.prepareStatement("" +
@@ -62,14 +57,15 @@ public class DbHandler {
     /*
     given a project, it returns all messages in that chat
      */
-    public static List<ChatMsg> readChat(String projectName) throws SQLException {
+    public List<ChatMsg> readChat(String projectName) throws SQLException {
         PreparedStatement pstmnt = conn.prepareStatement(
-                "SELECT Username, Project, SentTime, Msg FROM Chats WHERE Project=?");
+                "SELECT * FROM Chats WHERE Project = ?");
 
         pstmnt.setString(1, projectName);
+        System.out.println(projectName);
 
         ResultSet rs = pstmnt.executeQuery(); // rows in results
-        System.out.println("[DB-HANDLER] query eseguita");
+        System.out.println("[DB-HANDLER] query eseguita size: " + rs.getFetchSize());
         List<ChatMsg> messages = new ArrayList<>();
 
         while (rs.next()) {
@@ -80,6 +76,7 @@ public class DbHandler {
                     rs.getString("Msg"));
 
             messages.add(msg);
+            msg.printMsg();
         }
 
         return messages;

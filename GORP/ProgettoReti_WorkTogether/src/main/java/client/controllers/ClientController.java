@@ -30,6 +30,8 @@ public abstract class ClientController {
         if(username != null) {
             clientLogic.logout();
         }
+        username = null;
+
         clientLogic.exit();
         clientLogic.closeConnection();
     }

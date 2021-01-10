@@ -8,10 +8,10 @@
 <?import com.jfoenix.controls.JFXToggleButton?>
 <?import javafx.geometry.Insets?>
 <?import javafx.scene.control.Label?>
-<?import javafx.scene.control.ScrollPane?>
 <?import javafx.scene.control.Tab?>
 <?import javafx.scene.control.TableColumn?>
 <?import javafx.scene.control.TableView?>
+<?import javafx.scene.effect.Glow?>
 <?import javafx.scene.image.Image?>
 <?import javafx.scene.image.ImageView?>
 <?import javafx.scene.layout.AnchorPane?>
@@ -36,107 +36,126 @@
                             <content>
                                 <BorderPane>
                                  <top>
-                                    <HBox alignment="CENTER" prefHeight="100.0" prefWidth="200.0" spacing="40.0" BorderPane.alignment="CENTER">
+                                    <HBox alignment="CENTER" prefHeight="99.0" prefWidth="1200.0" BorderPane.alignment="CENTER">
                                        <children>
-                                          <Label fx:id="labelChosenProject" prefHeight="63.0" prefWidth="289.0" text="ProjectName" textAlignment="CENTER">
-                                             <textFill>
-                                                <RadialGradient centerX="0.5" centerY="0.5" radius="0.5">
-                                                   <stops>
-                                                      <Stop>
-                                                         <color>
-                                                            <Color red="0.7699999809265137" green="0.05389999970793724" blue="0.32621970772743225" />
-                                                         </color>
-                                                      </Stop>
-                                                      <Stop offset="1.0">
-                                                         <color>
-                                                            <Color red="0.46052631735801697" green="0.17056530714035034" blue="0.2768843472003937" />
-                                                         </color>
-                                                      </Stop>
-                                                   </stops>
-                                                </RadialGradient>
-                                             </textFill>
-                                             <font>
-                                                <Font name="URWGothic-BookOblique" size="41.0" />
-                                             </font></Label>
-                                          <JFXButton fx:id="btnAddCArd" onAction="#handleBtnAddCard" text="Card">
-                                             <graphic>
-                                                <ImageView fitHeight="36.0" fitWidth="44.0" pickOnBounds="true" preserveRatio="true">
-                                                   <image>
-                                                      <Image url="@../images/add-file.png" />
-                                                   </image>
-                                                </ImageView>
-                                             </graphic>
-                                          </JFXButton>
-                                          <VBox alignment="CENTER">
+                                          <HBox alignment="CENTER" prefHeight="99.0" prefWidth="623.0" spacing="20.0" HBox.hgrow="ALWAYS">
                                              <children>
-                                                <JFXButton fx:id="btnAddProject" onMouseClicked="#handleClickBtnAddProject" prefHeight="52.0" prefWidth="176.0" styleClass="button-small" text="Progetto" VBox.vgrow="NEVER">
+                                                <Label id="project-name" fx:id="labelChosenProject" text=".. ProjectName ..&#10;&#10;" textAlignment="CENTER" HBox.hgrow="ALWAYS">
+                                                   <textFill>
+                                                      <RadialGradient centerX="0.5" centerY="0.5" radius="0.5">
+                                                         <stops>
+                                                            <Stop>
+                                                               <color>
+                                                                  <Color red="0.7699999809265137" green="0.05389999970793724" blue="0.32621970772743225" />
+                                                               </color>
+                                                            </Stop>
+                                                            <Stop offset="1.0">
+                                                               <color>
+                                                                  <Color red="0.46052631735801697" green="0.17056530714035034" blue="0.2768843472003937" />
+                                                               </color>
+                                                            </Stop>
+                                                         </stops>
+                                                      </RadialGradient>
+                                                   </textFill>
+                                                   <effect>
+                                                      <Glow level="1.0" />
+                                                   </effect>
+                                                </Label>
+                                                <JFXButton fx:id="btnAddCArd" onAction="#handleBtnAddCard" text="Card" HBox.hgrow="ALWAYS">
                                                    <graphic>
                                                       <ImageView fitHeight="36.0" fitWidth="44.0" pickOnBounds="true" preserveRatio="true">
                                                          <image>
-                                                            <Image url="@../images/add.png" />
+                                                            <Image url="@../images/add-file.png" />
                                                          </image>
                                                       </ImageView>
                                                    </graphic>
+                                                   <HBox.margin>
+                                                      <Insets bottom="10.0" />
+                                                   </HBox.margin>
                                                 </JFXButton>
-                                                <JFXComboBox fx:id="comboChooseProject" onAction="#handleComboChooseProject" prefHeight="39.0" prefWidth="205.0" promptText="Cambia progetto..." styleClass="combo-small" unFocusColor="WHITE" />
                                              </children>
-                                          </VBox>
-                                          <JFXButton fx:id="btnCancel" disable="true" text="Cancella">
-                                             <graphic>
-                                                <ImageView fitHeight="36.0" fitWidth="44.0" pickOnBounds="true" preserveRatio="true">
-                                                   <image>
-                                                      <Image url="@../images/x-button.png" />
-                                                   </image>
-                                                </ImageView>
-                                             </graphic>
-                                          </JFXButton>
+                                          </HBox>
+                                          <HBox spacing="70.0" HBox.hgrow="ALWAYS">
+                                             <children>
+                                                <VBox alignment="TOP_CENTER">
+                                                   <children>
+                                                      <JFXButton fx:id="btnAddProject" onMouseClicked="#handleClickBtnAddProject" prefHeight="52.0" prefWidth="176.0" styleClass="button-small" text="Progetto" VBox.vgrow="NEVER">
+                                                         <graphic>
+                                                            <ImageView fitHeight="36.0" fitWidth="44.0" pickOnBounds="true" preserveRatio="true">
+                                                               <image>
+                                                                  <Image url="@../images/add.png" />
+                                                               </image>
+                                                            </ImageView>
+                                                         </graphic>
+                                                      </JFXButton>
+                                                      <JFXComboBox fx:id="comboChooseProject" onAction="#handleComboChooseProject" prefHeight="39.0" prefWidth="205.0" promptText="Cambia progetto..." styleClass="combo-small" unFocusColor="WHITE" />
+                                                   </children>
+                                                </VBox>
+                                                <JFXButton fx:id="btnCancel" disable="true" text="Cancella">
+                                                   <graphic>
+                                                      <ImageView fitHeight="36.0" fitWidth="44.0" pickOnBounds="true" preserveRatio="true">
+                                                         <image>
+                                                            <Image url="@../images/x-button.png" />
+                                                         </image>
+                                                      </ImageView>
+                                                   </graphic>
+                                                   <HBox.margin>
+                                                      <Insets top="10.0" />
+                                                   </HBox.margin>
+                                                </JFXButton>
+                                             </children>
+                                             <padding>
+                                                <Insets top="4.0" />
+                                             </padding>
+                                          </HBox>
                                        </children>
                                        <BorderPane.margin>
                                           <Insets />
                                        </BorderPane.margin>
-                                       <padding>
-                                          <Insets left="30.0" right="30.0" />
-                                       </padding>
                                     </HBox>
                                  </top>
                                  <center>
                                     <HBox BorderPane.alignment="CENTER">
                                        <children>
-                                          <VBox alignment="TOP_CENTER" prefHeight="600.0" prefWidth="500.0" HBox.hgrow="ALWAYS">
-                                             <children>
-                                                <Label text="TODO" textFill="WHITE" />
-                                                <ScrollPane prefHeight="509.0" prefWidth="300.0" VBox.vgrow="ALWAYS">
-                                                   <content>
-                                                      <StackPane styleClass="cardListVBox">
-                                                         <children>
-                                                            <VBox fx:id="toDoVBox" alignment="TOP_CENTER" prefHeight="482.0" prefWidth="286.0" spacing="10.0" styleClass="cardListVBox">
-                                                               <children>
-                                                                  <Label fx:id="labelOne" onMouseClicked="#handleLabelOne" prefWidth="250.0" styleClass="my-label" text="Dato1" VBox.vgrow="ALWAYS" />
-                                                               </children>
-                                                               <padding>
-                                                                  <Insets bottom="10.0" left="10.0" right="10.0" top="10.0" />
-                                                               </padding>
-                                                            </VBox>
-                                                         </children>
-                                                      </StackPane>
-                                                   </content>
-                                                   <VBox.margin>
-                                                      <Insets bottom="6.0" left="6.0" right="6.0" top="6.0" />
-                                                   </VBox.margin>
-                                                </ScrollPane>
-                                             </children>
-                                          </VBox>
                                           <VBox alignment="CENTER" prefHeight="600.0" prefWidth="500.0" spacing="5.0" HBox.hgrow="ALWAYS">
                                              <children>
-                                                <Label text="TO BE REVISED" textFill="WHITE" />
-                                                <JFXListView id="toBeRevisedList" prefHeight="267.0" prefWidth="91.0" VBox.vgrow="ALWAYS" />
+                                                <Label text="TO  DO" textFill="WHITE" />
+                                                <JFXListView id="toDoList" fx:id="toDoListView" prefHeight="267.0" prefWidth="91.0" styleClass="cardsList" VBox.vgrow="ALWAYS" />
                                              </children>
                                              <padding>
-                                                <Insets bottom="20.0" left="10.0" right="10.0" top="10.0" />
+                                                <Insets bottom="10.0" left="10.0" right="10.0" top="10.0" />
                                              </padding></VBox>
-                                          <VBox prefHeight="600.0" prefWidth="500.0" />
-                                          <VBox prefHeight="600.0" prefWidth="500.0" />
+                                          <VBox alignment="CENTER" prefHeight="600.0" prefWidth="500.0" spacing="5.0">
+                                             <children>
+                                                <Label text="IN  PROGRESS" textFill="WHITE" />
+                                                <JFXListView id="inProgressList" fx:id="inProgressListView" prefHeight="267.0" prefWidth="91.0" styleClass="cardsList" VBox.vgrow="ALWAYS" />
+                                             </children>
+                                             <padding>
+                                                <Insets bottom="10.0" left="10.0" right="10.0" top="10.0" />
+                                             </padding>
+                                          </VBox>
+                                          <VBox alignment="CENTER" prefHeight="600.0" prefWidth="500.0" spacing="5.0">
+                                             <children>
+                                                <Label text="TO BE REVISED" textFill="WHITE" />
+                                                <JFXListView id="toBeRevisedList" fx:id="toBeRevisedListView" prefHeight="267.0" prefWidth="91.0" styleClass="cardsList" VBox.vgrow="ALWAYS" />
+                                             </children>
+                                             <padding>
+                                                <Insets bottom="10.0" left="10.0" right="10.0" top="10.0" />
+                                             </padding>
+                                          </VBox>
+                                          <VBox alignment="CENTER" prefHeight="600.0" prefWidth="500.0" spacing="5.0">
+                                             <children>
+                                                <Label text="- DONE -" textFill="WHITE" />
+                                                <JFXListView id="doneList" fx:id="doneListView" prefHeight="267.0" prefWidth="91.0" styleClass="cardsList" VBox.vgrow="ALWAYS" />
+                                             </children>
+                                             <padding>
+                                                <Insets bottom="10.0" left="10.0" right="10.0" top="10.0" />
+                                             </padding>
+                                          </VBox>
                                        </children>
+                                       <BorderPane.margin>
+                                          <Insets bottom="10.0" left="20.0" right="20.0" />
+                                       </BorderPane.margin>
                                     </HBox>
                                  </center></BorderPane>
                             </content>
@@ -268,13 +287,20 @@
                   </BorderPane>
                </content>
             </Tab>
-            <Tab text="SETTINGS">
+            <Tab text="INFO">
               <content>
                   <StackPane prefHeight="640.0" prefWidth="1280.0">
                      <children>
                         <BorderPane prefHeight="200.0" prefWidth="200.0">
                            <bottom>
-                              <HBox prefHeight="132.0" prefWidth="1280.0" BorderPane.alignment="CENTER" />
+                              <HBox alignment="CENTER_RIGHT" prefHeight="132.0" prefWidth="1280.0" BorderPane.alignment="CENTER_RIGHT">
+                                 <children>
+                                    <Label id="about-label" text="Ludovico Venturi&#10;UniPi&#10;a.a. 2020/21 &#10;&#10;" textFill="#8d7e7e">
+                                       <HBox.margin>
+                                          <Insets right="30.0" />
+                                       </HBox.margin>
+                                    </Label>
+                                 </children></HBox>
                            </bottom>
                            <left>
                               <VBox prefHeight="374.0" prefWidth="390.0" BorderPane.alignment="CENTER" />
@@ -288,10 +314,13 @@
                                     <HBox alignment="CENTER" spacing="50.0">
                                        <children>
                                           <Label text="Tuo Username" textFill="#906262" />
-                                          <Label fx:id="labelYourUsername" text="Username" />
+                                          <Label fx:id="labelYourUsername" text="Username" textFill="WHITE">
+                                             <font>
+                                                <Font name="Roboto Bold" size="42.0" />
+                                             </font></Label>
                                        </children>
                                     </HBox>
-                                    <JFXButton fx:id="btnExit" onMouseClicked="#handleExit" text="EXIT" />
+                                    <JFXButton fx:id="btnExit" onMouseClicked="#handleExit" text="LOGOUT" />
                                  </children>
                               </VBox>
                            </center>

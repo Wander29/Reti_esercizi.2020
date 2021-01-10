@@ -50,9 +50,19 @@ public class WorthClientMain extends Application {
             Platform.exit();
             System.exit(0);
         });
+        stage.setOnHiding(event -> {
+            try {
+                controller.handleCloseRequest();
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+            Platform.exit();
+            System.exit(0);
+        });
+
         // view
         stage.setScene(scene);
-        stage.setMaximized(false);
+        // stage.setMaximized(false);
         stage.setTitle("WORTH - Work Together");
 
         stage.getIcons().add(new Image(
