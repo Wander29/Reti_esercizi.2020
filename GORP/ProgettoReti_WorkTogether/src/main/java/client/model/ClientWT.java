@@ -8,6 +8,8 @@ import protocol.CSOperations;
 import protocol.CSProtocol;
 import protocol.CSReturnValues;
 import protocol.ChatUtils;
+import protocol.classes.CardStatus;
+import protocol.classes.Project;
 import protocol.exceptions.IllegalProtocolMessageException;
 import protocol.classes.ChatMsg;
 import protocol.classes.ListProjectEntry;
@@ -25,6 +27,8 @@ import java.rmi.NotBoundException;
 import java.rmi.RemoteException;
 import java.rmi.registry.LocateRegistry;
 import java.rmi.registry.Registry;
+import java.security.NoSuchAlgorithmException;
+import java.security.spec.InvalidKeySpecException;
 import java.sql.SQLException;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
@@ -88,7 +92,7 @@ RMI
         serverStub = (ServerInterface) r.lookup(CSProtocol.RMI_SERVICE_NAME());
     }
 
-    public static CSReturnValues register(String username, String password) throws RemoteException {
+    public static CSReturnValues register(String username, String password) throws RemoteException, InvalidKeySpecException, NoSuchAlgorithmException {
         String ret = serverStub.register(username, password);
 
         return CSReturnValues.valueOf(ret);
@@ -146,7 +150,7 @@ UDP
 
         bbPipe.clear();
 
-        String sendToPipe = project.ip + ";" + project.port;
+        String sendToPipe = project.ip + ";" + project.port + ",";
         bbPipe.put(StringUtils.stringToBytes(sendToPipe));
         bbPipe.flip();
 
@@ -246,7 +250,8 @@ TCP
         -   LIST_PROJECTS
      */
     public static List<ListProjectEntry> listProjects()
-            throws IOException, IllegalUsernameException, IllegalProtocolMessageException {
+            throws IOException, IllegalUsernameException, IllegalProtocolMessageException
+    {
         String req = CSOperations.LIST_PROJECTS.toString();
 
         if(CSProtocol.DEBUG()) {
@@ -271,25 +276,7 @@ TCP
                 Gson gson = new Gson();
                 Type listType = new TypeToken<List<ListProjectEntry>>() {}.getType();
                 list = gson.fromJson(tokenizer.nextToken(), listType);
-                /*
 
-                while(tokenizer.hasMoreTokens()) {
-                    String projectName = tokenizer.nextToken();
-                    System.out.println("name: " + projectName);
-                    if(tokenizer.hasMoreTokens())
-                    {
-                        String ip = tokenizer.nextToken();
-                        System.out.println("ip: " + ip);
-
-                        if(tokenizer.hasMoreTokens()) {
-                            int port = Integer.parseInt(tokenizer.nextToken());
-                            list.add(new ListProjectEntry(projectName, ip, port));
-                        }
-                        else throw new IllegalProtocolMessageException();
-                    }
-                    else throw new IllegalProtocolMessageException();
-                }
-                */
                 return list;
 
             case USERNAME_NOT_PRESENT:
@@ -298,6 +285,119 @@ TCP
 
         return null;
     }
+
+    /*
+    protocol for operation SHOW PROJECT
+        - SHOW_PROJECT;projectName
+     */
+    public static Project showProject(String projectName)
+            throws IOException, IllegalUsernameException, IllegalProjectException
+    {
+        String req = CSOperations.SHOW_PROJECT.toString() + ";" + projectName;
+
+        if(CSProtocol.DEBUG()) {
+            System.out.println("req: SHOW PROJECT " + projectName + " for " +  user);
+        }
+        connThread.bOutput.write(req);
+        connThread.bOutput.flush();
+
+        String ret = connThread.bInput.readLine();
+        System.out.println("ret: " + ret);
+
+        StringTokenizer tokenizer = new StringTokenizer(ret, ";");
+        String firstToken = tokenizer.nextToken();
+
+        switch(CSReturnValues.valueOf(firstToken)) {
+
+            case SHOW_PROJECT_OK:
+                // deserialization
+                Gson gson = new Gson();
+                Type listType = new TypeToken<Project>() {}.getType();
+                Project p = gson.fromJson(tokenizer.nextToken(), listType);
+
+                return p;
+
+            case USERNAME_NOT_PRESENT:
+                throw new IllegalUsernameException();
+
+            case PROJECT_NOT_PRESENT:
+                throw new IllegalProjectException();
+
+            default:
+                System.out.println(firstToken + ret);
+                break;
+        }
+
+        return null;
+    }
+
+    /*
+    protocol for MOVE CARD operation
+        -   MOVE_CARD;projectName;cardName;fromStatus;toStatus
+     */
+    public static CSReturnValues moveCard(
+            String projectName, String cardName, CardStatus from, CardStatus to)
+        throws IOException
+    {
+        String req = CSOperations.MOVE_CARD.toString() + ";" +
+                projectName + ";" + cardName + ";" +
+                from.toString() + ";" + to.toString();
+
+        CSProtocol.printRequest(req);
+
+        connThread.bOutput.write(req);
+        connThread.bOutput.flush();
+
+        String ret = connThread.bInput.readLine();
+        CSProtocol.printResponse(ret);
+
+        return CSReturnValues.valueOf(ret);
+    }
+
+    /*
+    protocol for operation ADD CARD
+        -   ADD_CARD;projectName;cardName;description
+     */
+    public static CSReturnValues addCard(String projectName, String cardName, String description)
+            throws IOException
+    {
+        String req = CSOperations.ADD_CARD.toString() + ";" +
+                        projectName + ";" + cardName + ";" + description;
+
+        CSProtocol.printRequest(req);
+
+        connThread.bOutput.write(req);
+        connThread.bOutput.flush();
+
+        String ret = connThread.bInput.readLine();
+
+        CSProtocol.printResponse(ret);
+
+        return CSReturnValues.valueOf(ret);
+    }
+
+    /*
+    protocol for operation DELETE PROJECT
+        -   DELETE_PROJECT;projectName
+     */
+    public static CSReturnValues deleteProject(String projectName) throws IOException {
+        String req = CSOperations.DELETE_PROJECT.toString() + ";" + projectName;
+
+        if(CSProtocol.DEBUG()) {
+            System.out.println("req: DELETE PROJECT for " +  user + " proj: " + projectName);
+        }
+        connThread.bOutput.write(req);
+        connThread.bOutput.flush();
+
+        String ret = connThread.bInput.readLine();
+
+        if(CSProtocol.DEBUG()) {
+            System.out.println("response: " + ret);
+        }
+
+        return CSReturnValues.valueOf(ret);
+    }
+
 
     public static List<String> showMembers(String projectName)
             throws IOException, IllegalUsernameException, IllegalProjectException {
@@ -389,7 +489,7 @@ TCP
     }
 
     protected static int getServerPort() {
-        return CSProtocol.SERVER_PORT();
+        return CSProtocol.WORTH_TCP_PORT();
     }
 
     public static void startConnection() throws IOException {

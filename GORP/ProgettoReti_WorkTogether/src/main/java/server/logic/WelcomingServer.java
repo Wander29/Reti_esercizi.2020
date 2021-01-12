@@ -53,7 +53,7 @@ public class WelcomingServer implements Runnable {
         try( ServerSocketChannel serverSockCh = ServerSocketChannel.open() ) {
             ServerSocket serverSock = serverSockCh.socket();
 
-            serverSock.bind(new InetSocketAddress(CSProtocol.SERVER_PORT()));
+            serverSock.bind(new InetSocketAddress(CSProtocol.WORTH_TCP_PORT()));
 
             tpe = (ThreadPoolExecutor) Executors.newCachedThreadPool();
             Selector sel = null;

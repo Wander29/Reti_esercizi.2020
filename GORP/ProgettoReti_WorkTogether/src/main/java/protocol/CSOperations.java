@@ -1,18 +1,21 @@
 package protocol;
 
 /*
-Client and Server communicate with each other using these operations through a protocol here defined:
-    - ';' is the delimiter
-    - send just string as byte[], containing all data both for requests and responses
+Client and Server communicate with each other using these operations
+    - ';' is the delimiter used in response, request without serialization
  */
 
 public enum CSOperations {
     LOGIN,
     CREATE_PROJECT,
     LIST_PROJECTS,
+    SHOW_PROJECT,
+    MOVE_CARD,
+    ADD_CARD,
     SHOW_MEMBERS,
     ADD_MEMBER,
     CHAT_MSG,
+    DELETE_PROJECT,
     LOGOUT,
     EXIT;
 }

@@ -9,6 +9,8 @@ import javafx.scene.control.Alert;
 import javafx.stage.Stage;
 import javafx.stage.StageStyle;
 import protocol.CSProtocol;
+import protocol.classes.Card;
+import protocol.classes.CardStatus;
 
 import java.io.IOException;
 import java.rmi.NotBoundException;
@@ -19,8 +21,7 @@ public abstract class ClientController {
     protected final static int MIN_LENGTH_PSW = 2;
 
     protected static String username = null;
-
-    protected static ClientWT clientLogic;
+    protected static ClientWT  clientLogic;
 
     /*
     modular exit: in future will be easy to implement
@@ -90,5 +91,30 @@ public abstract class ClientController {
         Alert info = new Alert(Alert.AlertType.INFORMATION);
         info.setHeaderText("ERRORE DI RETE");
         info.showAndWait();
+    }
+
+    protected void showDialogProjectNotPresent() {
+        Alert info = new Alert(Alert.AlertType.INFORMATION);
+        info.setHeaderText("Progetto NON presente");
+        info.setContentText("L'operazione richiesta non è stata completata");
+        info.showAndWait();
+    }
+
+    protected void showDialogUsernameNotPresent() {
+        Alert info = new Alert(Alert.AlertType.INFORMATION);
+        info.setHeaderText("Nome utente NON presente");
+        info.setContentText("L'operazione richiesta non è stata completata");
+        info.showAndWait();
+    }
+
+    protected void showDialogIllegalOperation() {
+        Alert info = new Alert(Alert.AlertType.INFORMATION);
+        info.setHeaderText("Operazione NON consentita dal sistema");
+        info.setContentText("L'operazione richiesta non è stata completata");
+        info.showAndWait();
+    }
+
+    protected String cardStatusToString(CardStatus cs) {
+        return cs.toString().replace("_", " ");
     }
 }

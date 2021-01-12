@@ -51,6 +51,12 @@ Client->Server: ADD_MEMBER;projectName;newMember
 Server-->Client: ADD_MEMBER_OK || USERNAME_NOT_PRESENT || USERNAME_INVALID ||\n USERNAME_ALREADY_PRESENT || PROJECT_NOT_PRESENT
 Client->Server: SHOW_PROJECT;projectName
 Server-->Client: SHOW_PROJECT_OK;JSON || PROJECT_NOT_PRESENT || USERNAME_NOT_PRESENT \n JSON content: [projName, toDoList..., cards history..]
+Client->Server: MOVE_CARD;projectName;cardName;fromStatus;toStatus
+Server-->Client: MOVE_CARD_OK || PROJECT_NOT_PRESENT || USERNAME_NOT_PRESENT || ILLEGAL_OPERATION || CARD_FROM_STATUS_OUTDATED
+Client->Server: DELETE_PROJECT;projectName
+Server-->Client: DELETE_PROJECT_OK || USERNAME_NOT_PRESENT || PROJECT_NOT_PRESENT
+Client->Server: ADD_CARD;projectName;cardName;description
+Server-->Client: ADD_CARD_OK || USERNAME_NOT_PRESENT || PROJECT_NOT_PRESENT || CARD_ALREADY_PRESENT
 ```
 
 ```sequence
@@ -62,9 +68,17 @@ Note left of Multicast Group: (msg : max 2048 chars)
 
 
 
+```sequence
+title: PIPE communicaton
+UserSceneController->ChatManager:  IP1;port1,IP2port2,....
+```
+
+
+
 # Ipotesi
 
 - un utente può loggarsi su una sola connessione (no login multipli)
+- stateful
 
 
 

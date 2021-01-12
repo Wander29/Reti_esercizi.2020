@@ -13,6 +13,8 @@ import protocol.CSReturnValues;
 
 import java.io.IOException;
 import java.rmi.RemoteException;
+import java.security.NoSuchAlgorithmException;
+import java.security.spec.InvalidKeySpecException;
 
 public class LoginController extends ClientController {
 /*
@@ -95,7 +97,7 @@ public class LoginController extends ClientController {
 
                 case USERNAME_NOT_PRESENT:
                     headerString    = loginError;
-                    contentString   = username + " NON è un nome utente valido";
+                    contentString   = user + " NON è un nome utente valido";
                     break;
 
                 case PSW_INCORRECT:
@@ -168,6 +170,8 @@ public class LoginController extends ClientController {
 
             } catch (RemoteException e) {
                 showAlertNetworkError();
+            } catch (InvalidKeySpecException | NoSuchAlgorithmException e) {
+                e.printStackTrace();
             }
         }
     }

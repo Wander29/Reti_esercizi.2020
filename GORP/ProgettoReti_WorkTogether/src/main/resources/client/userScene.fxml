@@ -6,6 +6,7 @@
 <?import com.jfoenix.controls.JFXTabPane?>
 <?import com.jfoenix.controls.JFXTextArea?>
 <?import com.jfoenix.controls.JFXToggleButton?>
+<?import java.net.URL?>
 <?import javafx.geometry.Insets?>
 <?import javafx.scene.control.Label?>
 <?import javafx.scene.control.Tab?>
@@ -24,7 +25,7 @@
 <?import javafx.scene.paint.Stop?>
 <?import javafx.scene.text.Font?>
 
-<StackPane maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="720.0" prefWidth="1280.0" stylesheets="@../css/main_style.css" xmlns="http://javafx.com/javafx/15.0.1" xmlns:fx="http://javafx.com/fxml/1" fx:controller="client.controllers.UserSceneController">
+<StackPane maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="720.0" prefWidth="1280.0" xmlns="http://javafx.com/javafx/15.0.1" xmlns:fx="http://javafx.com/fxml/1" fx:controller="client.controllers.UserSceneController">
    <children>
       <JFXTabPane fx:id="tabPaneMain" cacheShape="false" tabClosingPolicy="UNAVAILABLE">
          <tabs>
@@ -75,7 +76,7 @@
                                                 </JFXButton>
                                              </children>
                                           </HBox>
-                                          <HBox spacing="70.0" HBox.hgrow="ALWAYS">
+                                          <HBox spacing="50.0" HBox.hgrow="ALWAYS">
                                              <children>
                                                 <VBox alignment="TOP_CENTER">
                                                    <children>
@@ -88,10 +89,23 @@
                                                             </ImageView>
                                                          </graphic>
                                                       </JFXButton>
-                                                      <JFXComboBox fx:id="comboChooseProject" onAction="#handleComboChooseProject" prefHeight="39.0" prefWidth="205.0" promptText="Cambia progetto..." styleClass="combo-small" unFocusColor="WHITE" />
+                                                      <HBox alignment="CENTER" spacing="15.0">
+                                                         <children>
+                                                            <JFXComboBox fx:id="comboChooseProject" onAction="#handleComboChooseProject" prefHeight="39.0" prefWidth="205.0" promptText="Cambia progetto..." styleClass="combo-small" unFocusColor="WHITE" />
+                                                            <JFXButton fx:id="btnUpdate" contentDisplay="CENTER" minWidth="53.0" onMouseClicked="#handleUpdateProjects" prefHeight="46.0" prefWidth="53.0" ripplerFill="WHITE" styleClass="button-small">
+                                                               <graphic>
+                                                                  <ImageView fitHeight="38.0" fitWidth="35.0" pickOnBounds="true" preserveRatio="true">
+                                                                     <image>
+                                                                        <Image url="@../images/refresh.png" />
+                                                                     </image>
+                                                                  </ImageView>
+                                                               </graphic>
+                                                            </JFXButton>
+                                                         </children>
+                                                      </HBox>
                                                    </children>
                                                 </VBox>
-                                                <JFXButton fx:id="btnCancel" disable="true" text="Cancella">
+                                                <JFXButton fx:id="btnCancel" disable="true" onMouseClicked="#handleDeleteProject" text="Cancella">
                                                    <graphic>
                                                       <ImageView fitHeight="36.0" fitWidth="44.0" pickOnBounds="true" preserveRatio="true">
                                                          <image>
@@ -100,7 +114,7 @@
                                                       </ImageView>
                                                    </graphic>
                                                    <HBox.margin>
-                                                      <Insets top="10.0" />
+                                                      <Insets top="15.0" />
                                                    </HBox.margin>
                                                 </JFXButton>
                                              </children>
@@ -335,4 +349,8 @@
          </tabs>
       </JFXTabPane>
    </children>
+   <stylesheets>
+      <URL value="@../css/main_style.css" />
+      <URL value="@../css/cardsListView.css" />
+   </stylesheets>
 </StackPane>

@@ -1,0 +1,33 @@
+#inProgressList {
+    -fx-background-color:  linear-gradient(to bottom, -fx-us-color-light, #ffcdd2);
+}
+
+#toDoList{
+    -fx-background-color:  linear-gradient(to bottom, -fx-us-color-light, -fx-us-color-strong);
+}
+
+#toBeRevisedList {
+    -fx-background-color:  linear-gradient(to top, -fx-us-color-light, #DCEDC8);
+}
+
+#doneList{
+    -fx-background-color:  linear-gradient(to bottom, #DCEDC8, #4CAF50);
+}
+
+.cardsList {
+    -fx-padding: 10px 10px;
+    -fx-font-size: 17pt;
+    -fx-text-alignment: center;
+}
+
+.cardsList .list-cell {
+    -fx-text-fill: black;
+    -fx-background-color: rgba(255, 255, 255, 0.4);
+    -fx-padding: 15px 15px;
+    -fx-text-alignment: center;
+}
+
+.cardsList .list-cell:even {
+    -fx-text-fill: black;
+    -fx-background-color: rgba(255, 255, 255, 0.6);
+}

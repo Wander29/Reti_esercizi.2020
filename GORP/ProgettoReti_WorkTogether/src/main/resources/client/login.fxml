@@ -6,6 +6,7 @@
 <?import javafx.geometry.Insets?>
 <?import javafx.scene.Cursor?>
 <?import javafx.scene.control.Label?>
+<?import javafx.scene.effect.DropShadow?>
 <?import javafx.scene.layout.BorderPane?>
 <?import javafx.scene.layout.HBox?>
 <?import javafx.scene.layout.StackPane?>
@@ -39,12 +40,15 @@
                         </Stop>
                         <Stop offset="1.0">
                            <color>
-                              <Color red="0.2631579041481018" green="0.23026315867900848" blue="0.09868421405553818" />
+                              <Color red="0.8157894611358643" green="0.7036813497543335" blue="0.298367440700531" />
                            </color>
                         </Stop>
                      </stops>
                   </LinearGradient>
                </textFill>
+               <effect>
+                  <DropShadow blurType="TWO_PASS_BOX" height="99.93" radius="33.5275" width="36.18" />
+               </effect>
             </Label>
          </children>
       </StackPane>
@@ -77,6 +81,9 @@
                            </stops>
                         </LinearGradient>
                      </textFill>
+                     <effect>
+                        <DropShadow height="101.0" radius="54.75" spread="0.55" width="120.0" />
+                     </effect>
                   </Label>
                   <JFXTextField fx:id="usernameTextField" focusColor="WHITE" onKeyTyped="#activateButtonsIfBothNotEmpty" promptText="... type here" styleClass="my-text-field" unFocusColor="WHITE" />
                </children>
@@ -103,6 +110,9 @@
                            </stops>
                         </LinearGradient>
                      </textFill>
+                     <effect>
+                        <DropShadow height="115.25" radius="58.3125" spread="0.55" width="120.0" />
+                     </effect>
                   </Label>
                   <JFXPasswordField fx:id="passwordTextField" focusColor="WHITE" onKeyTyped="#activateButtonsIfBothNotEmpty" promptText="... password hidden" unFocusColor="WHITE" />
                </children>

@@ -6,6 +6,8 @@ import server.logic.ServerManagerWT;
 
 import java.rmi.RemoteException;
 import java.rmi.server.UnicastRemoteObject;
+import java.security.NoSuchAlgorithmException;
+import java.security.spec.InvalidKeySpecException;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
@@ -23,7 +25,7 @@ public class ServerManagerRMI extends UnicastRemoteObject implements ServerInter
     }
 
     @Override
-    public String register(String username, String psw) throws RemoteException {
+    public String register(String username, String psw) throws RemoteException, InvalidKeySpecException, NoSuchAlgorithmException {
         if(username.isEmpty())
             return CSReturnValues.USERNAME_INVALID.toString();
 

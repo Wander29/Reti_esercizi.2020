@@ -20,6 +20,10 @@ public class DbHandler {
         conn = DriverManager.getConnection(dbUrl);
     }
 
+    public void closeConnection() throws SQLException {
+        this.conn.close();
+    }
+
     public void createDB() throws SQLException {
         // create
         Statement stmt = conn.createStatement();

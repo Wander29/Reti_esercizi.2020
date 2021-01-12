@@ -1,0 +1,29 @@
+.movements {
+    -fx-font-size: 14pt;
+    -fx-text-alignment: center;
+    -fx-background-color:  linear-gradient(to left, -fx-us-color-strong, #ffcdd2);
+    -fx-border-radius: 20px;
+    -fx-background-radius: 20px;
+}
+
+.movements .list-cell {
+    -fx-text-fill: black;
+    -fx-background-color: rgba(255, 255, 255, 0.4);
+    -fx-text-alignment: center;
+    -fx-border-radius: 20px;
+    -fx-background-radius: 20px;
+}
+
+.movements .list-cell:even {
+    -fx-text-fill: black;
+    -fx-background-color: rgba(255, 255, 255, 0.6);
+}
+
+.scroll-pane > .viewport {
+    -fx-background-color: transparent;
+}
+
+#label-description {
+    -fx-font-family: "Noto Sans";
+    -fx-font-size: 17pt;
+}

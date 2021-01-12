@@ -1,5 +1,3 @@
-@import url('https://fonts.googleapis.com/css?family=Balsamiq+Sans&display=swap');
-
 * {
     -fx-primary : #2A2E37;
     -fx-secondary : #FFFF8D;
@@ -139,43 +137,9 @@
     -fx-background-color:  linear-gradient(to bottom, -fx-us-color-light, -fx-us-color-strong);
 }
 
-#inProgressList {
-    -fx-background-color:  linear-gradient(to bottom, -fx-us-color-light, #ffcdd2);
-}
-
-#toDoList{
-    -fx-background-color:  linear-gradient(to bottom, -fx-us-color-light, -fx-us-color-strong);
-}
-
-#toBeRevisedList {
-    -fx-background-color:  linear-gradient(to top, -fx-us-color-light, #DCEDC8);
-}
-
-#doneList{
-    -fx-background-color:  linear-gradient(to bottom, #DCEDC8, #4CAF50);
-}
-
 .jfx-toggle-node {
     /* This is the color once toggled on. */
     -jfx-toggle-color: deepskyblue;
-}
-
-.cardsList .list-view {
-    -fx-padding: 10px 10px;
-    -fx-font-size: 17pt;
-    -fx-text-alignment: center;
-}
-
-.cardsList .list-view .list-cell {
-    -fx-text-fill: black;
-    -fx-background-color: rgba(255, 255, 255, 0.4);
-    -fx-padding: 15px 15px;
-    -fx-text-alignment: center;
-}
-
-.cardsList .list-view  .list-cell:even {
-    -fx-text-fill: black;
-    -fx-background-color: rgba(255, 255, 255, 0.6);
 }
 
 #project-name {

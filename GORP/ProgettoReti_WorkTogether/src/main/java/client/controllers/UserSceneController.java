@@ -1,21 +1,28 @@
 package client.controllers;
 
+import client.WorthClientMain;
 import client.data.ChatMsgObservable;
 import client.data.UserObservable;
 import com.jfoenix.controls.*;
+import javafx.application.Platform;
 import javafx.beans.binding.Bindings;
 import javafx.beans.property.SimpleStringProperty;
 import javafx.beans.property.StringProperty;
 import javafx.beans.value.ChangeListener;
 import javafx.beans.value.ObservableValue;
+import javafx.fxml.FXMLLoader;
 import javafx.geometry.Pos;
 import javafx.scene.Node;
+import javafx.scene.Parent;
+import javafx.scene.Scene;
 import javafx.scene.control.cell.PropertyValueFactory;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
 import javafx.scene.input.KeyEvent;
 import javafx.scene.layout.HBox;
+import javafx.stage.StageStyle;
 import protocol.CSReturnValues;
+import protocol.classes.Card;
 import protocol.classes.ChatMsg;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
@@ -25,6 +32,7 @@ import javafx.scene.control.*;
 import javafx.scene.input.MouseEvent;
 import javafx.scene.layout.VBox;
 import javafx.stage.Stage;
+import protocol.classes.Project;
 import protocol.exceptions.IllegalProtocolMessageException;
 import protocol.classes.ListProjectEntry;
 import protocol.exceptions.IllegalProjectException;
@@ -33,10 +41,7 @@ import protocol.exceptions.IllegalUsernameException;
 import java.io.IOException;
 import java.rmi.RemoteException;
 import java.sql.SQLException;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Optional;
-import java.util.Set;
+import java.util.*;
 
 public class UserSceneController extends ClientController {
 /*
@@ -64,6 +69,8 @@ public class UserSceneController extends ClientController {
     private JFXButton btnExit;
     @FXML
     private Label labelYourUsername;
+    @FXML
+    private JFXButton btnUpdate;
 
 /*
     Cards
@@ -113,9 +120,9 @@ public class UserSceneController extends ClientController {
 /*
   PROJECTS list
 */
-    private List<ListProjectEntry> projects = null;
     private ObservableList<String> projectNames = FXCollections.observableArrayList();
-    private SimpleStringProperty currentProject = new SimpleStringProperty(null);
+    private SimpleStringProperty currentProject = new SimpleStringProperty("");
+    private Project projectInfo = null;
 
 /*
     controller FUNCTIONS
@@ -154,6 +161,7 @@ public class UserSceneController extends ClientController {
     PROJECTS
      */
         // binds combobox items to list of project names
+        labelChosenProject.setText("");
         listProjects();
         comboChooseProject.setItems(projectNames);
 
@@ -275,50 +283,94 @@ public class UserSceneController extends ClientController {
     }
 
     private void listViewsInit() {
+        addListenerListView(toDoListView);
+        addListenerListView(inProgressListView);
+        addListenerListView(toBeRevisedListView);
+        addListenerListView(doneListView);
+
         toDoListView.setItems(toDoList);
         inProgressListView.setItems(inProgressList);
         toBeRevisedListView.setItems(toBeRevisedList);
         doneListView.setItems(doneList);
     }
 
+    private void addListenerListView(ListView listView) {
+        listView.setOnMouseClicked(e -> {
+            String selectedCard = (String) listView.getSelectionModel().getSelectedItem();
+            Card c = this.projectInfo.getCardFromAnyList(selectedCard);
+
+            // once user selects a card -> open new window to handle it
+            if(c != null) {
+                CardShowController controller = loadNewCardShow();
+                if(this.currentProject.get().isEmpty())
+                    System.out.println("durante la selezione di una carta: non è stato selezionato il progetto!");
+
+                controller.initShowCard(c, this.currentProject.get());
+            }
+        });
+    }
+
 /*
     runtime routins
  */
     private void listProjects() {
-    try {
-        List<ListProjectEntry> updatedProjects = clientLogic.listProjects();
-        if(this.projects == null) {
-            System.out.println("projects null");
-            for(ListProjectEntry entry : updatedProjects)
-            {
-                clientLogic.startChatConnection(entry);
-                this.projectNames.add(entry.project);
-            }
-        }
-        else {
-            for(ListProjectEntry entry : updatedProjects)
-            {
-                if(!this.projectNames.contains(entry.project)) {
+        try {
+            List<ListProjectEntry> updatedProjects = clientLogic.listProjects();
+            if(this.projectNames.isEmpty()) {
+                System.out.println("projects null");
+                for(ListProjectEntry entry : updatedProjects)
+                {
                     clientLogic.startChatConnection(entry);
                     this.projectNames.add(entry.project);
                 }
             }
+            else {
+                for(ListProjectEntry entry : updatedProjects)
+                {
+                    if(!this.projectNames.contains(entry.project)) {
+                        clientLogic.startChatConnection(entry);
+                        this.projectNames.add(entry.project);
+                    }
+                }
+            }
         }
-        for(String s : this.projectNames)
-        {
-            System.out.println(s);
-        }
-
-        this.projects = updatedProjects;
-
-    } catch (IOException e) {
-        e.printStackTrace();
-    } catch (IllegalUsernameException e) {
-        showDialogUsernameNotPresent();
-    } catch (IllegalProtocolMessageException e) {
-        e.printStackTrace();
+        catch (IOException e)                       { e.printStackTrace(); }
+        catch (IllegalUsernameException e)          { showDialogUsernameNotPresent(); }
+        catch (IllegalProtocolMessageException e)   { e.printStackTrace();}
     }
-}
+
+    private void fillCards() {
+        if(this.projectInfo != null) {
+            replaceCardList(this.projectInfo.getToDoCards(), toDoList);
+            replaceCardList(this.projectInfo.getInProgressCards(), inProgressList);
+            replaceCardList(this.projectInfo.getToBeRevisedCards(), toBeRevisedList);
+            replaceCardList(this.projectInfo.getDoneCards(), doneList);
+
+            if(toDoList.isEmpty() && inProgressList.isEmpty() && toBeRevisedList.isEmpty()) {
+                btnCancel.setDisable(false);
+            } else {
+                btnCancel.setDisable(true);
+            }
+        }
+    }
+    /*
+    for(Map.Entry<String, Card> entry : map.entrySet()) {
+        Card c = entry.getValue();
+
+        toDoList.add(c.getCardName());
+    }
+     */
+
+    private void replaceCardList(Map<String, Card> map, ObservableList<String> list) {
+
+        List<String> tmp = new ArrayList<>();
+        list.clear();
+
+        for(String s : map.keySet()) {
+            tmp.add(s);
+        }
+        list.addAll(tmp);
+    }
 
     private void fillChatTable() {
         if(this.currentProject.get() != null) {
@@ -371,17 +423,11 @@ public class UserSceneController extends ClientController {
 /*
     UTILS
  */
-    private void showDialogProjectNotPresent() {
-        Alert info = new Alert(Alert.AlertType.INFORMATION);
-        info.setHeaderText("Progetto NON presente");
-        info.setContentText("L'operazione richiesta non è stata completata");
-        info.showAndWait();
-    }
 
-    private void showDialogUsernameNotPresent() {
+    private void showDialogNoProjectSelected() {
         Alert info = new Alert(Alert.AlertType.INFORMATION);
-        info.setHeaderText("Nome utente NON presente");
-        info.setContentText("L'operazione richiesta non è stata completata");
+        info.setHeaderText("NON è stato selezionato alcun Progetto");
+        info.setContentText("Scegli un progetto dal menù a tendina nella schermata «PROGETTO»");
         info.showAndWait();
     }
 
@@ -395,6 +441,47 @@ public class UserSceneController extends ClientController {
         return graphicContainer;
     }
 
+    protected CardShowController loadNewCardShow() {
+        try {
+            FXMLLoader loader = new FXMLLoader(getClass().getResource("../cardShow.fxml"));
+            Parent parent = loader.load();
+
+            CardShowController controller = loader.getController();
+
+            Stage stage = new Stage(StageStyle.DECORATED);
+            stage.setTitle("Card");
+            stage.getIcons().add(new Image(
+                    WorthClientMain.class.getResourceAsStream("../images/notebook.png")));
+
+            // when closing -> update listViews asking server for updates
+            stage.setOnHiding(event -> {
+                try {
+                    updateShownProject();
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+                catch (IllegalProjectException e) {
+                    e.printStackTrace();
+                } catch (IllegalUsernameException e) {
+                    e.printStackTrace();
+                }
+            });
+
+            stage.setScene(new Scene(parent));
+            stage.show();
+
+            return controller;
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+
+        return null;
+    }
+
+    private void updateShownProject() throws IllegalProjectException, IOException, IllegalUsernameException {
+        this.projectInfo = clientLogic.showProject(this.currentProject.get());
+        fillCards();
+    }
 /*
     HANDLERS
  */
@@ -448,20 +535,114 @@ public class UserSceneController extends ClientController {
     }
 
     @FXML
-    void handleBtnAddCard(ActionEvent event) {
+    void handleUpdateProjects(MouseEvent event) {
+        listProjects();
 
+        try {
+            if(!this.currentProject.get().isEmpty())
+                updateShownProject();
+
+        } catch (IllegalProjectException e) {
+            e.printStackTrace();
+        } catch (IOException e) {
+            e.printStackTrace();
+        } catch (IllegalUsernameException e) {
+            e.printStackTrace();
+        }
+    }
+
+    @FXML
+    void handleBtnAddCard(ActionEvent event) {
+        if(this.currentProject.get().isEmpty())
+            return;
+
+        try {
+            // get new card name
+            TextInputDialog dialogCardName = new TextInputDialog("");
+            dialogCardName.setHeaderText("Inserisci il nome della Card da inserire");
+            dialogCardName.setTitle("Aggiungi Card al progetto: " + this.currentProject.get());
+            Optional<String> resultName = dialogCardName.showAndWait();
+
+            if(resultName.isEmpty())
+                return;
+
+            String cardName = resultName.get();
+            if(cardName.isEmpty())
+                return;
+
+            // get new card description
+            TextInputDialog dialogDescription = new TextInputDialog("");
+            dialogDescription.setHeaderText("Inserisci la descrizione");
+            dialogDescription.setTitle("Aggiungi Card al progetto: " + this.currentProject.get());
+            Optional<String> resultDescription = dialogDescription.showAndWait();
+
+            if(resultDescription.isEmpty())
+                return;
+
+            String description = resultDescription.get();
+            if(description.isEmpty())
+                return;
+
+            String projectName = this.currentProject.get();
+
+            System.out.println("request: ADD CARD " + cardName + " descr: " + description);
+
+            CSReturnValues retVal = clientLogic.addCard(projectName, cardName, description);
+
+            switch(retVal) {
+
+                case ADD_CARD_OK:
+                    Alert info = new Alert(Alert.AlertType.INFORMATION);
+                    info.setHeaderText("Card aggiunta");
+                    info.showAndWait();
+
+                    updateShownProject();
+                    break;
+
+                case USERNAME_NOT_PRESENT:
+                    showDialogUsernameNotPresent();
+                    return;
+
+                case PROJECT_NOT_PRESENT:
+                    showDialogProjectNotPresent();
+                    return;
+
+                case CARD_ALREADY_PRESENT:
+                    Alert infoCard = new Alert(Alert.AlertType.INFORMATION);
+                    infoCard.setHeaderText("Card «" + cardName + "» già presente");
+                    infoCard.setContentText("L'operazione richiesta non è stata completata");
+                    infoCard.showAndWait();
+                    return;
+
+                default:
+                    return;
+            }
+
+
+        } catch (IOException e) {
+            e.printStackTrace();
+        } catch (IllegalProjectException e) {
+            e.printStackTrace();
+        } catch (IllegalUsernameException e) {
+            e.printStackTrace();
+        }
     }
 
     @FXML
     void handleComboChooseProject(ActionEvent event) {
         this.currentProject.set(comboChooseProject.getValue());
         labelChosenProject.textProperty().bind(this.currentProject);
-
         System.out.println("COMBO BOX: " + this.currentProject.get());
-        // @todo showCards()
 
-        // List<Cards> clientLogic.showCards(this.currentProject.get());
+        if(this.currentProject.get().isEmpty())
+            return;
 
+        try {
+            updateShownProject();
+        }
+        catch (IOException e)               { e.printStackTrace(); }
+        catch (IllegalUsernameException e)  { showDialogUsernameNotPresent(); }
+        catch (IllegalProjectException e)   { e.printStackTrace(); }
     }
 
     @FXML
@@ -476,7 +657,7 @@ public class UserSceneController extends ClientController {
             return;
 
         String member = result.get();
-        if(member == null || member == "")
+        if(member.isEmpty())
             return;
 
         try {
@@ -513,6 +694,53 @@ public class UserSceneController extends ClientController {
         }
     }
 
+    @FXML
+    void handleDeleteProject(MouseEvent event) {
+
+        if(this.currentProject.get().isEmpty())
+            return;
+
+        try {
+            String projectName = this.currentProject.get();
+            CSReturnValues retVal = clientLogic.deleteProject(projectName);
+
+            switch(retVal) {
+
+                case DELETE_PROJECT_OK:
+                    Alert info = new Alert(Alert.AlertType.INFORMATION);
+                    info.setHeaderText("Progetto cancellato");
+                    info.showAndWait();
+
+                    resetUIstate(projectName);
+                    break;
+
+                case USERNAME_NOT_PRESENT:
+                    showDialogUsernameNotPresent();
+                    return;
+
+                case PROJECT_NOT_PRESENT:
+                    showDialogProjectNotPresent();
+                    return;
+            }
+
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+
+    private void resetUIstate(String projectName) {
+        comboChooseProject.setValue("");
+        this.projectNames.remove(projectName);
+        btnCancel.setDisable(true);
+
+        toDoList.clear();
+        inProgressList.clear();
+        toBeRevisedList.clear();
+        doneList.clear();
+
+        listProjects();
+    }
+
         /*
         Chat
          */
@@ -522,13 +750,6 @@ public class UserSceneController extends ClientController {
             btnSendChat.setDisable(false);
         else
             btnSendChat.setDisable(true);
-    }
-
-    void showDialogNoProjectSelected() {
-        Alert info = new Alert(Alert.AlertType.INFORMATION);
-        info.setHeaderText("NON è stato selezionato alcun Progetto");
-        info.setContentText("Scegli un progetto dal menù a tendina nella schermata «PROGETTO»");
-        info.showAndWait();
     }
 
     @FXML

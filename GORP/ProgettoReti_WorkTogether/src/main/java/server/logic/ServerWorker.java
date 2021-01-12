@@ -4,8 +4,7 @@ import com.google.gson.Gson;
 import protocol.CSOperations;
 import protocol.CSProtocol;
 import protocol.CSReturnValues;
-import protocol.classes.ListProjectEntry;
-import protocol.classes.TCPBuffersNIO;
+import protocol.classes.*;
 import utils.*;
 import protocol.exceptions.IllegalProjectException;
 import protocol.exceptions.IllegalUsernameException;
@@ -16,6 +15,8 @@ import java.nio.ByteBuffer;
 import java.nio.channels.SelectionKey;
 import java.nio.channels.Selector;
 import java.nio.channels.SocketChannel;
+import java.security.NoSuchAlgorithmException;
+import java.security.spec.InvalidKeySpecException;
 import java.util.*;
 
 public class ServerWorker implements Runnable {
@@ -29,8 +30,7 @@ public class ServerWorker implements Runnable {
     }
 
     private void readMsgAndComputeRequest(SelectionKey key)
-            throws IOException, TerminationException
-    {
+            throws IOException, TerminationException, InvalidKeySpecException, NoSuchAlgorithmException {
         SocketChannel cliCh     = (SocketChannel)   key.channel();
         TCPBuffersNIO bufs      = (TCPBuffersNIO)   key.attachment();
 
@@ -65,6 +65,22 @@ public class ServerWorker implements Runnable {
 
             case LIST_PROJECTS:
                 opListProject(bufs, cliCh);
+                break;
+
+            case SHOW_PROJECT:
+                opShowProject(bufs, cliCh);
+                break;
+
+            case MOVE_CARD:
+                opMoveCard(bufs, cliCh);
+                break;
+
+            case ADD_CARD:
+                opAddCard(bufs, cliCh);
+                break;
+
+            case DELETE_PROJECT:
+                opDeleteProject(bufs, cliCh);
                 break;
 
             case SHOW_MEMBERS:
@@ -127,6 +143,12 @@ public class ServerWorker implements Runnable {
                             System.err.println("errore durante la lettura di una richiesta dal client");
                             e.printStackTrace();
                         }
+                        catch (InvalidKeySpecException e) {
+                            e.printStackTrace();
+                        }
+                        catch (NoSuchAlgorithmException e) {
+                            e.printStackTrace();
+                        }
 
                     }
                     // if(key.isWritable()) {}
@@ -153,7 +175,7 @@ public class ServerWorker implements Runnable {
     protocol for LOGIN operation:
         -   LOGIN;username;pswInBytes
      */
-    private void opLogin(TCPBuffersNIO bufs, SocketChannel cliCh) throws IOException {
+    private void opLogin(TCPBuffersNIO bufs, SocketChannel cliCh) throws IOException, InvalidKeySpecException, NoSuchAlgorithmException {
 
         List<String> tokens = StringUtils.tokenizeRequest(bufs.inputBuf);
         bufs.inputBuf.clear();
@@ -195,26 +217,97 @@ public class ServerWorker implements Runnable {
         } catch (IllegalUsernameException e) {
             this.sendResponse(bufs.outputBuf, cliCh, e.retval.toString());
         }
-        /*
-        StringBuilder builder = new StringBuilder(CSReturnValues.LIST_PROJECTS_OK.toString());
-        for(ListProjectEntry proj : list) {
-            builder.append(";");
-            builder.append(proj.project);
-            builder.append(";");
-            builder.append(proj.ip);
-            builder.append(";");
-            builder.append(String.valueOf(proj.port));
-        }
-        String ret = builder.toString();
-
-        if(CSProtocol.DEBUG()) {
-            System.out.println("response: " + ret);
-        }*/
 
         Gson gson = new Gson();
         String toSend = CSReturnValues.LIST_PROJECTS_OK.toString() + ";" + gson.toJson(list);
+        CSProtocol.printResponse(toSend);
 
         this.sendResponse(bufs.outputBuf, cliCh, toSend);
+    }
+
+    /*
+   protocol for SHOW PROJECT:
+       - SHOW_PROJECT;projectName
+    */
+    private void opShowProject(TCPBuffersNIO bufs, SocketChannel cliCh) throws IOException {
+        List<String> tokens = StringUtils.tokenizeRequest(bufs.inputBuf);
+        bufs.inputBuf.clear();
+
+        String projectName  = tokens.remove(0);
+
+        Project p = null;
+        try {
+            p = this.server.showProject(bufs.getUsername(), projectName);
+        }
+        catch (IllegalUsernameException e) {
+            this.sendResponse(bufs.outputBuf, cliCh, e.retval.toString());
+        }
+        catch (IllegalProjectException e) {
+            this.sendResponse(bufs.outputBuf, cliCh, e.retval.toString());
+        }
+
+        Gson gson = new Gson();
+        String toSend = CSReturnValues.SHOW_PROJECT_OK.toString() + ";" + gson.toJson(p);
+        CSProtocol.printResponse(toSend);
+
+        this.sendResponse(bufs.outputBuf, cliCh, toSend);
+    }
+
+    /*
+    protocol for MOVE CARD operation
+        -   MOVE_CARD;projectName;cardName;fromStatus;toStatus
+     */
+    private void opMoveCard(TCPBuffersNIO bufs, SocketChannel cliCh) throws IOException {
+        List<String> tokens = StringUtils.tokenizeRequest(bufs.inputBuf);
+        bufs.inputBuf.clear();
+
+        String projectName  = tokens.remove(0);
+        String cardName     = tokens.remove(0);
+        CardStatus from     = CardStatus.valueOf(tokens.remove(0));
+        CardStatus to       = CardStatus.valueOf(tokens.remove(0));
+
+        String toSend = this.server.moveCard(
+                bufs.getUsername(),
+                projectName,
+                cardName,
+                from,
+                to);
+
+        CSProtocol.printResponse(toSend);
+        sendResponse(bufs.outputBuf, cliCh, toSend);
+    }
+
+    private void opAddCard(TCPBuffersNIO bufs, SocketChannel cliCh) throws IOException {
+        List<String> tokens = StringUtils.tokenizeRequest(bufs.inputBuf);
+        bufs.inputBuf.clear();
+
+        String projectName  = tokens.remove(0);
+        String cardName     = tokens.remove(0);
+        String description  = tokens.remove(0);
+
+        String ret = this.server.addCard(
+                bufs.getUsername(),
+                projectName,
+                cardName,
+                description);
+
+        sendResponse(bufs.outputBuf, cliCh, ret);
+    }
+
+    private void opDeleteProject(TCPBuffersNIO bufs, SocketChannel cliCh) throws IOException {
+        List<String> tokens = StringUtils.tokenizeRequest(bufs.inputBuf);
+        bufs.inputBuf.clear();
+
+        if(tokens.size() != 1)
+            return;
+
+        String projectName = tokens.remove(0);
+
+        System.out.println("DELETE PROJECT: " + projectName);
+        String ret = this.server.deleteProject(bufs.getUsername(), projectName);
+
+        System.out.println("RESPONSE: " + ret);
+        sendResponse(bufs.outputBuf, cliCh, ret);
     }
 
     /*

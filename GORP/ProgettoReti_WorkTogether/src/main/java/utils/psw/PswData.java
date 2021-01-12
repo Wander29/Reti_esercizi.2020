@@ -1,6 +1,10 @@
 package utils.psw;
 
-public class PswData {
+import java.io.Serializable;
+
+public class PswData implements Serializable {
+    private static final long serialVersionUID = 01L;
+
     public byte[] salt;
     public byte[] psw;
 

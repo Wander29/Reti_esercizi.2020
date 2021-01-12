@@ -1,7 +1,10 @@
 package server.data;
 
+import protocol.CSProtocol;
 import protocol.classes.Card;
+import protocol.classes.CardStatus;
 import protocol.classes.Project;
+import protocol.exceptions.IllegalOperation;
 
 import java.io.IOException;
 import java.io.Serializable;
@@ -21,7 +24,6 @@ public class ServerProject extends Project implements Serializable {
 
     private InetAddress chatMulticastIP;
     private int chatMulticastPort;
-
     private static List<InetAddress> ipFree = new ArrayList<>();
 
     public ServerProject(String s, String creator) throws UnknownHostException, NoSuchElementException {
@@ -36,34 +38,122 @@ public class ServerProject extends Project implements Serializable {
         this.chatMulticastPort = this.portScannerFindFreePort(this.chatMulticastIP);
 
         this.members            = new ArrayList<>();
-        this.toDoCards          = new ArrayList<>();
-        this.inProgressCards    = new ArrayList<>();
-        this.toBeRevisedCards   = new ArrayList<>();
-        this.doneCards          = new ArrayList<>();
+        this.toDoCards          = new HashMap<>();
+        this.inProgressCards    = new HashMap<>();
+        this.toBeRevisedCards   = new HashMap<>();
+        this.doneCards          = new HashMap<>();
         // add creator as member
         this.members.add(creator);
     }
 
     /*** TEST
      */
-    public void addCard(String name, String descr) {
-        this.toDoCards.add(new Card(name, descr));
+    public void addCard(String cardName, String descr, String username) {
+        this.toDoCards.put(cardName, new Card(cardName, descr, username));
     }
 
-    public void addInProgressCard(String name, String descr) {
-        this.inProgressCards.add(new Card(name, descr));
+    public boolean isCardInFromStatus(String cardName, CardStatus fromStatus) {
+
+        switch(fromStatus) {
+
+            case TO_DO:
+                if(toDoCards.containsKey(cardName))           return true;
+                else        return false;
+
+            case IN_PROGRESS:
+                if(inProgressCards.containsKey(cardName))     return true;
+                else        return false;
+
+            case TO_BE_REVISED:
+                if(toBeRevisedCards.containsKey(cardName))     return true;
+                else        return false;
+
+            case DONE:
+                if(doneCards.containsKey(cardName))            return true;
+                else        return false;
+        }
+
+        return false;
     }
 
-    public void addToBeRevisedCard(String name, String descr) {
-        this.toBeRevisedCards.add(new Card(name, descr));
-    }
+    public void moveCard(String name, CardStatus from, CardStatus to, String username)
+            throws IllegalOperation
+    {
+        Card movingCard;
 
-    public void addDoneCard(String name, String descr) {
-        this.doneCards.add(new Card(name, descr));
-    }
-    /*
+        switch(from) {
+            case TO_DO:
+                if(to != CardStatus.IN_PROGRESS)
+                    throw new IllegalOperation();
 
-     */
+                movingCard = this.toDoCards.remove(name);
+
+                this.inProgressCards.put(name, movingCard);
+                movingCard.addMovement(
+                        from,
+                        to,
+                        username
+                );
+
+                break;
+
+            case IN_PROGRESS:
+                if(to != CardStatus.TO_BE_REVISED && to != CardStatus.DONE)
+                    throw new IllegalOperation();
+
+                movingCard = this.inProgressCards.remove(name);
+
+                switch(to) {
+                    case TO_BE_REVISED:
+                        toBeRevisedCards.put(name, movingCard);
+                        break;
+
+                    case DONE:
+                        doneCards.put(name, movingCard);
+                        break;
+
+                    default:
+                        return;
+                }
+                movingCard.addMovement(
+                        from,
+                        to,
+                        username
+                );
+
+                break;
+
+            case TO_BE_REVISED:
+                if(to != CardStatus.IN_PROGRESS && to != CardStatus.DONE)
+                    throw new IllegalOperation();
+
+                movingCard = this.toBeRevisedCards.remove(name);
+
+                switch(to) {
+                    case IN_PROGRESS:
+                        inProgressCards.put(name, movingCard);
+                        break;
+
+                    case DONE:
+                        doneCards.put(name, movingCard);
+                        break;
+
+                    default:
+                        return;
+                }
+                movingCard.addMovement(
+                        from,
+                        to,
+                        username
+                );
+
+                break;
+
+            // if is from: done -> illegal operation
+            default:
+                throw new IllegalOperation();
+        }
+    }
 
     public void addMember(String username) {
         this.members.add(username);
@@ -124,9 +214,16 @@ public class ServerProject extends Project implements Serializable {
     }
 
     private int portScannerFindFreePort(InetAddress ip) {
+        Socket s;
+        try {
+            s = new Socket(ip, CSProtocol.WORTH_DEFAULT_CHAT_SERVICE_PORT());
+        } catch (IOException e) {
+            return CSProtocol.WORTH_DEFAULT_CHAT_SERVICE_PORT();
+        }
+
         for (int i = FIRST_FREE_PORT; i <= MAX_PORT_NUM; i++) {
             try {
-                Socket s = new Socket(ip, i);
+                s = new Socket(ip, i);
                 System.out.println("Esiste un servizio sulla porta "+i);
             }
             catch (IOException ex) {
@@ -150,19 +247,19 @@ public class ServerProject extends Project implements Serializable {
     }
 
 
-    public List<Card> getToDoCards() {
+    public Map<String, Card> getToDoCards() {
         return toDoCards;
     }
 
-    public List<Card> getInProgressCards() {
+    public Map<String, Card> getInProgressCards() {
         return inProgressCards;
     }
 
-    public List<Card> getToBeRevisedCards() {
+    public Map<String, Card> getToBeRevisedCards() {
         return toBeRevisedCards;
     }
 
-    public List<Card> getDoneCards() {
+    public Map<String, Card> getDoneCards() {
         return doneCards;
     }
 

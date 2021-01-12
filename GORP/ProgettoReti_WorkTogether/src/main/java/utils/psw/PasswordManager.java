@@ -25,12 +25,12 @@ public class PasswordManager {
         return hash;
     }
 
-    public static PswData hashString(String s) throws NoSuchAlgorithmException, InvalidKeySpecException {
+    public static PswData hashPsw(String s) throws NoSuchAlgorithmException, InvalidKeySpecException {
         random.nextBytes(salt);
         return new PswData(salt, PasswordManager.hash(s, salt));
     }
 
-    public static boolean compareString(String s, byte[] saltUsed, byte[] hashedString) throws NoSuchAlgorithmException, InvalidKeySpecException {
-        return Arrays.equals(PasswordManager.hash(s, saltUsed), hashedString);
+    public static boolean comparePsw(String s, PswData psw) throws NoSuchAlgorithmException, InvalidKeySpecException {
+        return Arrays.equals(PasswordManager.hash(s, psw.salt), psw.psw);
     }
 }

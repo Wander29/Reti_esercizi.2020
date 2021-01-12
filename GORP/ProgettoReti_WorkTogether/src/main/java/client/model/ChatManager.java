@@ -16,6 +16,7 @@ import java.sql.Time;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Set;
+import java.util.StringTokenizer;
 
 /*
     this thread will listen on PIPE from
@@ -108,20 +109,33 @@ public class ChatManager extends Thread {
         while (pipeReadEnd.read(bb) > 0) {
             bb.flip();
 
-            String ret = StringUtils.byteBufferToString(bb);
+            builder.append(StringUtils.byteBufferToString(bb));
             bb.clear();
-
-            builder.append(ret);
         }
-        List<String> tokens = StringUtils.tokenizeRequest(builder.toString());
+        String ret = builder.toString();
+        System.out.println(ret);
 
-        if(tokens.size() != 2)
-            throw new IOException();
+        // if ClientWT wrote more than one connection
+        StringTokenizer tokenizerMultipleRequests = new StringTokenizer(ret, ",");
+        while(tokenizerMultipleRequests.hasMoreTokens()) {
 
-        String ip = tokens.remove(0);
-        int port = Integer.parseInt(tokens.remove(0));
+            String current = tokenizerMultipleRequests.nextToken();
+            System.out.println("current: " + current);
+            if(current.equals("")) {
+                break;
+            }
 
-        registerMulticastConnection(ip, port);
+            List<String> tokens = StringUtils.tokenizeRequest(current);
+
+            if(tokens.size() != 2)
+                throw new IOException();
+
+            String ip = tokens.remove(0);
+            int port = Integer.parseInt(tokens.remove(0));
+
+            registerMulticastConnection(ip, port);
+            System.out.println("ip: " + ip + " registrato!");
+        }
     }
 
     /*
@@ -150,7 +164,7 @@ public class ChatManager extends Thread {
         // needed to have Multicast NIO
             // see: @https://stackoverflow.com/questions/59718752/java-nio-join-to-multicast-channel-on-the-default-network-interface
         NetworkInterface ni;
-        try (MulticastSocket s = new MulticastSocket()) {
+        try (MulticastSocket s = new MulticastSocket()) { // created solely to get NetworkInterface
             ni = s.getNetworkInterface();
         }
         // join on Multicast group

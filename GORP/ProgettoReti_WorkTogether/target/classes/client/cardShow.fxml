@@ -2,56 +2,49 @@
 
 <?import com.jfoenix.controls.JFXButton?>
 <?import com.jfoenix.controls.JFXComboBox?>
+<?import java.net.URL?>
 <?import javafx.geometry.Insets?>
 <?import javafx.scene.control.Label?>
-<?import javafx.scene.control.ScrollPane?>
+<?import javafx.scene.control.ListView?>
+<?import javafx.scene.control.TextArea?>
 <?import javafx.scene.layout.HBox?>
 <?import javafx.scene.layout.StackPane?>
 <?import javafx.scene.layout.VBox?>
 
-
-<StackPane maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="480.0" prefWidth="720.0" stylesheets="@../css/main_style.css" xmlns="http://javafx.com/javafx/15.0.1" xmlns:fx="http://javafx.com/fxml/1">
+<StackPane id="mainBox" maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="480.0" prefWidth="720.0" xmlns="http://javafx.com/javafx/15.0.1" xmlns:fx="http://javafx.com/fxml/1" fx:controller="client.controllers.CardShowController">
    <children>
-      <VBox alignment="CENTER" prefHeight="200.0" prefWidth="100.0" StackPane.alignment="CENTER">
+      <VBox alignment="CENTER" prefHeight="200.0" prefWidth="100.0" spacing="10.0" StackPane.alignment="CENTER">
          <children>
-            <Label prefHeight="40.0" prefWidth="331.0" text="DESCRIZIONE" textFill="WHITE" />
-            <ScrollPane prefHeight="237.0" prefWidth="720.0">
-              <content>
-                  <VBox alignment="CENTER" prefHeight="178.0" prefWidth="711.0">
+            <VBox alignment="CENTER" VBox.vgrow="ALWAYS">
+               <children>
+                  <Label fx:id="labelCardName" text="CardName" textFill="WHITE" VBox.vgrow="ALWAYS" />
+                  <HBox VBox.vgrow="ALWAYS">
                      <children>
-                        <Label text="Descriziomneee" />
+                        <TextArea id="label-description" fx:id="textAreaDesscription" editable="false" prefHeight="263.0" prefWidth="709.0" text="description&#10;" wrapText="true" HBox.hgrow="ALWAYS" />
                      </children>
-                  </VBox>
-              </content>
-            </ScrollPane>
+                  </HBox>
+               </children>
+            </VBox>
             <HBox alignment="CENTER_LEFT" prefHeight="306.0" prefWidth="720.0" spacing="30.0">
                <children>
-                  <VBox alignment="CENTER" prefHeight="237.0" prefWidth="360.0" spacing="5.0">
+                  <VBox alignment="CENTER" prefHeight="237.0" prefWidth="360.0" spacing="5.0" HBox.hgrow="ALWAYS">
                      <children>
-                        <Label text="HISTORY" textFill="WHITE" />
-                        <ScrollPane prefHeight="226.0" prefWidth="360.0">
-                          <content>
-                              <VBox alignment="CENTER" prefHeight="27.0" prefWidth="353.0">
-                                 <children>
-                                    <Label prefHeight="40.0" prefWidth="306.0" text="Label" textAlignment="CENTER" />
-                                 </children>
-                              </VBox>
-                          </content>
-                        </ScrollPane>
+                        <Label text="MOVIMENTI" textFill="WHITE" VBox.vgrow="ALWAYS" />
+                        <ListView fx:id="historyListView" prefHeight="200.0" prefWidth="200.0" styleClass="movements" VBox.vgrow="ALWAYS" />
                      </children>
                   </VBox>
-                  <VBox alignment="CENTER" prefHeight="254.0" prefWidth="339.0" spacing="20.0">
+                  <VBox alignment="CENTER" prefHeight="254.0" prefWidth="339.0" spacing="20.0" HBox.hgrow="ALWAYS">
                      <children>
-                        <HBox alignment="CENTER" prefHeight="100.0" prefWidth="200.0">
+                        <VBox alignment="CENTER">
                            <children>
-                              <Label text="MOVE TO" textFill="WHITE" />
-                              <JFXComboBox />
+                              <Label text="Sposta in.." textFill="WHITE" />
+                              <JFXComboBox fx:id="comboMoveCard" onAction="#handleComboChooseStatus" styleClass="combo-small" />
                            </children>
-                        </HBox>
-                        <JFXButton text="SPOSTA" />
+                        </VBox>
+                        <JFXButton fx:id="btnMoveCard" disable="true" onMouseClicked="#handleMoveCard" text="Sposta" VBox.vgrow="NEVER" />
                      </children>
                      <HBox.margin>
-                        <Insets top="20.0" />
+                        <Insets bottom="20.0" top="20.0" />
                      </HBox.margin>
                   </VBox>
                </children>
@@ -59,4 +52,11 @@
          </children>
       </VBox>
    </children>
+   <stylesheets>
+      <URL value="@../css/main_style.css" />
+      <URL value="@../css/movementsListView.css" />
+   </stylesheets>
+   <padding>
+      <Insets bottom="30.0" left="30.0" right="30.0" top="5.0" />
+   </padding>
 </StackPane>

@@ -46,8 +46,11 @@ public abstract class SerializeHelper {
             System.out.println(project.getProjectName());
             // creo una directory
             System.out.println("- TODO CARDS");
-            for(Card c : project.getToDoCards()) {
+            Map<String, Card> map = project.getToDoCards();
+
+            for(Map.Entry<String, Card> entry : map.entrySet()) {
                 // serialize card
+                Card c = entry.getValue();
                 System.out.println(c.getCardName());
                 System.out.println(c.getDescription());
                 System.out.println(c.getCardHistory().toString());

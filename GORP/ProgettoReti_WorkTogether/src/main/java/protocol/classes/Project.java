@@ -1,50 +1,78 @@
 package protocol.classes;
 
+import server.data.ServerProject;
+
 import java.io.Serializable;
-import java.sql.PreparedStatement;
 import java.util.List;
+import java.util.Map;
 
 public class Project implements Serializable {
-    private static final long serialVersionUID = 42L;
+    private static final long serialVersionUID = 01L;
 
     public String getProjectName() {
         return projectName;
     }
 
-    public List<Card> getToDoCards() {
+    public Map<String,Card> getToDoCards() {
         return toDoCards;
     }
 
-    public List<Card> getInProgressCards() {
+    public Map<String,Card> getInProgressCards() {
         return inProgressCards;
     }
 
-    public List<Card> getToBeRevisedCards() {
+    public Map<String,Card> getToBeRevisedCards() {
         return toBeRevisedCards;
     }
 
-    public List<Card> getDoneCards() {
+    public Map<String,Card> getDoneCards() {
         return doneCards;
     }
 
     protected String projectName;
-    protected List<Card> toDoCards;
-    protected List<Card> inProgressCards;
-    protected List<Card> toBeRevisedCards;
-    protected List<Card> doneCards;
+    protected Map<String,Card> toDoCards;
+    protected Map<String,Card> inProgressCards;
+    protected Map<String,Card> toBeRevisedCards;
+    protected Map<String,Card> doneCards;
 
     public Project(
             String name,
-            List<Card> toDo,
-            List<Card> inProgress,
-            List<Card> toBeRevised,
-            List<Card> done
+            Map<String,Card> toDo,
+            Map<String,Card> inProgress,
+            Map<String,Card> toBeRevised,
+            Map<String,Card> done
     ) {
         this.projectName        = name;
         this.toDoCards          = toDo;
         this.inProgressCards    = inProgress;
         this.toBeRevisedCards   = toBeRevised;
         this.doneCards          = done;
+    }
+
+    public Project() {}
+
+    public Project(ServerProject sp) {
+        this.toDoCards          = sp.getToDoCards();
+        this.inProgressCards    = sp.getInProgressCards();
+        this.toBeRevisedCards   = sp.getToBeRevisedCards();
+        this.doneCards          = sp.getDoneCards();
+    }
+
+    public Card getCardFromAnyList(String name) {
+        if(this.toDoCards.containsKey(name)) {
+            return this.toDoCards.get(name);
+        }
+        else if(this.inProgressCards.containsKey(name)) {
+            return this.inProgressCards.get(name);
+        }
+        else if(this.toBeRevisedCards.containsKey(name)) {
+            return this.toBeRevisedCards.get(name);
+        }
+        else if(this.doneCards.containsKey(name)) {
+            return this.doneCards.get(name);
+        }
+
+        return null;
     }
 
 }
