@@ -27,7 +27,7 @@ import java.util.concurrent.ConcurrentHashMap;
  */
 
 public class ServerWT {
-    Map<String, Boolean> onlineStateUsers;  // users online state
+    Map<String, Boolean> onlineStateUsers;      // users online state
                                                 // when you start server every user is offline
     private WorthData data;
     Map<String, UserInfo> users;                // users login info
@@ -43,6 +43,10 @@ public class ServerWT {
 
         this.projects   = data.getProjects();
         this.users      = data.getUsers();
+
+        for(Map.Entry<String, UserInfo> entry : this.users.entrySet())
+            this.onlineStateUsers.put(entry.getKey(), Boolean.FALSE);
+
 
         try {
             insertSampleData();

@@ -79,6 +79,8 @@ UserSceneController->ChatManager:  IP1;port1,IP2port2,....
 
 - un utente può loggarsi su una sola connessione (no login multipli)
 - stateful
+- limite superiore numero progetti dato dal numero di IP multicast locali
+- scalabilità multihread + multiplexed
 
 
 
@@ -109,3 +111,6 @@ threads.
 «If thread
 A does database work that is not transactionally related to thread B, assign them to
 different Connections»
+
+
+

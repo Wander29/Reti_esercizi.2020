@@ -4,6 +4,9 @@ import protocol.CSProtocol;
 
 import java.nio.ByteBuffer;
 import java.nio.charset.StandardCharsets;
+import java.sql.Time;
+import java.text.DateFormat;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.StringTokenizer;
@@ -59,12 +62,18 @@ public abstract class StringUtils {
         return tokens;
     }
 
-    private static String getFirstToken(String s) {
+    public static String getFirstToken(String s) {
         StringTokenizer tokenizer = new StringTokenizer(s, ";");
 
         if(tokenizer.hasMoreTokens())
             return tokenizer.nextToken();
 
         return null;
+    }
+
+    private static final DateFormat df = new SimpleDateFormat("HH:mm");
+    public static String getTimeFormatted(Time time) {
+
+        return df.format(time);
     }
 }

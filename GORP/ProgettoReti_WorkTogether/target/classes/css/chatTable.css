@@ -16,9 +16,15 @@
     -fx-max-height:40px;
 }
 
-.table-row-cell highlighted {
-    -fx-background-color: #81c483;
-    -fx-background-radius: 15px;
+.table-row-cell{
+    -fx-background-radius: 7px 7px 0px 0px;
+    -fx-background-insets: 0 11px 0 0;
+    -fx-padding: 0.0em;
+}
+
+.table-row-cell:mine {
+    -fx-background-color: #81C784 !important;
+    -fx-background-radius: 15px !important;
 }
 
 .table-view .virtual-flow .scroll-bar:vertical .thumb{
@@ -37,9 +43,6 @@
 
 .table-row-cell:odd{
     -fx-background-color:  linear-gradient(to right, -fx-us-color-white, #B2DFDB);
-    -fx-background-radius: 7px 7px 0px 0px;
-    -fx-background-insets: 0 11px 0 0;
-    -fx-padding: 0.0em;
 }
 
 .table-view .table-cell{

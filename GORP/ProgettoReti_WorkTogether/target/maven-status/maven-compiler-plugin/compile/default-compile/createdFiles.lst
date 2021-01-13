@@ -16,6 +16,7 @@ client/WorthClientMain.class
 client/controllers/ClientController.class
 protocol/exceptions/IllegalOperation.class
 server/DaemonSaver.class
+client/controllers/UserSceneController$5.class
 server/logic/rmi/ServerInterface.class
 server/data/ServerProject.class
 client/model/rmi/ClientNotify.class
@@ -33,6 +34,7 @@ client/model/rmi/NotifyInterface.class
 protocol/classes/ChatMsg.class
 client/model/ClientWT$3.class
 client/controllers/UserSceneController$1.class
+client/controllers/UserSceneController$4.class
 client/controllers/LoginController$1.class
 server/logic/SerializeHelper.class
 utils/psw/PasswordManager.class
@@ -52,3 +54,4 @@ protocol/CSOperations.class
 protocol/exceptions/TerminationException.class
 protocol/classes/CardMovement.class
 server/logic/rmi/ServerManagerRMI.class
+client/controllers/UserSceneController$3.class

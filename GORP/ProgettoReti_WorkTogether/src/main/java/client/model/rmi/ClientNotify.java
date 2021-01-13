@@ -19,7 +19,7 @@ public class ClientNotify extends UnicastRemoteObject implements NotifyInterface
         this.usersOnline = new HashSet<>();
     }
 
-    public void setUsersMap(Map<String, Boolean> map) {
+    public synchronized void setUsersMap(Map<String, Boolean> map) {
         this.usersOnlineState = map;
         for(Map.Entry<String, Boolean> user : this.usersOnlineState.entrySet()) {
             if(user.getValue()) {
@@ -29,7 +29,7 @@ public class ClientNotify extends UnicastRemoteObject implements NotifyInterface
     }
 
     @Override
-    public void userIsOnline(String username) throws RemoteException {
+    public synchronized void userIsOnline(String username) throws RemoteException {
         if(CSProtocol.DEBUG()) {
             System.out.println("CALLBACK ricevuta [online]: " + username);
         }
@@ -39,7 +39,7 @@ public class ClientNotify extends UnicastRemoteObject implements NotifyInterface
     }
 
     @Override
-    public void userIsOffline(String username) throws RemoteException {
+    public synchronized void userIsOffline(String username) throws RemoteException {
         if(CSProtocol.DEBUG()) {
             System.out.println("CALLBACK ricevuta [offline]: " + username);
         }
@@ -48,18 +48,18 @@ public class ClientNotify extends UnicastRemoteObject implements NotifyInterface
     }
 
     @Override
-    public void newUser(String username) throws RemoteException {
+    public synchronized void newUser(String username) throws RemoteException {
         if(CSProtocol.DEBUG()) {
             System.out.println("CALLBACK ricevuta [new]: " + username);
         }
         this.usersOnlineState.put(username, Boolean.FALSE);
     }
 
-    public Set<String> getAllUsers() {
-        return Collections.unmodifiableSet(this.usersOnlineState.keySet());
+    public synchronized Map<String, Boolean> getAllUsers() {
+        return Collections.unmodifiableMap(this.usersOnlineState);
     }
 
-    public Set<String> getOnlineUsers() {
+    public synchronized Set<String> getOnlineUsers() {
         return Collections.unmodifiableSet(this.usersOnline);
     }
 }

@@ -1,9 +1,12 @@
 package client.model;
 
+import client.data.ChatMsgObservable;
 import client.data.DbHandler;
 import client.model.rmi.ClientNotify;
 import com.google.gson.Gson;
 import com.google.gson.reflect.TypeToken;
+import javafx.collections.FXCollections;
+import javafx.collections.ObservableList;
 import protocol.CSOperations;
 import protocol.CSProtocol;
 import protocol.CSReturnValues;
@@ -110,7 +113,7 @@ RMI
                 new ConcurrentHashMap<>(usersStateUnmodifiable) );
     }
 
-    public static Set<String> listUsers() {
+    public static Map<String, Boolean> listUsers() {
         return clientStub.getAllUsers();
     }
 
@@ -124,6 +127,11 @@ UDP
     private Pipe pipe;
     private Pipe.SinkChannel pipe_writeChannel;
     private DbHandler dbHandler;
+    private ObservableList<ChatMsgObservable> chatCurrentMsgs = FXCollections.observableArrayList();
+
+    public ObservableList<ChatMsgObservable> getChatCurrentMsgs() {
+        return this.chatCurrentMsgs;
+    }
 
     public void startChatManager() throws IOException, SQLException {
 
@@ -134,6 +142,7 @@ UDP
 
         // link to dbHandler
         dbHandler = new DbHandler(this.user);
+        dbHandler.setObservableChatList(this.chatCurrentMsgs);
         dbHandler.createDB();
 
         // starts a daemon thread: chatManager

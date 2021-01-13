@@ -8,7 +8,7 @@ import java.io.PushbackReader;
 
 public class UserObservable {
     private final SimpleStringProperty username = new SimpleStringProperty();
-    private final SimpleStringProperty stato = new SimpleStringProperty();
+    private final SimpleStringProperty stato    = new SimpleStringProperty();
 
     public UserObservable(String  user, boolean state) {
         this.username.set(user);

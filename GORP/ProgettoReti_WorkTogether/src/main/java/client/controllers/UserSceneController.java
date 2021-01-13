@@ -10,6 +10,7 @@ import javafx.beans.property.SimpleStringProperty;
 import javafx.beans.property.StringProperty;
 import javafx.beans.value.ChangeListener;
 import javafx.beans.value.ObservableValue;
+import javafx.css.PseudoClass;
 import javafx.fxml.FXMLLoader;
 import javafx.geometry.Pos;
 import javafx.scene.Node;
@@ -50,7 +51,21 @@ public class UserSceneController extends ClientController {
     @FXML
     private JFXTabPane tabPaneMain;
     @FXML
+    private Tab tabMainProjects;
+    @FXML
+    private Tab tabUsers;
+    @FXML
+    private Tab tabInfo;
+
+    @FXML
     private JFXTabPane tabPaneShowProject;
+    @FXML
+    private Tab tabProject;
+    @FXML
+    private Tab tabChat;
+    @FXML
+    private Tab tabMembers;
+
     @FXML
     private Label labelChosenProject;
     @FXML
@@ -103,7 +118,6 @@ public class UserSceneController extends ClientController {
 /*
     CHAT table
  */
-    private ObservableList<ChatMsgObservable> chatMessagesCurrentProject = FXCollections.observableArrayList();
     @FXML
     private TableView<ChatMsgObservable> chatTableView;
     @FXML
@@ -123,6 +137,19 @@ public class UserSceneController extends ClientController {
     private ObservableList<String> projectNames = FXCollections.observableArrayList();
     private SimpleStringProperty currentProject = new SimpleStringProperty("");
     private Project projectInfo = null;
+
+/*
+    Users
+ */
+    private ObservableList<UserObservable> usersWorth = FXCollections.observableArrayList();
+    @FXML
+    private TableView<UserObservable> tableViewUsers;
+    @FXML
+    private TableColumn<UserObservable, String> usernameUsersCol;
+    @FXML
+    private TableColumn<UserObservable, String> stateUsersCol;
+    @FXML
+    private JFXToggleButton toggleOnlineUsers;
 
 /*
     controller FUNCTIONS
@@ -156,6 +183,7 @@ public class UserSceneController extends ClientController {
 
         // listeners for TabPanes
         tabPaneShowProjectInit();
+        tabPaneMainInit();
 
     /*
     PROJECTS
@@ -172,10 +200,14 @@ public class UserSceneController extends ClientController {
         chatInitTable();
 
         // starts member project table
-        memberProjectTableInitTable();
+        memberProjectTableInit();
+
+        // starts users table
+        usersTableInit();
 
         // listeners for toggleButtons
         toggleMembersInit();
+        toggleUsersInit();
 
     /*
     USERS
@@ -204,15 +236,19 @@ public class UserSceneController extends ClientController {
                     break;
 
                 case "CHAT":
-                    if(this.currentProject.get() == null) {
+                    if(this.currentProject.get().isEmpty()) {
                         showDialogNoProjectSelected();
+
+                        tabPaneShowProject.getSelectionModel().select(tabProject);
                     }
                     else fillChatTable();
                     break;
 
                 case "MEMBRI":
-                    if(this.currentProject.get() == null) {
+                    if(this.currentProject.get().isEmpty()) {
                         showDialogNoProjectSelected();
+
+                        tabPaneShowProject.getSelectionModel().select(tabProject);
                         return;
                     }
                     else fillProjectMembers();
@@ -223,6 +259,31 @@ public class UserSceneController extends ClientController {
                     break;
             }
         });
+    }
+
+    private void tabPaneMainInit() {
+        tabPaneMain.getSelectionModel().selectedItemProperty().
+                addListener((ov, oldTab, newTab) ->
+                {
+                    System.err.println("tabPaneMain changed: " + newTab.getText());
+
+                    switch(newTab.getText()) {
+                        case "PROGETTI":
+                            listProjects();
+                            break;
+
+                        case "UTENTI WORTH":
+                            fillUsersWorth();
+                            break;
+
+                        case "INFO":
+                            break;
+
+                        default:
+                            System.err.println("changed: " + newTab.getText());
+                            break;
+                    }
+                });
     }
 
     private void toggleMembersInit() {
@@ -249,6 +310,24 @@ public class UserSceneController extends ClientController {
         });
     }
 
+    private void toggleUsersInit() {
+        toggleOnlineUsers.selectedProperty().addListener(new ChangeListener<Boolean>() {
+            @Override
+            public void changed(ObservableValue<? extends Boolean> observableValue, Boolean aBoolean, Boolean t1) {
+                if(toggleOnlineUsers.isSelected())
+                {
+                    usersWorth.clear();
+                    for(String user : clientLogic.listOnlineUsers()) {
+                        usersWorth.add(new UserObservable(user, Boolean.TRUE));
+                    }
+                }
+                else {
+                    fillUsersWorth();
+                }
+            }
+        });
+    }
+
     //@todo not used
     private void setOnlineImageColumn(TableColumn column) {
         column.setCellFactory(col -> {
@@ -263,23 +342,79 @@ public class UserSceneController extends ClientController {
         });
     }
 
+    private static final PseudoClass pseudoClassMine =  PseudoClass.getPseudoClass("mine");
     private void chatInitTable() {
         // initialize chat table for data
         chatUsernameCol.setCellValueFactory(new PropertyValueFactory<>("username"));
         chatMessageCol.setCellValueFactory(new PropertyValueFactory<>("message"));
         chatSentTimeCol.setCellValueFactory(new PropertyValueFactory<>("timeSent"));
 
-        chatTableView.setItems(chatMessagesCurrentProject);
+        // apply style for user's row
+        chatTableView.setRowFactory(tableView -> {
+            TableRow<ChatMsgObservable> row = new TableRow<>() {
+
+                @Override
+                public void updateItem(ChatMsgObservable msg, boolean empty) {
+
+                    if(msg != null && msg.getUsername().equals(username))
+                        pseudoClassStateChanged(pseudoClassMine, true);
+                    else
+                        pseudoClassStateChanged(pseudoClassMine, false);
+
+                    super.updateItem(msg, empty);
+                }
+            };
+            return row;
+        });
+
+        chatTableView.setItems(clientLogic.getChatCurrentMsgs());
         chatTableView.getSelectionModel().setSelectionMode(SelectionMode.MULTIPLE);
     }
 
-    private void memberProjectTableInitTable() {
+    private void memberProjectTableInit() {
         // initialize chat table for data
         usernameMemberProjectColumn.setCellValueFactory(new PropertyValueFactory<UserObservable, String>("username"));
         stateMemberProjectColumn.setCellValueFactory(new PropertyValueFactory<UserObservable, String>("stato"));
 
+        // apply style for user's row
+        tableRowStyleForUserRow(membersProjectTableView);
+
         membersProjectTableView.setItems(currProjectMembers);
         membersProjectTableView.getSelectionModel().setSelectionMode(SelectionMode.MULTIPLE);
+    }
+
+    private void usersTableInit() {
+        // initialize chat table for data
+        usernameUsersCol.setCellValueFactory(new PropertyValueFactory<UserObservable, String>("username"));
+        stateUsersCol.setCellValueFactory(new PropertyValueFactory<UserObservable, String>("stato"));
+
+        // apply style for user's row
+        tableRowStyleForUserRow(tableViewUsers);
+
+        tableViewUsers.setItems(usersWorth);
+        tableViewUsers.getSelectionModel().
+                setSelectionMode(SelectionMode.SINGLE);
+    }
+
+    private static final PseudoClass pseudoClassMyself =  PseudoClass.getPseudoClass("myself");
+    private void tableRowStyleForUserRow(TableView tv) {
+        // apply style for user's row
+        tv.setRowFactory(tableView -> {
+            TableRow<UserObservable> row = new TableRow<>() {
+
+                @Override
+                public void updateItem(UserObservable user, boolean empty) {
+
+                    if(user != null && user.getUsername().equals(username))
+                        pseudoClassStateChanged(pseudoClassMyself, true);
+                    else
+                        pseudoClassStateChanged(pseudoClassMyself, false);
+
+                    super.updateItem(user, empty);
+                }
+            };
+            return row;
+        });
     }
 
     private void listViewsInit() {
@@ -316,8 +451,8 @@ public class UserSceneController extends ClientController {
     private void listProjects() {
         try {
             List<ListProjectEntry> updatedProjects = clientLogic.listProjects();
-            if(this.projectNames.isEmpty()) {
-                System.out.println("projects null");
+            if(this.projectNames.isEmpty())
+            {
                 for(ListProjectEntry entry : updatedProjects)
                 {
                     clientLogic.startChatConnection(entry);
@@ -353,13 +488,6 @@ public class UserSceneController extends ClientController {
             }
         }
     }
-    /*
-    for(Map.Entry<String, Card> entry : map.entrySet()) {
-        Card c = entry.getValue();
-
-        toDoList.add(c.getCardName());
-    }
-     */
 
     private void replaceCardList(Map<String, Card> map, ObservableList<String> list) {
 
@@ -373,39 +501,28 @@ public class UserSceneController extends ClientController {
     }
 
     private void fillChatTable() {
-        if(this.currentProject.get() != null) {
-            try {
-                List<ChatMsg> msgs = clientLogic.readChat(this.currentProject.get());
-                chatMessagesCurrentProject.clear();
+        if(this.currentProject.get().isEmpty() )
+            return;
 
-                for(ChatMsg msg : msgs) {
-                    chatMessagesCurrentProject.add(new ChatMsgObservable(
-                            msg.username,
-                            msg.msg,
-                            msg.getTimeFormatted()
-                    ));
-                }
+        try {
+            clientLogic.readChat(this.currentProject.get());
 
-            } catch (SQLException throwables) {
-                throwables.printStackTrace();
-            }
+        } catch (SQLException throwables) {
+            throwables.printStackTrace();
         }
     }
 
     private void fillProjectMembers() {
-        if(this.currentProject.get() == null)
+        if(this.currentProject.get().isEmpty())
             return;
 
         try {
             List<String> members = clientLogic.showMembers(this.currentProject.get());
             Set<String> onlineUsers = clientLogic.listOnlineUsers();
 
-            members.remove(this.username);
-
             currProjectMembers.clear();
             for(String s : members) {
                 // get member name and see if he's online
-
                 if(onlineUsers.contains(s)) {
                     System.out.println("user online: " + s);
                     currProjectMembers.add(new UserObservable(s, true));
@@ -413,11 +530,26 @@ public class UserSceneController extends ClientController {
                 else
                     currProjectMembers.add(new UserObservable(s, false));
             }
-
         }
         catch (IOException e)               { e.printStackTrace(); }
         catch (IllegalUsernameException e)  { showDialogUsernameNotPresent(); }
-        catch (IllegalProjectException e)   { showDialogProjectNotPresent(); }
+        catch (IllegalProjectException e)   {
+            showDialogProjectNotPresent();
+            resetUIstate();
+        }
+    }
+
+    private void fillUsersWorth() {
+
+        usersWorth.clear();
+        Map<String, Boolean> users = clientLogic.listUsers();
+
+        for(Map.Entry<String, Boolean> user : users.entrySet()) {
+            String username = user.getKey();
+            Boolean isOnline = user.getValue();
+
+            usersWorth.add(new UserObservable(username, isOnline));
+        }
     }
 
 /*
@@ -455,16 +587,7 @@ public class UserSceneController extends ClientController {
 
             // when closing -> update listViews asking server for updates
             stage.setOnHiding(event -> {
-                try {
-                    updateShownProject();
-                } catch (IOException e) {
-                    e.printStackTrace();
-                }
-                catch (IllegalProjectException e) {
-                    e.printStackTrace();
-                } catch (IllegalUsernameException e) {
-                    e.printStackTrace();
-                }
+                updateShownProject();
             });
 
             stage.setScene(new Scene(parent));
@@ -478,9 +601,17 @@ public class UserSceneController extends ClientController {
         return null;
     }
 
-    private void updateShownProject() throws IllegalProjectException, IOException, IllegalUsernameException {
-        this.projectInfo = clientLogic.showProject(this.currentProject.get());
-        fillCards();
+    private void updateShownProject() {
+        try {
+            this.projectInfo = clientLogic.showProject(this.currentProject.get());
+            fillCards();
+        }
+        catch (IOException e)               { e.printStackTrace(); }
+        catch (IllegalUsernameException e)  { showDialogUsernameNotPresent(); }
+        catch (IllegalProjectException e)   {
+            showDialogProjectNotPresent();
+            resetUIstate();
+        }
     }
 /*
     HANDLERS
@@ -495,8 +626,10 @@ public class UserSceneController extends ClientController {
     @FXML
     void handleClickBtnAddProject(MouseEvent event) {
         TextInputDialog dialog = new TextInputDialog("");
-        dialog.setHeaderText("Inserisci il nome del progetto");
         dialog.setTitle("Aggiungi progetto");
+        dialog.setContentText("Nome del progetto: ");
+        dialog.setHeaderText(null);
+        dialog.setGraphic(null);
 
         Optional<String> result = dialog.showAndWait();
         if(result.isEmpty())
@@ -537,18 +670,8 @@ public class UserSceneController extends ClientController {
     @FXML
     void handleUpdateProjects(MouseEvent event) {
         listProjects();
-
-        try {
-            if(!this.currentProject.get().isEmpty())
-                updateShownProject();
-
-        } catch (IllegalProjectException e) {
-            e.printStackTrace();
-        } catch (IOException e) {
-            e.printStackTrace();
-        } catch (IllegalUsernameException e) {
-            e.printStackTrace();
-        }
+        if(!this.currentProject.get().isEmpty())
+            updateShownProject();
     }
 
     @FXML
@@ -559,8 +682,10 @@ public class UserSceneController extends ClientController {
         try {
             // get new card name
             TextInputDialog dialogCardName = new TextInputDialog("");
-            dialogCardName.setHeaderText("Inserisci il nome della Card da inserire");
-            dialogCardName.setTitle("Aggiungi Card al progetto: " + this.currentProject.get());
+            dialogCardName.setHeaderText(null);
+            dialogCardName.setGraphic(null);
+            dialogCardName.setContentText("Nome card: ");
+            dialogCardName.setTitle("Aggiungi Card");
             Optional<String> resultName = dialogCardName.showAndWait();
 
             if(resultName.isEmpty())
@@ -572,8 +697,10 @@ public class UserSceneController extends ClientController {
 
             // get new card description
             TextInputDialog dialogDescription = new TextInputDialog("");
-            dialogDescription.setHeaderText("Inserisci la descrizione");
-            dialogDescription.setTitle("Aggiungi Card al progetto: " + this.currentProject.get());
+            dialogDescription.setTitle("Aggiungi Card");
+            dialogDescription.setContentText("Descrizione: ");
+            dialogDescription.setHeaderText(null);
+            dialogDescription.setGraphic(null);
             Optional<String> resultDescription = dialogDescription.showAndWait();
 
             if(resultDescription.isEmpty())
@@ -593,7 +720,8 @@ public class UserSceneController extends ClientController {
 
                 case ADD_CARD_OK:
                     Alert info = new Alert(Alert.AlertType.INFORMATION);
-                    info.setHeaderText("Card aggiunta");
+                    info.setContentText("Card aggiunta");
+                    info.setHeaderText(null);
                     info.showAndWait();
 
                     updateShownProject();
@@ -605,6 +733,7 @@ public class UserSceneController extends ClientController {
 
                 case PROJECT_NOT_PRESENT:
                     showDialogProjectNotPresent();
+                    resetUIstate();
                     return;
 
                 case CARD_ALREADY_PRESENT:
@@ -617,15 +746,8 @@ public class UserSceneController extends ClientController {
                 default:
                     return;
             }
-
-
-        } catch (IOException e) {
-            e.printStackTrace();
-        } catch (IllegalProjectException e) {
-            e.printStackTrace();
-        } catch (IllegalUsernameException e) {
-            e.printStackTrace();
         }
+        catch (IOException e)           { e.printStackTrace(); }
     }
 
     @FXML
@@ -637,19 +759,16 @@ public class UserSceneController extends ClientController {
         if(this.currentProject.get().isEmpty())
             return;
 
-        try {
-            updateShownProject();
-        }
-        catch (IOException e)               { e.printStackTrace(); }
-        catch (IllegalUsernameException e)  { showDialogUsernameNotPresent(); }
-        catch (IllegalProjectException e)   { e.printStackTrace(); }
+        updateShownProject();
     }
 
     @FXML
     void handleAddMember(MouseEvent event) {
         TextInputDialog dialog = new TextInputDialog("");
-        dialog.setHeaderText("Inserisci il nome utente");
-        dialog.setTitle("Aggiungi membro al progetto: " + this.currentProject.get());
+        dialog.setTitle("Aggiungi membro");
+        dialog.setContentText("Nome utente: ");
+        dialog.setHeaderText(null);
+        dialog.setGraphic(null);
 
         Optional<String> result = dialog.showAndWait();
 
@@ -676,7 +795,8 @@ public class UserSceneController extends ClientController {
                     return;
 
                 case PROJECT_NOT_PRESENT:
-                    showDialogProjectNotPresent();
+                    showDialogNoProjectSelected();
+                    resetUIstate();
                     return;
 
                 case USERNAME_ALREADY_PRESENT:
@@ -708,10 +828,14 @@ public class UserSceneController extends ClientController {
 
                 case DELETE_PROJECT_OK:
                     Alert info = new Alert(Alert.AlertType.INFORMATION);
-                    info.setHeaderText("Progetto cancellato");
+                    info.setContentText("Progetto cancellato");
+                    info.setHeaderText(null);
                     info.showAndWait();
 
-                    resetUIstate(projectName);
+
+                    // @todo al momento della callback potrei non averne bisogno
+                    this.projectNames.remove(projectName);
+                    resetUIstate();
                     break;
 
                 case USERNAME_NOT_PRESENT:
@@ -719,7 +843,8 @@ public class UserSceneController extends ClientController {
                     return;
 
                 case PROJECT_NOT_PRESENT:
-                    showDialogProjectNotPresent();
+                    showDialogNoProjectSelected();
+                    resetUIstate();
                     return;
             }
 
@@ -728,9 +853,8 @@ public class UserSceneController extends ClientController {
         }
     }
 
-    private void resetUIstate(String projectName) {
+    private void resetUIstate() {
         comboChooseProject.setValue("");
-        this.projectNames.remove(projectName);
         btnCancel.setDisable(true);
 
         toDoList.clear();
@@ -740,7 +864,6 @@ public class UserSceneController extends ClientController {
 
         listProjects();
     }
-
         /*
         Chat
          */
@@ -754,7 +877,7 @@ public class UserSceneController extends ClientController {
 
     @FXML
     void handleSendChat(MouseEvent event) {
-        if(this.currentProject.get() == null) {
+        if(this.currentProject.get().isEmpty()) {
             showDialogNoProjectSelected();
             return;
         }

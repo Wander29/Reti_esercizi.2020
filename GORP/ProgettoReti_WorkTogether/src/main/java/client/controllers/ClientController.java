@@ -89,13 +89,14 @@ public abstract class ClientController {
 
     protected void showAlertNetworkError() {
         Alert info = new Alert(Alert.AlertType.INFORMATION);
-        info.setHeaderText("ERRORE DI RETE");
+        info.setHeaderText(null);
+        info.setContentText("ERRORE DI RETE");
         info.showAndWait();
     }
 
     protected void showDialogProjectNotPresent() {
         Alert info = new Alert(Alert.AlertType.INFORMATION);
-        info.setHeaderText("Progetto NON presente");
+        info.setHeaderText("Progetto NON presente, un membro del gruppo potrebbe averlo cancellato da poco");
         info.setContentText("L'operazione richiesta non è stata completata");
         info.showAndWait();
     }

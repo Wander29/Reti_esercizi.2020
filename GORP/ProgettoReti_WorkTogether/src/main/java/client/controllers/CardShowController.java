@@ -61,7 +61,9 @@ public class CardShowController extends ClientController {
             switch(ret) {
                 case MOVE_CARD_OK:
                     Alert info = new Alert(Alert.AlertType.INFORMATION);
-                    info.setHeaderText("Spostamento completato!");
+                    info.setContentText("Spostamento completato!");
+                    info.setHeaderText(null);
+                    info.setGraphic(null);
                     info.showAndWait();
 
                     break;

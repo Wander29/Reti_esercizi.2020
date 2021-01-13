@@ -41,6 +41,17 @@
     -fx-padding: 0.0em;
 }
 
+.table-row-cell{
+    -fx-background-radius: 7px 7px 0px 0px;
+    -fx-background-insets: 0 11px 0 0;
+    -fx-padding: 0.0em;
+}
+
+.table-row-cell:myself {
+    -fx-background-color: #F06292 !important;
+    -fx-background-radius: 15px !important;
+}
+
 .table-view .table-cell{
     -fx-padding: 13px 13px 13px 50px;
     -fx-font-size: 22px;

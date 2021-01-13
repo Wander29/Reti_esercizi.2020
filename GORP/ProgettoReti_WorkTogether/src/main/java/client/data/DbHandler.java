@@ -1,6 +1,8 @@
 package client.data;
 
+import javafx.collections.ObservableList;
 import protocol.classes.ChatMsg;
+import utils.StringUtils;
 
 import java.sql.*;
 import java.util.ArrayList;
@@ -11,13 +13,22 @@ public class DbHandler {
     private String dbUrl = null;
     private Connection conn = null;
     private String username = null;
+    private static ObservableList<ChatMsgObservable> currentChatMsgList = null;
+    private static String currentChat;
 
     public DbHandler(String username) throws SQLException {
-        this.username = username;
+        this.username               = username;
+        this.currentChat            = "";
+
         dbUrl = "jdbc:derby:memory:client/" + this.username + "/db;create=true";
 
         // connect to DB
         conn = DriverManager.getConnection(dbUrl);
+    }
+
+    public void setObservableChatList(ObservableList<ChatMsgObservable> list){
+        if(this.currentChatMsgList == null)
+            this.currentChatMsgList = list;
     }
 
     public void closeConnection() throws SQLException {
@@ -53,8 +64,16 @@ public class DbHandler {
             pstmnt.setTime(3, time);
             pstmnt.setString(4, msg);
 
-
             pstmnt.executeUpdate();
+
+            if(this.currentChat.equals(projectName)){
+                this.currentChatMsgList.add(new ChatMsgObservable(
+                        username,
+                        msg,
+                        StringUtils.getTimeFormatted(time)
+                ));
+            }
+
         System.out.println("[DB-HANDLER] chat salvata");
     }
 
@@ -82,7 +101,22 @@ public class DbHandler {
             messages.add(msg);
             msg.printMsg();
         }
+        this.currentChat = projectName;
+        this.currentChatMsgList.clear();
+        addMsgToObservableList(messages);
 
         return messages;
+    }
+
+    private void addMsgToObservableList(List<ChatMsg> messages) {
+        this.currentChatMsgList.clear();
+
+        for(ChatMsg msg : messages) {
+            this.currentChatMsgList.add(new ChatMsgObservable(
+                    msg.username,
+                    msg.msg,
+                    msg.getTimeFormatted()
+            ));
+        }
     }
 }
