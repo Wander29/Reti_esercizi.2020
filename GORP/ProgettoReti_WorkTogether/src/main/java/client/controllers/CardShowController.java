@@ -49,7 +49,6 @@ public class CardShowController extends ClientController {
         if(nextStatus == null)
             return;
 
-        System.out.println(nextStatus);
         try {
             CSReturnValues ret = clientLogic.moveCard(
                     this.project,
@@ -76,11 +75,10 @@ public class CardShowController extends ClientController {
                     break;
 
                 case PROJECT_NOT_PRESENT:
-                    showDialogProjectNotPresent();
+                    // at close it will do another request to server with same response
                     break;
 
                 case USERNAME_NOT_PRESENT:
-                    showDialogUsernameNotPresent();
                     break;
 
                 case ILLEGAL_OPERATION:

@@ -14,7 +14,7 @@ public abstract class ChatUtils {
 
     public static void sendChatMsg(
             String username, String projectName, String text,
-            InetAddress multicastAddress, int port) throws IOException
+            InetAddress multicastAddress, int port)
     {
         String toSend =
                 CSOperations.CHAT_MSG + ";"
@@ -26,8 +26,31 @@ public abstract class ChatUtils {
         byte[] data = StringUtils.stringToBytes(toSend);
 
         DatagramPacket dp = new DatagramPacket(data, data.length, multicastAddress, port);
-        DatagramSocket ms = new DatagramSocket();
-        ms.send(dp);
+
+        try(DatagramSocket ms = new DatagramSocket()) {
+            ms.send(dp);
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
     }
 
+    public static void sendChatStop(
+            String username, String projectName,
+            InetAddress multicastAddress, int port)
+    {
+        String toSend =
+                CSOperations.CHAT_STOP + ";"
+                        + username + ";"
+                        + projectName;
+
+        byte[] data = StringUtils.stringToBytes(toSend);
+
+        DatagramPacket dp = new DatagramPacket(data, data.length, multicastAddress, port);
+
+        try(DatagramSocket ms = new DatagramSocket()) {
+            ms.send(dp);
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
 }

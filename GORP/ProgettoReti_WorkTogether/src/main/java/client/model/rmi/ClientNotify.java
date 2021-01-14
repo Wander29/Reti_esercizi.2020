@@ -30,28 +30,18 @@ public class ClientNotify extends UnicastRemoteObject implements NotifyInterface
 
     @Override
     public synchronized void userIsOnline(String username) throws RemoteException {
-        if(CSProtocol.DEBUG()) {
-            System.out.println("CALLBACK ricevuta [online]: " + username);
-        }
-
         this.usersOnlineState.replace(username, Boolean.TRUE);
         this.usersOnline.add(username);
     }
 
     @Override
     public synchronized void userIsOffline(String username) throws RemoteException {
-        if(CSProtocol.DEBUG()) {
-            System.out.println("CALLBACK ricevuta [offline]: " + username);
-        }
         this.usersOnlineState.replace(username, Boolean.FALSE);
         this.usersOnline.remove(username);
     }
 
     @Override
     public synchronized void newUser(String username) throws RemoteException {
-        if(CSProtocol.DEBUG()) {
-            System.out.println("CALLBACK ricevuta [new]: " + username);
-        }
         this.usersOnlineState.put(username, Boolean.FALSE);
     }
 

@@ -98,12 +98,7 @@ RMI
         // hashing psw
         PswData password = PasswordManager.hashPsw(psw);
         this.users.put(username, new UserInfo(username, password));
-
         this.onlineStateUsers.put(username, Boolean.FALSE);
-
-        if(CSProtocol.DEBUG()) {
-            System.out.println(username + " si è registrato");
-        }
 
         return CSReturnValues.REGISTRATION_OK;
     }
@@ -133,10 +128,6 @@ TCP
         }
         this.onlineStateUsers.put(username, Boolean.TRUE);
 
-        if(CSProtocol.DEBUG()) {
-            System.out.println(username + " si è loggato");
-        }
-
         return CSReturnValues.LOGIN_OK;
     }
 
@@ -147,7 +138,6 @@ TCP
        Next assign a Multicast IP to the project
     */
     public CSReturnValues createProject(String username, String projectName)
-            throws UnknownHostException, NoSuchElementException
     {
         if(!this.users.containsKey(username))
             return CSReturnValues.USERNAME_NOT_PRESENT;
@@ -156,10 +146,10 @@ TCP
             return CSReturnValues.PROJECT_ALREADY_PRESENT;
         }
 
-        this.projects.put(projectName, new ServerProject(projectName, username));
-
-        if(CSProtocol.DEBUG()) {
-            System.out.println(projectName + " è stato creato");
+        try {
+            this.projects.put(projectName, new ServerProject(projectName, username));
+        } catch (UnknownHostException e) {
+            e.printStackTrace();
         }
 
         return CSReturnValues.CREATE_PROJECT_OK;
@@ -183,8 +173,6 @@ TCP
 
                 String projName = project.getProjectName();
 
-                System.out.println(projName);
-
                 listProject.add(new ListProjectEntry(
                         projName,
                         getProjectMulticasIp(projName),
@@ -196,7 +184,9 @@ TCP
         return listProject;
     }
 
-    public Project showProject(String username, String projectName) throws IllegalUsernameException, IllegalProjectException {
+    public Project showProject(String username, String projectName)
+            throws IllegalUsernameException, IllegalProjectException
+    {
 
         if(!this.users.containsKey(username))
             throw new IllegalUsernameException();
@@ -214,11 +204,10 @@ TCP
                                    String cardName, CardStatus from, CardStatus to) throws IllegalOperation
     {
         if(!this.users.containsKey(username))
-            return CSReturnValues.USERNAME_INVALID;
+            return CSReturnValues.USERNAME_NOT_PRESENT;
 
-        if(!this.projects.containsKey(projectName)) {
+        if(!this.projects.containsKey(projectName))
             return CSReturnValues.PROJECT_NOT_PRESENT;
-        }
 
         ServerProject proj = this.projects.get(projectName);
         if(!proj.isCardInFromStatus(cardName, from))
@@ -244,14 +233,14 @@ TCP
 
     public CSReturnValues addMember(String username, String projectName, String newMember) {
         if(!this.users.containsKey(username))
-            return CSReturnValues.USERNAME_INVALID;
-
-        if(!this.users.containsKey(newMember))
             return CSReturnValues.USERNAME_NOT_PRESENT;
 
         if(!this.projects.containsKey(projectName)) {
             return CSReturnValues.PROJECT_NOT_PRESENT;
         }
+
+        if(!this.users.containsKey(newMember))
+            return CSReturnValues.USERNAME_INVALID;
 
         ServerProject proj = this.projects.get(projectName);
         if(proj.getMembers().contains(newMember)) {
@@ -308,10 +297,6 @@ TCP
 
         this.onlineStateUsers.replace(username, Boolean.FALSE);
 
-        if(CSProtocol.DEBUG()) {
-            System.out.println(username + " ha effettuato il logout");
-        }
-
         return CSReturnValues.LOGOUT_OK;
     }
 
@@ -327,6 +312,13 @@ TCP
             return this.projects.get(projectName).getChatMulticastIP().toString().substring(1);
         }
         return null;
+    }
+
+    public int getProjectMulticastPort(String projectName) {
+        if(this.projects.containsKey(projectName))
+            return this.projects.get(projectName).getChatMulticastPort();
+
+        return -1;
     }
 
     /*

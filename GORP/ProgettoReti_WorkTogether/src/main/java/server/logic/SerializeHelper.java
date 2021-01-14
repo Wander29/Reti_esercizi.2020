@@ -43,23 +43,13 @@ public abstract class SerializeHelper {
 
             ServerProject project = projectEntry.getValue();
 
-            System.out.println(project.getProjectName());
             // creo una directory
-            System.out.println("- TODO CARDS");
             Map<String, Card> map = project.getToDoCards();
 
             for(Map.Entry<String, Card> entry : map.entrySet()) {
                 // serialize card
                 Card c = entry.getValue();
-                System.out.println(c.getCardName());
-                System.out.println(c.getDescription());
-                System.out.println(c.getCardHistory().toString());
             }
-            System.out.println("- IN PROGRESS CARDS");
-
-            System.out.println("- TO BE REVISED CARDS");
-
-            System.out.println("- DONE CARDS");
         }
 
         /**

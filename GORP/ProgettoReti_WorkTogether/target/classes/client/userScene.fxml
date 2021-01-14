@@ -232,7 +232,7 @@
                                        <children>
                                           <HBox prefHeight="54.0" prefWidth="414.0">
                                              <children>
-                                                <JFXButton fx:id="bntAddMember" accessibleHelp="Aggiungi un utente al progetto corrente, inserendo il suo Username" accessibleRoleDescription="Aggiungi un utente al progetto corrente, inserendo il suo Username" accessibleText="Aggiungi un utente al progetto corrente, inserendo il suo Username" onMouseClicked="#handleAddMember" text="Utente">
+                                                <JFXButton fx:id="btnAddMember" accessibleHelp="Aggiungi un utente al progetto corrente, inserendo il suo Username" accessibleRoleDescription="Aggiungi un utente al progetto corrente, inserendo il suo Username" accessibleText="Aggiungi un utente al progetto corrente, inserendo il suo Username" onMouseClicked="#handleAddMember" text="Utente" HBox.hgrow="NEVER">
                                                    <graphic>
                                                       <ImageView fitHeight="36.0" fitWidth="44.0" pickOnBounds="true" preserveRatio="true">
                                                          <image>
@@ -243,7 +243,7 @@
                                                 </JFXButton>
                                              </children>
                                           </HBox>
-                                          <JFXToggleButton fx:id="toggleOnlineMembersOnly" contentDisplay="RIGHT" styleClass="button" text="Solo ONLINE" />
+                                          <JFXToggleButton fx:id="toggleOnlineMembersOnly" contentDisplay="RIGHT" styleClass="button" text="Solo ONLINE" HBox.hgrow="NEVER" />
                                        </children>
                                        <padding>
                                           <Insets bottom="3.0" right="100.0" top="3.0" />
@@ -278,7 +278,7 @@
                               <Insets bottom="3.0" left="200.0" top="3.0" />
                            </padding>
                            <children>
-                              <JFXToggleButton fx:id="toggleOnlineUsers" contentDisplay="RIGHT" styleClass="button" text="Solo ONLINE" />
+                              <JFXToggleButton fx:id="toggleOnlineUsers" contentDisplay="RIGHT" styleClass="button" text="Solo ONLINE" HBox.hgrow="NEVER" />
                            </children>
                         </HBox>
                      </top>
@@ -301,18 +301,18 @@
                                  </children></HBox>
                            </bottom>
                            <left>
-                              <VBox prefHeight="374.0" prefWidth="390.0" BorderPane.alignment="CENTER" />
+                              <VBox prefHeight="374.0" prefWidth="220.0" BorderPane.alignment="CENTER" />
                            </left>
                            <right>
-                              <VBox prefHeight="408.0" prefWidth="316.0" BorderPane.alignment="CENTER" />
+                              <VBox prefHeight="374.0" prefWidth="135.0" BorderPane.alignment="CENTER" />
                            </right>
                            <center>
-                              <VBox alignment="CENTER" spacing="60.0" BorderPane.alignment="CENTER">
+                              <VBox alignment="CENTER" prefHeight="465.0" prefWidth="925.0" spacing="60.0" BorderPane.alignment="CENTER">
                                  <children>
-                                    <HBox alignment="CENTER" spacing="50.0">
+                                    <HBox alignment="CENTER" spacing="50.0" VBox.vgrow="ALWAYS">
                                        <children>
-                                          <Label text="Tuo Username" textFill="#906262" />
-                                          <Label fx:id="labelYourUsername" text="Username" textFill="WHITE">
+                                          <Label text="Tuo Username" textFill="#906262" HBox.hgrow="ALWAYS" />
+                                          <Label fx:id="labelYourUsername" text="Username" textFill="WHITE" HBox.hgrow="ALWAYS">
                                              <font>
                                                 <Font name="Roboto Bold" size="42.0" />
                                              </font></Label>

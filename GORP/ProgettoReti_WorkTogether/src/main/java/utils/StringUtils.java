@@ -17,9 +17,9 @@ public abstract class StringUtils {
     */
 
     public static String byteBufferToString(ByteBuffer buf) {
-        String utf8EncodedString = CSProtocol.CHARSET().decode(buf).toString();
+        String encodedString = CSProtocol.CHARSET().decode(buf).toString();
 
-        return utf8EncodedString;
+        return encodedString;
     }
 
     public static byte[] stringToBytes(String s) {

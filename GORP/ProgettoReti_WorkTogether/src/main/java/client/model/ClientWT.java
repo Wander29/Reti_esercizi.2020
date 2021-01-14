@@ -95,7 +95,9 @@ RMI
         serverStub = (ServerInterface) r.lookup(CSProtocol.RMI_SERVICE_NAME());
     }
 
-    public static CSReturnValues register(String username, String password) throws RemoteException, InvalidKeySpecException, NoSuchAlgorithmException {
+    public static CSReturnValues register(String username, String password)
+            throws RemoteException, InvalidKeySpecException, NoSuchAlgorithmException
+    {
         String ret = serverStub.register(username, password);
 
         return CSReturnValues.valueOf(ret);
@@ -127,9 +129,9 @@ UDP
     private Pipe pipe;
     private Pipe.SinkChannel pipe_writeChannel;
     private DbHandler dbHandler;
-    private ObservableList<ChatMsgObservable> chatCurrentMsgs = FXCollections.observableArrayList();
 
-    public ObservableList<ChatMsgObservable> getChatCurrentMsgs() {
+    private ObservableList<ChatMsgObservable> chatCurrentMsgs = FXCollections.observableArrayList();
+    public  ObservableList<ChatMsgObservable> getChatCurrentMsgs() {
         return this.chatCurrentMsgs;
     }
 
@@ -170,7 +172,6 @@ UDP
 
         // add to map info
         this.projectsInfo.put(project.project, project);
-        System.out.println("aggiunto alle INFO: " + project.project + " IP: " + project.ip);
     }
 
     public List<ChatMsg> readChat(String projectName) throws SQLException {
@@ -190,6 +191,10 @@ UDP
 
         ChatUtils.sendChatMsg(user, projectName, text, multicastAddress, project.port);
     }
+
+    public void removeProject(String projectName) {
+        this.projectsInfo.remove(projectName);
+    }
 /*
 TCP
  */
@@ -204,18 +209,15 @@ TCP
         sbuild.append(";");
         sbuild.append(password);
 
-        if(CSProtocol.DEBUG()) {
-            System.out.println("trying LOGIN for " + username);
-        }
+        String req = sbuild.toString();
+        CSProtocol.printRequest(req);
 
-        connThread.bOutput.write(sbuild.toString());
+        connThread.bOutput.write(req);
         connThread.bOutput.flush();
 
         String ret = connThread.bInput.readLine();
+        CSProtocol.printResponse(ret);
 
-        if(CSProtocol.DEBUG()) {
-            System.out.println("response: " + ret);
-        }
         if(CSReturnValues.valueOf(ret).equals(CSReturnValues.LOGIN_OK)) {
             user =  username;
         }
@@ -227,31 +229,21 @@ TCP
     -   CREATE_PROJECT;projectName
 
     possible responses:
-    CREATE_PROJECT_OK;ip            if everything is ok
+    CREATE_PROJECT_OK            if everything is ok
     PROJECT_ALREADY_PRESENT         if a project with the same name is already present in the server
     SERVER_INTERNAL_NETWORK_ERROR   if server can't use a Multicast Ip
 */
     public static CSReturnValues createProject(String projName) throws IOException {
         String req = CSOperations.CREATE_PROJECT.toString() + ";" + projName;
 
+        CSProtocol.printRequest(req);
         connThread.bOutput.write(req);
         connThread.bOutput.flush();
 
-        if(CSProtocol.DEBUG()) {
-            System.out.println("req: CREATE PROJECT for " +  user + ": " + projName);
-        }
-
         String ret = connThread.bInput.readLine();
+        CSProtocol.printResponse(ret);
 
-        // @todo CHAT: retrieve multicast IP for chat
-        String firstToken = StringUtils.tokenizeRequest(ret).get(0);
-        if(CSReturnValues.CREATE_PROJECT_OK.equals(CSReturnValues.valueOf(firstToken))) {
-            if(CSProtocol.DEBUG()) {
-                System.out.println("response: " + ret);
-            }
-        }
-
-        return CSReturnValues.valueOf(firstToken);
+        return CSReturnValues.valueOf(ret);
     }
 
     /*
@@ -263,15 +255,12 @@ TCP
     {
         String req = CSOperations.LIST_PROJECTS.toString();
 
-        if(CSProtocol.DEBUG()) {
-            System.out.println("req: LIST PROJECT for " +  user);
-        }
+        CSProtocol.printRequest(req);
         connThread.bOutput.write(req);
         connThread.bOutput.flush();
 
-
         String ret = connThread.bInput.readLine();
-        System.out.println("ret: " + ret);
+        CSProtocol.printResponse(ret);
 
         StringTokenizer tokenizer = new StringTokenizer(ret, ";");
         String firstToken = tokenizer.nextToken();
@@ -304,14 +293,12 @@ TCP
     {
         String req = CSOperations.SHOW_PROJECT.toString() + ";" + projectName;
 
-        if(CSProtocol.DEBUG()) {
-            System.out.println("req: SHOW PROJECT " + projectName + " for " +  user);
-        }
+        CSProtocol.printRequest(req);
         connThread.bOutput.write(req);
         connThread.bOutput.flush();
 
         String ret = connThread.bInput.readLine();
-        System.out.println("ret: " + ret);
+        CSProtocol.printResponse(ret);
 
         StringTokenizer tokenizer = new StringTokenizer(ret, ";");
         String firstToken = tokenizer.nextToken();
@@ -333,7 +320,6 @@ TCP
                 throw new IllegalProjectException();
 
             default:
-                System.out.println(firstToken + ret);
                 break;
         }
 
@@ -353,7 +339,6 @@ TCP
                 from.toString() + ";" + to.toString();
 
         CSProtocol.printRequest(req);
-
         connThread.bOutput.write(req);
         connThread.bOutput.flush();
 
@@ -374,12 +359,10 @@ TCP
                         projectName + ";" + cardName + ";" + description;
 
         CSProtocol.printRequest(req);
-
         connThread.bOutput.write(req);
         connThread.bOutput.flush();
 
         String ret = connThread.bInput.readLine();
-
         CSProtocol.printResponse(ret);
 
         return CSReturnValues.valueOf(ret);
@@ -392,33 +375,28 @@ TCP
     public static CSReturnValues deleteProject(String projectName) throws IOException {
         String req = CSOperations.DELETE_PROJECT.toString() + ";" + projectName;
 
-        if(CSProtocol.DEBUG()) {
-            System.out.println("req: DELETE PROJECT for " +  user + " proj: " + projectName);
-        }
+        CSProtocol.printRequest(req);
         connThread.bOutput.write(req);
         connThread.bOutput.flush();
 
         String ret = connThread.bInput.readLine();
-
-        if(CSProtocol.DEBUG()) {
-            System.out.println("response: " + ret);
-        }
+        CSProtocol.printResponse(ret);
 
         return CSReturnValues.valueOf(ret);
     }
 
 
     public static List<String> showMembers(String projectName)
-            throws IOException, IllegalUsernameException, IllegalProjectException {
+            throws IOException, IllegalUsernameException, IllegalProjectException
+    {
         String req = CSOperations.SHOW_MEMBERS.toString() + ";" + projectName;
 
-        if(CSProtocol.DEBUG()) {
-            System.out.println("req: SHOW MEMBERS for " +  user + " proj: " + projectName);
-        }
+        CSProtocol.printRequest(req);
         connThread.bOutput.write(req);
         connThread.bOutput.flush();
 
         String ret = connThread.bInput.readLine();
+        CSProtocol.printResponse(ret);
 
         List<String> tokens = StringUtils.tokenizeRequest(ret);
         String firstToken = tokens.remove(0);
@@ -434,7 +412,7 @@ TCP
                 throw new IllegalProjectException();
 
             default:
-                System.out.println(firstToken);
+                break;
         }
 
         return null;
@@ -448,14 +426,12 @@ TCP
         String req = CSOperations.ADD_MEMBER.toString() + ";" +
                 projectName + ";" + newMember;
 
-        if(CSProtocol.DEBUG()) {
-            System.out.println("req: ADD MEMBER for " +  user + " proj: " +
-                    projectName + " newMember: " + newMember);
-        }
+        CSProtocol.printRequest(req);
         connThread.bOutput.write(req);
         connThread.bOutput.flush();
 
         String ret = connThread.bInput.readLine();
+        CSProtocol.printResponse(ret);
 
         return CSReturnValues.valueOf(ret);
     }
@@ -472,21 +448,22 @@ TCP
 
         String req = CSOperations.LOGOUT.toString();
 
-        if(CSProtocol.DEBUG()) {
-            System.out.println("req: LOGOUT for " + user);
-        }
-
+        CSProtocol.printRequest(req);
         connThread.bOutput.write(req);
         connThread.bOutput.flush();
 
         String ret = connThread.bInput.readLine();
+        CSProtocol.printResponse(ret);
         user = null;
 
         return CSReturnValues.valueOf(ret);
     }
 
     public static void exit() throws IOException {
-        connThread.bOutput.write("EXIT");
+        String req = CSOperations.EXIT.toString();
+
+        CSProtocol.printRequest(req);
+        connThread.bOutput.write(req);
         connThread.bOutput.flush();
     }
 

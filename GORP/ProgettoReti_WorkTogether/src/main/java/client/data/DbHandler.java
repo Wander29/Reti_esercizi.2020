@@ -13,6 +13,7 @@ public class DbHandler {
     private String dbUrl = null;
     private Connection conn = null;
     private String username = null;
+    // static variables => they need to be accessed in synchronized methods
     private static ObservableList<ChatMsgObservable> currentChatMsgList = null;
     private static String currentChat;
 
@@ -26,7 +27,7 @@ public class DbHandler {
         conn = DriverManager.getConnection(dbUrl);
     }
 
-    public void setObservableChatList(ObservableList<ChatMsgObservable> list){
+    public synchronized void setObservableChatList(ObservableList<ChatMsgObservable> list){
         if(this.currentChatMsgList == null)
             this.currentChatMsgList = list;
     }
@@ -49,10 +50,9 @@ public class DbHandler {
         System.out.println("[DB-HANDLER] tabella creata");
 
         stmt.executeUpdate("CREATE INDEX projIndex ON Chats (Project)");
-        System.out.println("[DB-HANDLER] indice creato");
     }
 
-    public void saveChat(String username, String projectName, long timestamp, String msg)
+    public synchronized void saveChat(String username, String projectName, long timestamp, String msg)
             throws SQLException
     {
             PreparedStatement pstmnt = conn.prepareStatement("" +
@@ -73,22 +73,33 @@ public class DbHandler {
                         StringUtils.getTimeFormatted(time)
                 ));
             }
+    }
 
-        System.out.println("[DB-HANDLER] chat salvata");
+    public synchronized void deleteChat(String projectName) throws SQLException {
+        PreparedStatement pstmnt = conn.prepareStatement(
+                "DELETE FROM Chats WHERE Project = ?");
+
+        pstmnt.setString(1, projectName);
+        pstmnt.executeUpdate();
+
+        if(currentChat.equals(projectName)) {
+            this.currentChat = "";
+            this.currentChatMsgList.clear();
+        }
+
+        System.out.println("[DB-HANDLER] chat cancellata: " + projectName);
     }
 
     /*
     given a project, it returns all messages in that chat
      */
-    public List<ChatMsg> readChat(String projectName) throws SQLException {
+    public synchronized List<ChatMsg> readChat(String projectName) throws SQLException {
         PreparedStatement pstmnt = conn.prepareStatement(
                 "SELECT * FROM Chats WHERE Project = ?");
 
         pstmnt.setString(1, projectName);
-        System.out.println(projectName);
 
         ResultSet rs = pstmnt.executeQuery(); // rows in results
-        System.out.println("[DB-HANDLER] query eseguita size: " + rs.getFetchSize());
         List<ChatMsg> messages = new ArrayList<>();
 
         while (rs.next()) {
@@ -99,7 +110,7 @@ public class DbHandler {
                     rs.getString("Msg"));
 
             messages.add(msg);
-            msg.printMsg();
+
         }
         this.currentChat = projectName;
         this.currentChatMsgList.clear();

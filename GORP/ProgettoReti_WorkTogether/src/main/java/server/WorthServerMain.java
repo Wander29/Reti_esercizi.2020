@@ -47,7 +47,7 @@ public class WorthServerMain {
             SerializeHelper.saveData(server.getWorthData());
         } catch (IOException e) { e.printStackTrace(); }
 
-        System.out.println("[MAIN SERVER] bye");
+        System.out.println("[MAIN SERVER] closing");
         System.exit(0);
     }
 

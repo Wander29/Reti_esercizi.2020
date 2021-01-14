@@ -188,8 +188,6 @@ public class ServerProject extends Project implements Serializable {
             sbuild.append(Integer.toString(d));
 
             currentIPString = sbuild.toString();
-
-            System.out.println(currentIPString);
             currIP = InetAddress.getByName(currentIPString);
 
             d++;
@@ -227,7 +225,6 @@ public class ServerProject extends Project implements Serializable {
                 System.out.println("Esiste un servizio sulla porta "+i);
             }
             catch (IOException ex) {
-                // System.out.println("Non esiste un servizio sulla porta");
                 return i;
             }
         }

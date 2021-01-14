@@ -91,7 +91,7 @@ public class WelcomingServer implements Runnable {
             }
         }
 
-        System.out.println("[WELCOME SERVER] bye");
+        System.out.println("[WELCOME SERVER] closing");
     }
 
 }

@@ -73,7 +73,7 @@ public class UserSceneController extends ClientController {
     @FXML
     private JFXToggleButton toggleOnlineMembersOnly;
     @FXML
-    private JFXButton bntAddMember;
+    private JFXButton btnAddMember;
     @FXML
     private JFXButton btnAddProject;
     @FXML
@@ -189,9 +189,10 @@ public class UserSceneController extends ClientController {
     PROJECTS
      */
         // binds combobox items to list of project names
-        labelChosenProject.setText("");
+        // labelChosenProject.setText("");
         listProjects();
         comboChooseProject.setItems(projectNames);
+        labelChosenProject.textProperty().bind(this.currentProject);
 
         // starts card lists
         listViewsInit();
@@ -232,6 +233,9 @@ public class UserSceneController extends ClientController {
             switch(newTab.getText()) {
                 case "PROGETTO":
                     listProjects();
+                    if(!this.currentProject.get().isEmpty())
+                        updateShownProject();
+
                     // JFXDepthManager.setDepth(tableViewTODOlist, 1);
                     break;
 
@@ -270,6 +274,8 @@ public class UserSceneController extends ClientController {
                     switch(newTab.getText()) {
                         case "PROGETTI":
                             listProjects();
+                            if(!this.currentProject.get().isEmpty())
+                                updateShownProject();
                             break;
 
                         case "UTENTI WORTH":
@@ -289,17 +295,22 @@ public class UserSceneController extends ClientController {
     private void toggleMembersInit() {
         toggleOnlineMembersOnly.selectedProperty().addListener(new ChangeListener<Boolean>() {
             @Override
-            public void changed(ObservableValue<? extends Boolean> observableValue, Boolean aBoolean, Boolean t1) {
+            public void changed(ObservableValue<? extends Boolean> observableValue,
+                                Boolean aBoolean, Boolean t1)
+            {
+                if(currentProject.get().isEmpty()) {
+                    showDialogProjectNotPresent();
+                    resetUIstate();
+                    return;
+                }
+
                 if(toggleOnlineMembersOnly.isSelected())
                 {
-                    if(currProjectMembers.isEmpty())
-                        return;
-
                     Iterator it = currProjectMembers.iterator();
                     while(it.hasNext())
                     {
                         UserObservable user = (UserObservable) it.next();
-                        if(user.getStato() == "offline")
+                        if(user.getStato().equals("offline"))
                             it.remove();
                     }
                 }
@@ -431,14 +442,19 @@ public class UserSceneController extends ClientController {
 
     private void addListenerListView(ListView listView) {
         listView.setOnMouseClicked(e -> {
+            if(this.projectInfo == null)
+                return;
+
             String selectedCard = (String) listView.getSelectionModel().getSelectedItem();
             Card c = this.projectInfo.getCardFromAnyList(selectedCard);
 
             // once user selects a card -> open new window to handle it
             if(c != null) {
                 CardShowController controller = loadNewCardShow();
-                if(this.currentProject.get().isEmpty())
-                    System.out.println("durante la selezione di una carta: non è stato selezionato il progetto!");
+                if(this.currentProject.get().isEmpty()) {
+                    showDialogProjectNotPresent();
+                    resetUIstate();
+                }
 
                 controller.initShowCard(c, this.currentProject.get());
             }
@@ -513,18 +529,20 @@ public class UserSceneController extends ClientController {
     }
 
     private void fillProjectMembers() {
-        if(this.currentProject.get().isEmpty())
+        if(this.currentProject.get().isEmpty()) {
+            showDialogProjectNotPresent();
+            resetUIstate();
             return;
+        }
 
         try {
-            List<String> members = clientLogic.showMembers(this.currentProject.get());
+            List<String> members    = clientLogic.showMembers(this.currentProject.get());
             Set<String> onlineUsers = clientLogic.listOnlineUsers();
 
             currProjectMembers.clear();
             for(String s : members) {
                 // get member name and see if he's online
                 if(onlineUsers.contains(s)) {
-                    System.out.println("user online: " + s);
                     currProjectMembers.add(new UserObservable(s, true));
                 }
                 else
@@ -613,6 +631,27 @@ public class UserSceneController extends ClientController {
             resetUIstate();
         }
     }
+
+    private void resetUIstate() {
+        String proj = this.currentProject.get();
+        btnCancel.setDisable(true);
+
+        toDoList.clear();
+        inProgressList.clear();
+        toBeRevisedList.clear();
+        doneList.clear();
+        comboChooseProject.setValue("");
+
+        if(!proj.isEmpty()) {
+            this.projectNames.remove(proj);
+            clientLogic.removeProject(proj);
+            this.projectInfo = null;
+            // this.currentProject.set("");
+        }
+
+        currProjectMembers.clear();
+        listProjects();
+    }
 /*
     HANDLERS
  */
@@ -636,7 +675,7 @@ public class UserSceneController extends ClientController {
             return;
 
         String projName = result.get();
-        if(projName == null || projName == "")
+        if(projName.isEmpty())
             return;
 
         // we have new project name
@@ -676,8 +715,11 @@ public class UserSceneController extends ClientController {
 
     @FXML
     void handleBtnAddCard(ActionEvent event) {
-        if(this.currentProject.get().isEmpty())
+        if(this.currentProject.get().isEmpty()){
+            showDialogNoProjectSelected();
+            resetUIstate();
             return;
+        }
 
         try {
             // get new card name
@@ -712,18 +754,10 @@ public class UserSceneController extends ClientController {
 
             String projectName = this.currentProject.get();
 
-            System.out.println("request: ADD CARD " + cardName + " descr: " + description);
-
             CSReturnValues retVal = clientLogic.addCard(projectName, cardName, description);
-
             switch(retVal) {
 
                 case ADD_CARD_OK:
-                    Alert info = new Alert(Alert.AlertType.INFORMATION);
-                    info.setContentText("Card aggiunta");
-                    info.setHeaderText(null);
-                    info.showAndWait();
-
                     updateShownProject();
                     break;
 
@@ -741,6 +775,8 @@ public class UserSceneController extends ClientController {
                     infoCard.setHeaderText("Card «" + cardName + "» già presente");
                     infoCard.setContentText("L'operazione richiesta non è stata completata");
                     infoCard.showAndWait();
+
+                    updateShownProject();
                     return;
 
                 default:
@@ -752,18 +788,100 @@ public class UserSceneController extends ClientController {
 
     @FXML
     void handleComboChooseProject(ActionEvent event) {
-        this.currentProject.set(comboChooseProject.getValue());
-        labelChosenProject.textProperty().bind(this.currentProject);
+        String selected = comboChooseProject.getValue();
+        this.currentProject.set(selected);
         System.out.println("COMBO BOX: " + this.currentProject.get());
-
-        if(this.currentProject.get().isEmpty())
+        if(selected.isEmpty())
             return;
 
         updateShownProject();
     }
 
     @FXML
+    void handleDeleteProject(MouseEvent event) {
+        String projectName = this.currentProject.get();
+        if(projectName.isEmpty())
+            return;
+
+        Alert alert = new Alert(Alert.AlertType.CONFIRMATION,
+                "Sei sicuro di voler cancellare il progetto «"
+                        + projectName + "» ?", ButtonType.YES, ButtonType.NO);
+        alert.setHeaderText(null);
+        alert.setGraphic(null);
+            // clicking X(close) also means no
+        ButtonType result = alert.showAndWait().orElse(ButtonType.NO);
+
+        if(ButtonType.YES.equals(result)) {
+            try {
+                CSReturnValues retVal = clientLogic.deleteProject(projectName);
+                switch (retVal) {
+
+                    case DELETE_PROJECT_OK:
+                        Alert info = new Alert(Alert.AlertType.INFORMATION);
+                        info.setContentText("Progetto cancellato");
+                        info.setHeaderText(null);
+                        info.showAndWait();
+
+                        resetUIstate();
+                        break;
+
+                    case USERNAME_NOT_PRESENT:
+                        showDialogUsernameNotPresent();
+                        return;
+
+                    case PROJECT_NOT_PRESENT:
+                        showDialogProjectNotPresent();
+                        resetUIstate();
+                        return;
+                }
+
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+        }
+    }
+
+        /*
+        Chat
+         */
+    @FXML
+    void enableSendButton(KeyEvent event) {
+        if(!chatTextArea.getText().isEmpty())
+            btnSendChat.setDisable(false);
+        else
+            btnSendChat.setDisable(true);
+    }
+
+    @FXML
+    void handleSendChat(MouseEvent event) {
+        if(this.currentProject.get().isEmpty()) {
+            showDialogProjectNotPresent();
+            resetUIstate();
+            return;
+        }
+
+        String textMsg = chatTextArea.getText();
+
+        try {
+            clientLogic.sendChatMsg(this.currentProject.get(), textMsg);
+
+            chatTextArea.setText("");
+            btnSendChat.setDisable(true);
+        }
+        catch (IOException e)       { e.printStackTrace(); }
+    }
+
+        /*
+        Members
+         */
+    @FXML
     void handleAddMember(MouseEvent event) {
+        if(this.currentProject.get().isEmpty()) {
+            showDialogProjectNotPresent();
+            resetUIstate();
+            return;
+        }
+
         TextInputDialog dialog = new TextInputDialog("");
         dialog.setTitle("Aggiungi membro");
         dialog.setContentText("Nome utente: ");
@@ -785,123 +903,35 @@ public class UserSceneController extends ClientController {
 
                 case USERNAME_INVALID:
                     Alert info = new Alert(Alert.AlertType.INFORMATION);
-                    info.setHeaderText("Nome utente non valido");
+                    info.setHeaderText("Nome utente NON valido");
                     info.setContentText("L'operazione richiesta non è stata completata");
                     info.showAndWait();
-                    return;
+                    break;
 
                 case USERNAME_NOT_PRESENT:
                     showDialogUsernameNotPresent();
-                    return;
+                    break;
 
                 case PROJECT_NOT_PRESENT:
-                    showDialogNoProjectSelected();
+                    showDialogProjectNotPresent();
                     resetUIstate();
-                    return;
+                    break;
 
                 case USERNAME_ALREADY_PRESENT:
                     Alert info2 = new Alert(Alert.AlertType.INFORMATION);
                     info2.setHeaderText("L'utente " + member + " è già membro di questo progetto");
                     info2.setContentText("L'operazione richiesta non è stata completata");
                     info2.showAndWait();
-                    return;
+                    break;
 
                 case ADD_MEMBER_OK:
                     fillProjectMembers();
-            }
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-    }
-
-    @FXML
-    void handleDeleteProject(MouseEvent event) {
-
-        if(this.currentProject.get().isEmpty())
-            return;
-
-        try {
-            String projectName = this.currentProject.get();
-            CSReturnValues retVal = clientLogic.deleteProject(projectName);
-
-            switch(retVal) {
-
-                case DELETE_PROJECT_OK:
-                    Alert info = new Alert(Alert.AlertType.INFORMATION);
-                    info.setContentText("Progetto cancellato");
-                    info.setHeaderText(null);
-                    info.showAndWait();
-
-
-                    // @todo al momento della callback potrei non averne bisogno
-                    this.projectNames.remove(projectName);
-                    resetUIstate();
                     break;
-
-                case USERNAME_NOT_PRESENT:
-                    showDialogUsernameNotPresent();
-                    return;
-
-                case PROJECT_NOT_PRESENT:
-                    showDialogNoProjectSelected();
-                    resetUIstate();
-                    return;
             }
-
         } catch (IOException e) {
             e.printStackTrace();
         }
     }
-
-    private void resetUIstate() {
-        comboChooseProject.setValue("");
-        btnCancel.setDisable(true);
-
-        toDoList.clear();
-        inProgressList.clear();
-        toBeRevisedList.clear();
-        doneList.clear();
-
-        listProjects();
-    }
-        /*
-        Chat
-         */
-    @FXML
-    void enableSendButton(KeyEvent event) {
-        if(!chatTextArea.getText().isEmpty())
-            btnSendChat.setDisable(false);
-        else
-            btnSendChat.setDisable(true);
-    }
-
-    @FXML
-    void handleSendChat(MouseEvent event) {
-        if(this.currentProject.get().isEmpty()) {
-            showDialogNoProjectSelected();
-            return;
-        }
-
-        String textMsg = chatTextArea.getText();
-
-        try {
-            clientLogic.sendChatMsg(this.currentProject.get(), textMsg);
-
-            chatTextArea.setText("");
-            btnSendChat.setDisable(true);
-        }
-        catch (IOException e)       { e.printStackTrace(); }
-    }
-
-        /*
-        Members
-         */
-
-
-    /*
-    USERS
-     */
-
 
     /*
    SETTINGS
@@ -912,92 +942,3 @@ public class UserSceneController extends ClientController {
         stage.close();
     }
 }
-
-/*
-// adds listener for list projects
-        projectNames.addListener((InvalidationListener) observable -> {
-            System.out.println("spara");
-        });
-
-// NUOVO PROGETTO
-            String ip = "239.21.21.21;9999";
-            ByteBuffer bb = ByteBuffer.allocate(512);
-            bb.clear();
-            bb.put(ip.getBytes());
-            bb.flip();
-            // writes the data into a sink channel.
-            while(bb.hasRemaining()) {
-                pipe_writeChannel.write(bb);
-            }
-
-            // writes the data into a sink channel.
-            while(bb.hasRemaining()) {
-                pipe_writeChannel.write(bb);
-            }
-
-// INVIO UDP CHAT
-
-            InetAddress ia = InetAddress.getByName("239.21.21.21");
-            String send = "CHAT_MSG;wander;Rancore;" + Long.toString(System.currentTimeMillis()) +
-                    ";la chat è avviata!";
-
-            byte[] data = StringUtils.stringToBytes(send);
-
-            DatagramPacket dp = new DatagramPacket(data, data.length, ia, 9999);
-            DatagramSocket ms = new DatagramSocket();
-            ms.send(dp);
-
-            Thread.sleep(1000);
-
-// RECUPERO MESSAGGI CHAT
-            try {
-                List<ChatMsg> messages = DbHandler.getInstance().readChat("Rancore");
-                for(ChatMsg msg : messages) {
-                    DateFormat df = new SimpleDateFormat("HH:mm");
-
-                    System.out.println(
-                            "USERNAME: " + msg.username +
-                            " - PROJECT: " + msg.project +
-                            " - TIMESENT: " + df.format(msg.sentTime) +
-                            "\n" + msg.msg);
-                }
-
-            } catch (SQLException throwables) {
-                throwables.printStackTrace();
-            }
- */
-
-
- /*
-    FOR TABLES
-
-    // for tables
-    ObservableList<cardEntry> list = FXCollections.observableArrayList();
-
-    private void initColumn() {
-        tableColTODOlist.setCellValueFactory(new PropertyValueFactory<>("Name"));
-    }
-
-
-    private void loadData() {
-        list.clear();
-        list.add(new cardEntry("luca"));
-
-        tableViewTODOlist.setItems(list);
-    }
-
-
-    public class cardEntry {
-        private final SimpleStringProperty name;
-
-        public cardEntry(String s) {
-            this.name = new SimpleStringProperty(s);
-        }
-
-        public String getName() {
-            return name.get();
-        }
-
-    }
-
-*/

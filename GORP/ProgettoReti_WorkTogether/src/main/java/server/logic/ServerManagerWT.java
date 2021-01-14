@@ -61,16 +61,7 @@ TCP
     }
 
     public synchronized String createProject(String username, String projectName) {
-        try {
-            String ret = this.server.createProject(username, projectName).toString();
-            String ip = this.server.getProjectMulticasIp(projectName);
-
-            return ret + ";" + ip;
-        }
-        catch(UnknownHostException | NoSuchElementException e) {
-            return CSReturnValues.SERVER_INTERNAL_NETWORK_ERROR.toString();
-        }
-
+        return this.server.createProject(username, projectName).toString();
     }
 
     public synchronized List<ListProjectEntry> listProjects(String username)
@@ -79,7 +70,9 @@ TCP
         return this.server.listProjects(username);
     }
 
-    public synchronized Project showProject(String username, String projectName) throws IllegalProjectException, IllegalUsernameException {
+    public synchronized Project showProject(String username, String projectName)
+            throws IllegalProjectException, IllegalUsernameException
+    {
         return this.server.showProject(username, projectName);
     }
 
@@ -121,6 +114,14 @@ TCP
         String ret = this.server.logout(username).toString();
         this.manager.userIsOfflineCallbacks(username);
         return ret;
+    }
+
+    public String getProjectMulticasIp(String projectName) {
+        return this.server.getProjectMulticasIp(projectName);
+    }
+
+    public int getProjectMulticastPort(String projectName) {
+        return this.server.getProjectMulticastPort(projectName);
     }
 
 /*

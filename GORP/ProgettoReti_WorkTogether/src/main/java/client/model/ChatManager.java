@@ -70,16 +70,19 @@ public class ChatManager extends Thread {
                         if(key.channel() instanceof Pipe.SourceChannel) {
                             try {
                                 readFromPipeNewMulticast(key);
+                                key.channel().register(this.selector, SelectionKey.OP_READ, key.attachment());
                             } catch (IOException e) { e.printStackTrace(); }
                         }
                         else { // it's a datagramSocketChannel
                             try {
                                 readChatMsg(key);
+                                key.channel().register(this.selector, SelectionKey.OP_READ, key.attachment());
                             }
                             catch (SQLException t)  { t.printStackTrace(); }
                             catch (IOException e)   { e.printStackTrace(); }
                             catch (TerminationException e) {
                                 System.out.println("Chat Terminata, chiusura Socket");
+
                                 DatagramChannel udpChannel = (DatagramChannel) key.channel();
                                 udpChannel.socket().close();
 
@@ -87,7 +90,6 @@ public class ChatManager extends Thread {
                             }
                         }
                     }
-                    key.channel().register(this.selector, SelectionKey.OP_READ, key.attachment());
                 }
             }
         } catch (IOException e) {
@@ -113,17 +115,14 @@ public class ChatManager extends Thread {
             bb.clear();
         }
         String ret = builder.toString();
-        System.out.println(ret);
 
         // if ClientWT wrote more than one connection
         StringTokenizer tokenizerMultipleRequests = new StringTokenizer(ret, ",");
         while(tokenizerMultipleRequests.hasMoreTokens()) {
 
             String current = tokenizerMultipleRequests.nextToken();
-            System.out.println("current: " + current);
-            if(current.equals("")) {
+            if(current.isEmpty())
                 break;
-            }
 
             List<String> tokens = StringUtils.tokenizeRequest(current);
 
@@ -134,7 +133,6 @@ public class ChatManager extends Thread {
             int port = Integer.parseInt(tokens.remove(0));
 
             registerMulticastConnection(ip, port);
-            System.out.println("ip: " + ip + " registrato!");
         }
     }
 
@@ -192,21 +190,33 @@ public class ChatManager extends Thread {
         String udpMessageRead = StringUtils.byteBufferToString(buf);
         buf.clear();
 
-        System.out.println("UDP CHAT MSG: " + udpMessageRead);
         List<String> tokens = StringUtils.tokenizeRequest(udpMessageRead);
 
         // analyze it
         String firstToken = tokens.remove(0); // throw header
-        if(firstToken.equals(CSReturnValues.CHAT_STOP.toString()))
-            throw new TerminationException();
+        String project;
+        switch(CSOperations.valueOf(firstToken)) {
 
-        String username = tokens.remove(0);
-        String project = tokens.remove(0);
-        String timeSentString = tokens.remove(0);
-        Long timeSent = Long.parseLong(timeSentString);
-        String msg = tokens.remove(0);
+            case CHAT_MSG:
+                String username = tokens.remove(0);
+                project = tokens.remove(0);
+                String timeSentString = tokens.remove(0);
+                Long timeSent = Long.parseLong(timeSentString);
+                String msg = tokens.remove(0);
 
-        // save into local DB
-        this.dbHandler.saveChat(username, project, timeSent, msg);
+                // save into local DB
+                this.dbHandler.saveChat(username, project, timeSent, msg);
+                CSProtocol.printResponse(CSOperations.CHAT_MSG.toString() + ": " + msg);
+                break;
+
+            case CHAT_STOP:
+                tokens.remove(0); // throw username
+                project = tokens.remove(0);
+                CSProtocol.printResponse(CSOperations.CHAT_STOP.toString() + ": " + project);
+                dbHandler.deleteChat(project);
+
+                throw new TerminationException();
+
+        }
     }
 }

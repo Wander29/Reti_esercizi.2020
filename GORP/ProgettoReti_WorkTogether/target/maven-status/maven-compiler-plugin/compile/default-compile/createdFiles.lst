@@ -36,6 +36,7 @@ client/model/ClientWT$3.class
 client/controllers/UserSceneController$1.class
 client/controllers/UserSceneController$4.class
 client/controllers/LoginController$1.class
+client/model/ChatManager$1.class
 server/logic/SerializeHelper.class
 utils/psw/PasswordManager.class
 protocol/exceptions/IllegalProtocolMessageException.class

@@ -18,8 +18,8 @@ public class WorthData {
         this.users      = recoveredData.getUsers();
         this.projects   = recoveredData.getProjects();
 
-        System.out.println("- UTENTI RECUPERATI");
-        printUsers();
+        // System.out.println("- UTENTI RECUPERATI");
+        // printUsers();
     }
 
     public void printUsers() {

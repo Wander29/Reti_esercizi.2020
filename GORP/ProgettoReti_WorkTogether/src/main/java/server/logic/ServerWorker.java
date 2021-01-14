@@ -4,6 +4,7 @@ import com.google.gson.Gson;
 import protocol.CSOperations;
 import protocol.CSProtocol;
 import protocol.CSReturnValues;
+import protocol.ChatUtils;
 import protocol.classes.*;
 import utils.*;
 import protocol.exceptions.IllegalProjectException;
@@ -11,6 +12,7 @@ import protocol.exceptions.IllegalUsernameException;
 import protocol.exceptions.TerminationException;
 
 import java.io.IOException;
+import java.net.InetAddress;
 import java.nio.ByteBuffer;
 import java.nio.channels.SelectionKey;
 import java.nio.channels.Selector;
@@ -109,7 +111,7 @@ public class ServerWorker implements Runnable {
     public void run() {
 
         if(CSProtocol.DEBUG()) {
-            System.out.println("Worker creato, sta per essere avviato: " + Thread.currentThread().getName());
+            System.out.println("Worker creato: " + Thread.currentThread().getName());
         }
 
         //while(!this.selector.keys().isEmpty()) {
@@ -134,7 +136,7 @@ public class ServerWorker implements Runnable {
                         }
                         catch (TerminationException e) {
                             key.cancel();
-                            System.err.println("Connessione con 1 client terminata!");
+                            System.err.println("Connessione con 1 client terminata");
                                 // break outer_loop;
                                 // per avere un comportamento while(true) usare «break;»
                             break;
@@ -183,7 +185,10 @@ public class ServerWorker implements Runnable {
         String username = tokens.remove(0);
         String psw = tokens.remove(0);
 
+        CSProtocol.printRequest(CSOperations.LOGIN.toString() + ": " + username);
         String ret = this.server.login(username, psw);
+        CSProtocol.printResponse(ret);
+
         if(CSReturnValues.valueOf(ret) == CSReturnValues.LOGIN_OK) {
             bufs.setUsername(username);
         }
@@ -199,9 +204,12 @@ public class ServerWorker implements Runnable {
         List<String> tokens = StringUtils.tokenizeRequest(bufs.inputBuf);
         bufs.inputBuf.clear();
 
+        CSProtocol.printRequest(CSOperations.CREATE_PROJECT.toString() + ": " + bufs.getUsername());
         String projectName  = tokens.remove(0);
 
         String ret = this.server.createProject(bufs.getUsername(), projectName);
+        CSProtocol.printResponse(ret);
+
         this.sendResponse(bufs.outputBuf, cliCh, ret);
     }
 
@@ -210,6 +218,7 @@ public class ServerWorker implements Runnable {
     */
     private void opListProject(TCPBuffersNIO bufs, SocketChannel cliCh) throws IOException {
         bufs.inputBuf.clear();
+        CSProtocol.printRequest(CSOperations.LIST_PROJECTS.toString() + ": " + bufs.getUsername());
 
         List<ListProjectEntry> list = null;
         try {
@@ -234,30 +243,32 @@ public class ServerWorker implements Runnable {
         bufs.inputBuf.clear();
 
         String projectName  = tokens.remove(0);
+        CSProtocol.printRequest(CSOperations.SHOW_PROJECT.toString() + ": " + bufs.getUsername());
 
-        Project p = null;
+        String toSend = null;
         try {
-            p = this.server.showProject(bufs.getUsername(), projectName);
+            Project p = this.server.showProject(bufs.getUsername(), projectName);
+            Gson gson = new Gson();
+            toSend = CSReturnValues.SHOW_PROJECT_OK.toString() + ";" + gson.toJson(p);
         }
-        catch (IllegalUsernameException e) {
-            this.sendResponse(bufs.outputBuf, cliCh, e.retval.toString());
+        catch (IllegalUsernameException iue) {
+            toSend = iue.retval.toString();
         }
-        catch (IllegalProjectException e) {
-            this.sendResponse(bufs.outputBuf, cliCh, e.retval.toString());
+        catch (IllegalProjectException ipe) {
+            toSend = ipe.retval.toString();
         }
-
-        Gson gson = new Gson();
-        String toSend = CSReturnValues.SHOW_PROJECT_OK.toString() + ";" + gson.toJson(p);
-        CSProtocol.printResponse(toSend);
-
-        this.sendResponse(bufs.outputBuf, cliCh, toSend);
+        finally {
+            CSProtocol.printResponse(toSend);
+            this.sendResponse(bufs.outputBuf, cliCh, toSend);
+        }
     }
 
     /*
     protocol for MOVE CARD operation
         -   MOVE_CARD;projectName;cardName;fromStatus;toStatus
      */
-    private void opMoveCard(TCPBuffersNIO bufs, SocketChannel cliCh) throws IOException {
+    private void opMoveCard(TCPBuffersNIO bufs, SocketChannel cliCh) throws IOException
+    {
         List<String> tokens = StringUtils.tokenizeRequest(bufs.inputBuf);
         bufs.inputBuf.clear();
 
@@ -265,6 +276,8 @@ public class ServerWorker implements Runnable {
         String cardName     = tokens.remove(0);
         CardStatus from     = CardStatus.valueOf(tokens.remove(0));
         CardStatus to       = CardStatus.valueOf(tokens.remove(0));
+
+        CSProtocol.printRequest(CSOperations.MOVE_CARD.toString() + ": " + bufs.getUsername());
 
         String toSend = this.server.moveCard(
                 bufs.getUsername(),
@@ -275,6 +288,22 @@ public class ServerWorker implements Runnable {
 
         CSProtocol.printResponse(toSend);
         sendResponse(bufs.outputBuf, cliCh, toSend);
+
+        if(CSReturnValues.valueOf(toSend) != CSReturnValues.MOVE_CARD_OK)
+            return;
+
+        // write into project chat
+       InetAddress chatIp = InetAddress.getByName(this.server.getProjectMulticasIp(projectName));
+       int chatPort = this.server.getProjectMulticastPort(projectName);
+
+       if(chatIp != null && chatPort != -1)
+       {
+           String chatMsg = "Card «" + cardName + "» spostata da " +
+                   from.toString().replace("_", " ") + " a " +
+                   to.toString().replace("_", " ");
+           CSProtocol.printResponse(chatMsg);
+           ChatUtils.sendChatMsg("SERVER", projectName, chatMsg, chatIp, chatPort);
+       }
     }
 
     private void opAddCard(TCPBuffersNIO bufs, SocketChannel cliCh) throws IOException {
@@ -285,11 +314,14 @@ public class ServerWorker implements Runnable {
         String cardName     = tokens.remove(0);
         String description  = tokens.remove(0);
 
+        CSProtocol.printRequest(CSOperations.ADD_CARD.toString() + ": " + bufs.getUsername());
+
         String ret = this.server.addCard(
                 bufs.getUsername(),
                 projectName,
                 cardName,
                 description);
+        CSProtocol.printResponse(ret);
 
         sendResponse(bufs.outputBuf, cliCh, ret);
     }
@@ -301,13 +333,25 @@ public class ServerWorker implements Runnable {
         if(tokens.size() != 1)
             return;
 
+        CSProtocol.printRequest(CSOperations.DELETE_PROJECT.toString() + ": " + bufs.getUsername());
         String projectName = tokens.remove(0);
 
-        System.out.println("DELETE PROJECT: " + projectName);
-        String ret = this.server.deleteProject(bufs.getUsername(), projectName);
+        // get chat info
+        InetAddress chatIp = InetAddress.getByName(this.server.getProjectMulticasIp(projectName));
+        int chatPort = this.server.getProjectMulticastPort(projectName);
 
-        System.out.println("RESPONSE: " + ret);
+        String ret = this.server.deleteProject(bufs.getUsername(), projectName);
+        CSProtocol.printResponse(ret);
+
         sendResponse(bufs.outputBuf, cliCh, ret);
+
+        if(CSReturnValues.valueOf(ret) != CSReturnValues.DELETE_PROJECT_OK)
+            return;
+
+        // write into project chat: CHAT_STOP
+        if(chatIp != null && chatPort != -1)
+            ChatUtils.sendChatStop("SERVER", projectName, chatIp, chatPort);
+
     }
 
     /*
@@ -319,6 +363,9 @@ public class ServerWorker implements Runnable {
         bufs.inputBuf.clear();
 
         String projectName = tokens.remove(0);
+
+        CSProtocol.printRequest(CSOperations.SHOW_MEMBERS.toString() + ": " + bufs.getUsername());
+
         StringBuilder builder = new StringBuilder();
         String ret = null;
 
@@ -338,6 +385,7 @@ public class ServerWorker implements Runnable {
             ret = e.retval.toString();
         }
         finally {
+            CSProtocol.printResponse(ret);
             sendResponse(bufs.outputBuf, cliCh, ret);
         }
     }
@@ -353,7 +401,10 @@ public class ServerWorker implements Runnable {
         String projectName  = tokens.remove(0);
         String newMember    = tokens.remove(0);
 
+        CSProtocol.printRequest(CSOperations.ADD_MEMBER.toString() + ": " + bufs.getUsername());
+
         String ret = this.server.addMember(bufs.getUsername(), projectName, newMember);
+        CSProtocol.printResponse(ret);
 
         sendResponse(bufs.outputBuf, cliCh, ret);
     }
@@ -369,7 +420,10 @@ public class ServerWorker implements Runnable {
     private void opLogout(TCPBuffersNIO bufs, SocketChannel cliCh) throws IOException {
         bufs.inputBuf.clear();
 
+        CSProtocol.printRequest(CSOperations.LOGOUT.toString() + ": " + bufs.getUsername());
+
         String ret = this.server.logout(bufs.getUsername());
+        CSProtocol.printResponse(ret);
         sendResponse(bufs.outputBuf, cliCh, ret);
     }
 
@@ -382,7 +436,7 @@ public class ServerWorker implements Runnable {
         buf.clear();
 
         String s = toSend + "\n";
-        byte[] tmp = s.getBytes();
+        byte[] tmp = StringUtils.stringToBytes(s);
         buf.put(tmp, 0, tmp.length);
 
         buf.flip();

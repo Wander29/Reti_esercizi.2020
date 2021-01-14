@@ -42,7 +42,7 @@ Server-->Client: LOGIN_OK \n USERNAME_NOT_PRESENT || PSW_INCORRECT || ALREADY_LO
 Client->Server: LOGOUT
 Server-->Client: LOGOUT_OK || USERNAME_NOT_PRESENT || USER_NOT_ONLINE
 Client->Server: CREATE_PROJECT;projectName
-Server-->Client: CREATE_PROJECT_OK;MulticastIP;port || PROJECT_ALREADY_PRESENT || \n SERVER_INTERNAL_NETWORK_ERROR || USERNAME_NOT_PRESENT
+Server-->Client: CREATE_PROJECT_OK || PROJECT_ALREADY_PRESENT || \n SERVER_INTERNAL_NETWORK_ERROR || USERNAME_NOT_PRESENT
 Client->Server: LIST_PROJECTS
 Server-->Client: LIST_PROJECTS;JSON || USERNAME_NOT_PRESENT \n JSON content: [proj1;IP1;PORT1;proj2;IP2;PORT2;..;..]
 Client->Server: SHOW_MEMBERS;projectName
@@ -64,6 +64,7 @@ title: CHAT MULTICAST UDP
 Sender->Multicast Group: CHAT_MSG;username;project;timeSent;msg
 Note left of Multicast Group: (timeSent : LONG as String)
 Note left of Multicast Group: (msg : max 2048 chars)
+Server->Members: CHAT_STOP;SERVER;project
 ```
 
 
@@ -92,7 +93,7 @@ Se il client aveva effettuato l'accesso in aggiunta viene inviato una richiesta 
 
 Comunicazione TCP stateful, lo stato di utente loggato è registrato durante la comunicazione, infatti non si ha bisogno di passare nuovamente il proprio username.
 
-
+``
 
 ? é importante che threadChatManager e ClientWT usino dbHandler che non è sincronizzato
 
@@ -112,5 +113,6 @@ threads.
 A does database work that is not transactionally related to thread B, assign them to
 different Connections»
 
+Per l'aggiornamento automatico della Chat:
 
-
+- nel `ClientLogic`, al momento dell'istanziamento di un'istanza di `DbHandler`, setto  la variabile statica `currentChatMsgList` passando una  `ObservableList <ChatMsgObservable>` .
