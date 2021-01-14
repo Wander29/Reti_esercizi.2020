@@ -1,10 +1,16 @@
 /*
     NOTE on language I used:
-    every sentence relative to specific rows of code is intended to be read with the the initial
+    in every sentence relative to specific rows of code is intended to be read with the the initial
     sentence, ex: «[the code below] opens an unnamed pipe»
  */
 
 package server;
+
+/**
+ * @author      LUDOVICO VENTURI (UniPi)
+ * @date        2021/01/14
+ * @versione    1.0
+ */
 
 import java.io.BufferedReader;
 import java.io.IOException;
@@ -18,23 +24,17 @@ import server.logic.ServerManagerWT;
 
 public class WorthServerMain {
     private final static String EXIT_STRING = "exit";
-    private final static int UPDATE_INTERVAL = 30; // seconds
+    private final static int SAVE_INTERVAL = 30; // seconds
 
     public static void main(String args[]) {
-        WorthData data = null;
-        try {
-            data = SerializeHelper.recoverData();
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-
-        ServerManagerWT server = new ServerManagerWT(data);
-        Thread serverThread = new Thread( new WelcomingServer(server) );
-        serverThread.start();
+        // start welcoming server for TCP and RMI
+        Thread welcomeServer = new Thread(new WelcomingServer());
+        welcomeServer.start();
 
         // daemon thread updating database
-        DaemonSaver daemonSaver = new DaemonSaver(UPDATE_INTERVAL * 1000, server);
-        //daemonSaver.start();
+        DaemonSaver daemonSaver = new DaemonSaver(SAVE_INTERVAL * 1000);
+        daemonSaver.setDaemon(true);
+        daemonSaver.start();
 
         // waiting for closure: manual handling
         System.out.println("Enter \"" + EXIT_STRING + "\" to stop server");

@@ -1,5 +1,11 @@
 package server.data;
 
+/**
+ * @author      LUDOVICO VENTURI (UniPi)
+ * @date        2021/01/14
+ * @versione    1.0
+ */
+
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
@@ -10,7 +16,7 @@ public class WorthData {
     private Map<String, ServerProject> projects;  // project data
 
     public WorthData() {
-        this.users      = new ConcurrentHashMap<String, UserInfo>();
+        this.users      = new HashMap<>();
         this.projects   = new HashMap<>();
     }
 
@@ -18,14 +24,12 @@ public class WorthData {
         this.users      = recoveredData.getUsers();
         this.projects   = recoveredData.getProjects();
 
-        // System.out.println("- UTENTI RECUPERATI");
-        // printUsers();
+        System.out.println("- STATO SERVER RECUPERATO");
     }
 
-    public void printUsers() {
-        for(Map.Entry<String, UserInfo> user : this.getUsers().entrySet()) {
-            System.out.println(user.getKey());
-        }
+    public WorthData(Map<String, UserInfo> users, Map<String, ServerProject> projects) {
+        this.users      = users;
+        this.projects   = projects;
     }
 
     public void setUsers(Map<String, UserInfo> users) {

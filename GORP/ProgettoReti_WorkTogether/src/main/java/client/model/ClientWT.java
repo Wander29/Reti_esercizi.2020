@@ -36,6 +36,7 @@ import java.sql.SQLException;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 
+// singleton
 public class ClientWT {
 
     // RMI
@@ -59,7 +60,7 @@ public class ClientWT {
     PROTECTED => can't be created outside package
     uses a daemon thread to manage tcp connection with server
      */
-    protected ClientWT() throws SQLException {
+    private ClientWT() throws SQLException {
         connThread.setDaemon(true);
         try {
             startRMI();

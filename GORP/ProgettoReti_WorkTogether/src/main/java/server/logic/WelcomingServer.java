@@ -26,8 +26,8 @@ public class WelcomingServer implements Runnable {
 
     private final static int MAX_CONNECTIONS_PER_THREAD = 4;
 
-    public WelcomingServer(ServerManagerWT manager) {
-        this.server = manager;
+    public WelcomingServer() {
+        this.server = ServerManagerWT.getInstance();
     }
 
     public void run() {

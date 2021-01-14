@@ -24,22 +24,32 @@ import java.util.NoSuchElementException;
     gestisce la concorrenza ecc.. del SERVER REALE
  */
 
+// singleton
 public class ServerManagerWT {
+    private static volatile ServerManagerWT instance;
 
-    private ServerWT server;
-    private ServerManagerRMI manager;
+    private static ServerWT server;
+    private static ServerManagerRMI manager;
 
-    public ServerManagerWT(WorthData data) {
-        this.server = new ServerWT(data);
+    private ServerManagerWT( ) {
+        server = ServerWT.getInstance();
+    }
+
+    public static synchronized ServerManagerWT getInstance() {
+        if(instance == null) {
+            instance = new ServerManagerWT();
+        }
+
+        return instance;
     }
 /*
 RMI
  */
-    public void setRMIManager(ServerManagerRMI manager) {
-    this.manager = manager;
-}
+    public static void setRMIManager(ServerManagerRMI man) {
+        manager = man;
+    }
 
-    public String register(String username, String psw)
+    public static String register(String username, String psw)
             throws RemoteException, InvalidKeySpecException, NoSuchAlgorithmException
     {
         CSReturnValues ret = this.server.register(username, psw);
@@ -49,13 +59,13 @@ RMI
         return ret.toString();
     }
 
-    public Map<String, Boolean> getStateUsers() {
+    public static Map<String, Boolean> getStateUsers() {
         return this.server.getStateUsers();
     }
 /*
 TCP
  */
-    public String login(String username, String psw) throws RemoteException, InvalidKeySpecException, NoSuchAlgorithmException {
+    public static String login(String username, String psw) throws RemoteException, InvalidKeySpecException, NoSuchAlgorithmException {
         CSReturnValues ret = this.server.login(username, psw);
         if(CSReturnValues.LOGIN_OK == ret)
             this.manager.userIsOnlineCallbacks(username);
@@ -63,23 +73,23 @@ TCP
         return ret.toString();
     }
 
-    public synchronized String createProject(String username, String projectName) {
+    public static synchronized String createProject(String username, String projectName) {
         return this.server.createProject(username, projectName).toString();
     }
 
-    public synchronized List<ListProjectEntry> listProjects(String username)
+    public static synchronized List<ListProjectEntry> listProjects(String username)
             throws IllegalUsernameException
     {
         return this.server.listProjects(username);
     }
 
-    public synchronized Project showProject(String username, String projectName)
+    public static synchronized Project showProject(String username, String projectName)
             throws IllegalProjectException, IllegalUsernameException
     {
         return this.server.showProject(username, projectName);
     }
 
-    public synchronized String moveCard(String username, String projectName,
+    public static synchronized String moveCard(String username, String projectName,
                                         String cardName, CardStatus from, CardStatus to)
     {
         try {
@@ -90,30 +100,30 @@ TCP
         }
     }
 
-    public synchronized String addCard(String username, String projectName,
+    public static synchronized String addCard(String username, String projectName,
                                        String cardName, String description)
     {
         return this.server.addCard(username, projectName, cardName, description).toString();
     }
 
-    public synchronized String deleteProject(String username, String projectName) {
+    public static synchronized String deleteProject(String username, String projectName) {
         return this.server.deleteProject(username, projectName).toString();
     }
 
-    public synchronized List<String> showMembers(String username, String projName)
+    public static synchronized List<String> showMembers(String username, String projName)
             throws IllegalProjectException, IllegalUsernameException
     {
         return this.server.showMembers(username, projName);
     }
 
-    public synchronized String addMember(String username, String projectName, String newMember) throws IOException {
+    public static synchronized String addMember(String username, String projectName, String newMember) throws IOException {
         return this.server.addMember(username, projectName, newMember).toString();
     }
 
 /*
  ******************************************** EXIT OPERATIONS
  */
-    public String logout(String username) throws RemoteException {
+    public static String logout(String username) throws RemoteException {
         CSReturnValues ret = this.server.logout(username);
         if(CSReturnValues.LOGOUT_OK == ret)
             this.manager.userIsOfflineCallbacks(username);
@@ -121,24 +131,24 @@ TCP
         return ret.toString();
     }
 
-    public String getProjectMulticasIp(String projectName) {
+    public static String getProjectMulticasIp(String projectName) {
         return this.server.getProjectMulticasIp(projectName);
     }
 
-    public int getProjectMulticastPort(String projectName) {
+    public static int getProjectMulticastPort(String projectName) {
         return this.server.getProjectMulticastPort(projectName);
     }
 
 /*
     SERIALIZATION
  */
-    public WorthData getWorthData() { return this.server.getWorthData(); }
+    public static WorthData getWorthData() { return this.server.getWorthData(); }
 }
 
 /*
-public Map<String, Project> getProjects() {
+public static Map<String, Project> getProjects() {
     return this.server.getProjects();
 }
 
-public Map<String, UserInfo> getUsers() { return this.server.getUsers(); }
+public static Map<String, UserInfo> getUsers() { return this.server.getUsers(); }
  */

@@ -20,9 +20,9 @@ public abstract class SerializeHelper {
         con dentro anche la lista movimenti
      */
 
-    private final static String MAIN_DIR = "./DataBaseSurrogate/";
-    private final static String PROJ_DIR = MAIN_DIR + "Projects/";
-    private final static String USER_DIR = MAIN_DIR + "Users/";
+    private final static String MAIN_DIR = "./.dataBaseSurrogate/";
+    private final static String PROJ_DIR = MAIN_DIR + "projects/";
+    private final static String USER_DIR = MAIN_DIR + "users/";
     private final static String USER_DB = "users.json";
 
     public static void saveData(WorthData data) throws IOException {

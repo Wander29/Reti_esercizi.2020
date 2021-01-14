@@ -1,5 +1,11 @@
 package server.logic;
 
+/**
+ * @author      LUDOVICO VENTURI (UniPi)
+ * @date        2021/01/14
+ * @versione    1.0
+ */
+
 import protocol.CSProtocol;
 import protocol.CSReturnValues;
 import protocol.classes.CardStatus;
@@ -14,6 +20,7 @@ import protocol.exceptions.IllegalUsernameException;
 import utils.psw.PasswordManager;
 import utils.psw.PswData;
 
+import java.io.IOException;
 import java.net.UnknownHostException;
 import java.security.spec.InvalidKeySpecException;
 import java.sql.SQLException;
@@ -26,20 +33,29 @@ import java.util.concurrent.ConcurrentHashMap;
     this object class will be managed by a manager, which will use an instance as private
  */
 
+// singleton, only one instance
 public class ServerWT {
-    Map<String, Boolean> onlineStateUsers;      // users online state
-                                                // when you start server every user is offline
-    private WorthData data;
-    Map<String, UserInfo> users;                // users login info
-    Map<String, ServerProject > projects;       // project data
+    private volatile static ServerWT instance;
 
-    public ServerWT(WorthData recoveredData) {
-        this.onlineStateUsers   = new ConcurrentHashMap<String, Boolean>();
+    private static Map<String, Boolean> onlineStateUsers;      // users online state
+                                                // when you start server every user is offline
+    private static WorthData data;
+    private static Map<String, UserInfo> users;                // users login info
+    private static Map<String, ServerProject > projects;       // project data
+
+    private ServerWT() {
+        onlineStateUsers   = new HashMap<String, Boolean>();
+
+        WorthData recoveredData = null;
+        try {
+            recoveredData = SerializeHelper.recoverData();
+        }
+        catch (IOException e) { e.printStackTrace(); }
 
         if(recoveredData == null )
-                data    = new WorthData();
+                this.data    = new WorthData();
         else
-                data    = new WorthData(recoveredData);
+                this.data    = new WorthData(recoveredData);
 
         this.projects   = data.getProjects();
         this.users      = data.getUsers();
@@ -47,35 +63,14 @@ public class ServerWT {
         for(Map.Entry<String, UserInfo> entry : this.users.entrySet())
             this.onlineStateUsers.put(entry.getKey(), Boolean.FALSE);
 
-
-        try {
-            insertSampleData();
-        }
-        catch (UnknownHostException e) { e.printStackTrace(); }
-        catch (IllegalOperation illegalOperation) {
-            illegalOperation.printStackTrace();
-        }
     }
 
-    private void insertSampleData() throws UnknownHostException, IllegalOperation {
-        ServerProject  p = new ServerProject("Musica per Bambini", "Rancore");
-        p.addMember("Orqestra");
-        p.addMember("Rinquore");
-        // add cards, 2 each column
-        p.addCard("1 - Underman", "Il titolo è un gioco di parole in contrapposizione a «super-uomo».", "Rancore");
-        p.addCard("2 - Giocattoli", "Nella traccia, l'artista impersona e dà voce a 3 oggetti, 3 “giocattoli” se vogliamo, di cui la ragazza narrata usufruisce nel corso della sua vita, della sua crescita, rispettivamente: un pupazzo, un rossetto ed una sigaretta.", "Rancore");
-        p.addCard("3 - Beep Beep", "“Beep Beep”, in parte un extrabeat, è un brano in cui Rancore riprende metaforicamente i personaggi animati Beep Beep e Willy il Coyote: il primo rappresenta Rancore stesso, inseguito dai problemi e dai fantasmi (Willy il Coyote) del suo passato.", "Rancore");
-        p.addCard("4 - Depressissimo", "La canzone affronta il tema della depressione in maniera auto-ironica.", "Rancore");
-        p.addCard("5 - Sangue di drago", "“Sangue di drago” racconta, seguendo gli schemi cavallereschi medievali, di un principe trasformato inconsapevolmente in drago da un mago, affinché un altro principe, sostenuto da quest'ultimo, possa eliminarlo e ottenere potere e onore. Metafora che probabilmente ricostruisce le modalità con le quali molte volte viene preso il potere: con l'inganno. Il principe che ha ordinato l'incantesimo infatti ottiene l'appoggio del popolo, in quanto ha creato un problema e si è proposto come principe buono che deve salvare la principessa dal drago malvagio (soluzione) che in realtà è il virtuoso principe colpito dal sotterfugio.", "Rancore");
+    public static synchronized ServerWT getInstance() {
+        if(instance == null) {
+            instance = new ServerWT();
+        }
 
-        p.moveCard("4 - Depressissimo", CardStatus.TO_DO, CardStatus.IN_PROGRESS, "Rinquore");
-        p.moveCard("4 - Depressissimo", CardStatus.IN_PROGRESS, CardStatus.DONE, "Rancore");
-
-        p.moveCard("5 - Sangue di drago", CardStatus.TO_DO, CardStatus.IN_PROGRESS, "Orqestra");
-        p.addMember("aa");
-        p.addMember("wander");
-
-        this.projects.put("Musica per Bambini", p);
+        return instance;
     }
 
 /*
@@ -89,16 +84,16 @@ RMI
      * @return          USERNAME_ALREADY_PRESENT
      *                  REGISTRATION_OK
      */
-    public CSReturnValues register(String username, String psw)
-            throws InvalidKeySpecException, NoSuchAlgorithmException {
-
-        if(this.users.containsKey(username))
+    public static CSReturnValues register(String username, String psw)
+            throws InvalidKeySpecException, NoSuchAlgorithmException
+    {
+        if(users.containsKey(username))
             return CSReturnValues.USERNAME_ALREADY_PRESENT;
 
         // hashing psw
         PswData password = PasswordManager.hashPsw(psw);
-        this.users.put(username, new UserInfo(username, password));
-        this.onlineStateUsers.put(username, Boolean.FALSE);
+        users.put(username, new UserInfo(username, password));
+        onlineStateUsers.put(username, Boolean.FALSE);
 
         return CSReturnValues.REGISTRATION_OK;
     }
@@ -110,23 +105,24 @@ TCP
      * Allow a user to login into the service, if he was already registered,
      *  the password is correct and he wasn't already online
      */
-    public CSReturnValues login(String username, String psw) throws InvalidKeySpecException, NoSuchAlgorithmException {
-        if(!this.users.containsKey(username))
+    public static CSReturnValues login(String username, String psw)
+            throws InvalidKeySpecException, NoSuchAlgorithmException
+    {
+        if(!users.containsKey(username))
             return CSReturnValues.USERNAME_NOT_PRESENT;
 
-        if(this.onlineStateUsers.get(username) == Boolean.TRUE) {
+        if(onlineStateUsers.get(username) == Boolean.TRUE)
             return CSReturnValues.ALREADY_LOGGED_IN;
-        }
 
         // hashing psw
-        UserInfo user_found = this.users.get(username);
+        UserInfo user_found = users.get(username);
 
         // compare byte per byte
         if(!PasswordManager.comparePsw(psw, user_found.getPsw())) {
-            System.out.println(username + " psw errata");
+            System.out.println(username + ": PSW errata");
             return CSReturnValues.PSW_INCORRECT;
         }
-        this.onlineStateUsers.put(username, Boolean.TRUE);
+        onlineStateUsers.put(username, Boolean.TRUE);
 
         return CSReturnValues.LOGIN_OK;
     }
@@ -134,23 +130,21 @@ TCP
     /*
    try to create a new project
    IF there is no projectName already in database
-       create new project and put the creatore as a member
+       create new project and put the creator as a member
        Next assign a Multicast IP to the project
     */
-    public CSReturnValues createProject(String username, String projectName)
+    public static CSReturnValues createProject(String username, String projectName)
     {
-        if(!this.users.containsKey(username))
+        if(!users.containsKey(username))
             return CSReturnValues.USERNAME_NOT_PRESENT;
 
-        if(this.projects.containsKey(projectName)) {
+        if(projects.containsKey(projectName))
             return CSReturnValues.PROJECT_ALREADY_PRESENT;
-        }
 
         try {
-            this.projects.put(projectName, new ServerProject(projectName, username));
-        } catch (UnknownHostException e) {
-            e.printStackTrace();
+            projects.put(projectName, new ServerProject(projectName, username));
         }
+        catch (UnknownHostException e)      { e.printStackTrace(); }
 
         return CSReturnValues.CREATE_PROJECT_OK;
     }
@@ -158,10 +152,10 @@ TCP
     /*
     lists only projects where username is member
      */
-    public List<ListProjectEntry> listProjects(String username)
+    public static List<ListProjectEntry> listProjects(String username)
             throws IllegalUsernameException
     {
-        if(!this.users.containsKey(username))
+        if(!users.containsKey(username))
             throw new IllegalUsernameException();
 
         List<ListProjectEntry> listProject = new ArrayList<>();
@@ -184,32 +178,32 @@ TCP
         return listProject;
     }
 
-    public Project showProject(String username, String projectName)
+    public static Project showProject(String username, String projectName)
             throws IllegalUsernameException, IllegalProjectException
     {
 
-        if(!this.users.containsKey(username))
+        if(!users.containsKey(username))
             throw new IllegalUsernameException();
 
-        if(!this.projects.containsKey(projectName)) {
+        if(!projects.containsKey(projectName))
             throw new IllegalProjectException();
-        }
 
-        //        return this.projects.get(projectName);
-        Project p = new Project(this.projects.get(projectName));
+        Project p = new Project(projects.get(projectName));
         return p;
     }
 
-    public CSReturnValues moveCard(String username, String projectName,
-                                   String cardName, CardStatus from, CardStatus to) throws IllegalOperation
+    public static CSReturnValues moveCard(String username, String projectName,
+                                   String cardName, CardStatus from, CardStatus to)
+            throws IllegalOperation
     {
-        if(!this.users.containsKey(username))
+        if(!users.containsKey(username))
             return CSReturnValues.USERNAME_NOT_PRESENT;
 
-        if(!this.projects.containsKey(projectName))
+        if(!projects.containsKey(projectName))
             return CSReturnValues.PROJECT_NOT_PRESENT;
 
-        ServerProject proj = this.projects.get(projectName);
+        ServerProject proj = projects.get(projectName);
+
         if(!proj.isCardInFromStatus(cardName, from))
             return CSReturnValues.CARD_FROM_STATUS_OUTDATED;
 
@@ -218,69 +212,67 @@ TCP
         return CSReturnValues.MOVE_CARD_OK;
     }
 
-    public List<String> showMembers(String username, String projectName)
+    public static List<String> showMembers(String username, String projectName)
             throws IllegalUsernameException, IllegalProjectException
     {
-        if(!this.users.containsKey(username))
+        if(!users.containsKey(username))
             throw new IllegalUsernameException();
 
-        if(!this.projects.containsKey(projectName)) {
+        if(!projects.containsKey(projectName))
             throw new IllegalProjectException();
-        }
 
-        return this.projects.get(projectName).getMembers();
+        return projects.get(projectName).getMembers();
     }
 
-    public CSReturnValues addMember(String username, String projectName, String newMember) {
-        if(!this.users.containsKey(username))
+    public static CSReturnValues addMember(String username, String projectName, String newMember)
+    {
+        if(!users.containsKey(username))
             return CSReturnValues.USERNAME_NOT_PRESENT;
 
-        if(!this.projects.containsKey(projectName)) {
+        if(!projects.containsKey(projectName))
             return CSReturnValues.PROJECT_NOT_PRESENT;
-        }
 
-        if(!this.users.containsKey(newMember))
+        if(!users.containsKey(newMember))
             return CSReturnValues.USERNAME_INVALID;
 
-        ServerProject proj = this.projects.get(projectName);
-        if(proj.getMembers().contains(newMember)) {
+        ServerProject proj = projects.get(projectName);
+        if(proj.getMembers().contains(newMember))
             return CSReturnValues.USERNAME_ALREADY_PRESENT;
-        }
 
         proj.addMember(newMember);
 
         return CSReturnValues.ADD_MEMBER_OK;
     }
 
-    public CSReturnValues addCard(String username, String projectName,
+    public static CSReturnValues addCard(String username, String projectName,
                                   String cardName, String description)
     {
-        if(!this.users.containsKey(username))
+        if(!users.containsKey(username))
             return CSReturnValues.USERNAME_NOT_PRESENT;
 
-        if(!this.projects.containsKey(projectName))
+        if(!projects.containsKey(projectName))
             return CSReturnValues.PROJECT_NOT_PRESENT;
 
-        ServerProject proj = this.projects.get(projectName);
-        if(proj.getCardFromAnyList(cardName) != null) {
+        ServerProject proj = projects.get(projectName);
+
+        if(proj.getCardFromAnyList(cardName) != null)
             return CSReturnValues.CARD_ALREADY_PRESENT;
-        }
 
         proj.addCard(cardName, description, username);
 
         return CSReturnValues.ADD_CARD_OK;
     }
 
-    public CSReturnValues deleteProject(String username, String projectName)
+    public static CSReturnValues deleteProject(String username, String projectName)
     {
-        if(!this.users.containsKey(username))
+        if(!users.containsKey(username))
             return CSReturnValues.USERNAME_NOT_PRESENT;
 
-        if(!this.projects.containsKey(projectName))
+        if(!projects.containsKey(projectName))
             return CSReturnValues.PROJECT_NOT_PRESENT;
 
         //  remove from map and add project ip to ipFree list
-        this.projects.remove(projectName).delete();
+        projects.remove(projectName).delete();
 
         return CSReturnValues.DELETE_PROJECT_OK;
     }
@@ -291,11 +283,11 @@ TCP
     /**
      * Allow a user to logout from the service
      */
-    public CSReturnValues logout(String username) {
-        if(!this.users.containsKey(username))
+    public static CSReturnValues logout(String username) {
+        if(!users.containsKey(username))
             return CSReturnValues.USERNAME_NOT_PRESENT;
 
-        this.onlineStateUsers.replace(username, Boolean.FALSE);
+        onlineStateUsers.replace(username, Boolean.FALSE);
 
         return CSReturnValues.LOGOUT_OK;
     }
@@ -307,16 +299,16 @@ TCP
         get the MulticastIP of a specific project and returns it as String
         ex. -> "224.0.0.0"
      */
-    public String getProjectMulticasIp(String projectName) {
-        if(this.projects.containsKey(projectName)) {
-            return this.projects.get(projectName).getChatMulticastIP().toString().substring(1);
-        }
+    public static String getProjectMulticasIp(String projectName) {
+        if(projects.containsKey(projectName))
+            return projects.get(projectName).getChatMulticastIP().toString().substring(1);
+
         return null;
     }
 
-    public int getProjectMulticastPort(String projectName) {
-        if(this.projects.containsKey(projectName))
-            return this.projects.get(projectName).getChatMulticastPort();
+    public static int getProjectMulticastPort(String projectName) {
+        if(projects.containsKey(projectName))
+            return projects.get(projectName).getChatMulticastPort();
 
         return -1;
     }
@@ -324,19 +316,40 @@ TCP
     /*
         returns an unmodifiable reference to the map of users and their state
      */
-    public Map<String, Boolean> getStateUsers() {
-        return Collections.unmodifiableMap(this.onlineStateUsers);
+    public static Map<String, Boolean> getStateUsers() {
+        return Collections.unmodifiableMap(onlineStateUsers);
     }
 
-    public WorthData getWorthData() { return this.data; }
+    /*
+        returns an unmodifiable reference to server data
+     */
+    public static WorthData getWorthData() {
+        return new WorthData(
+                Collections.unmodifiableMap(users),
+                Collections.unmodifiableMap(projects)
+        );
+    }
 }
 
-/*
-    public Map<String, Project> getProjects() {
-        return this.projects;
-    }
+ /*
+    private void insertSampleData() throws UnknownHostException, IllegalOperation {
+        ServerProject  p = new ServerProject("Musica per Bambini", "Rancore");
+        p.addMember("Orqestra");
+        p.addMember("Rinquore");
+        // add cards, 2 each column
+        p.addCard("1 - Underman", "Il titolo è un gioco di parole in contrapposizione a «super-uomo».", "Rancore");
+        p.addCard("2 - Giocattoli", "Nella traccia, l'artista impersona e dà voce a 3 oggetti, 3 “giocattoli” se vogliamo, di cui la ragazza narrata usufruisce nel corso della sua vita, della sua crescita, rispettivamente: un pupazzo, un rossetto ed una sigaretta.", "Rancore");
+        p.addCard("3 - Beep Beep", "“Beep Beep”, in parte un extrabeat, è un brano in cui Rancore riprende metaforicamente i personaggi animati Beep Beep e Willy il Coyote: il primo rappresenta Rancore stesso, inseguito dai problemi e dai fantasmi (Willy il Coyote) del suo passato.", "Rancore");
+        p.addCard("4 - Depressissimo", "La canzone affronta il tema della depressione in maniera auto-ironica.", "Rancore");
+        p.addCard("5 - Sangue di drago", "“Sangue di drago” racconta, seguendo gli schemi cavallereschi medievali, di un principe trasformato inconsapevolmente in drago da un mago, affinché un altro principe, sostenuto da quest'ultimo, possa eliminarlo e ottenere potere e onore. Metafora che probabilmente ricostruisce le modalità con le quali molte volte viene preso il potere: con l'inganno. Il principe che ha ordinato l'incantesimo infatti ottiene l'appoggio del popolo, in quanto ha creato un problema e si è proposto come principe buono che deve salvare la principessa dal drago malvagio (soluzione) che in realtà è il virtuoso principe colpito dal sotterfugio.", "Rancore");
 
-    public Map<String, UserInfo> getUsers() {
-        return this.users;
+        p.moveCard("4 - Depressissimo", CardStatus.TO_DO, CardStatus.IN_PROGRESS, "Rinquore");
+        p.moveCard("4 - Depressissimo", CardStatus.IN_PROGRESS, CardStatus.DONE, "Rancore");
+
+        p.moveCard("5 - Sangue di drago", CardStatus.TO_DO, CardStatus.IN_PROGRESS, "Orqestra");
+        p.addMember("aa");
+        p.addMember("wander");
+
+        this.projects.put("Musica per Bambini", p);
     }
- */
+    */

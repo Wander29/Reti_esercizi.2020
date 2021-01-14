@@ -10,10 +10,10 @@ public class DaemonSaver extends Thread {
     private int updateInterval;
     private ServerManagerWT manager;
 
-    public DaemonSaver(int interval, ServerManagerWT man) {
+    public DaemonSaver(int interval) {
         updateInterval = interval;
-        this.setDaemon(true);
-        this.manager = man;
+
+        this.manager = ServerManagerWT.getInstance();
     }
 
     public void run() {
