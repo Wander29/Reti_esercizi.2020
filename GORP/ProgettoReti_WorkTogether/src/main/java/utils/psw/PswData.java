@@ -1,5 +1,11 @@
 package utils.psw;
 
+/**
+ * @author      LUDOVICO VENTURI (UniPi)
+ * @date        2021/01/14
+ * @versione    1.0
+ */
+
 import java.io.Serializable;
 
 public class PswData implements Serializable {

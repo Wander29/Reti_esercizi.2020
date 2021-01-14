@@ -1,38 +1,46 @@
 package server.logic;
 
+/**
+ * @author      LUDOVICO VENTURI (UniPi)
+ * @date        2021/01/14
+ * @versione    1.0
+ */
+
 import protocol.CSReturnValues;
-import protocol.classes.Card;
 import protocol.classes.CardStatus;
 import protocol.classes.ListProjectEntry;
 import protocol.classes.Project;
 import protocol.exceptions.IllegalOperation;
 import server.data.WorthData;
-import server.logic.rmi.ServerManagerRMI;
+import server.logic.rmi.ServerManagerRMIRmi;
 import protocol.exceptions.IllegalProjectException;
 import protocol.exceptions.IllegalUsernameException;
 
 import java.io.IOException;
-import java.net.UnknownHostException;
 import java.rmi.RemoteException;
 import java.security.NoSuchAlgorithmException;
 import java.security.spec.InvalidKeySpecException;
 import java.util.List;
 import java.util.Map;
-import java.util.NoSuchElementException;
 
 /*
-    gestisce la concorrenza ecc.. del SERVER REALE
+    this class manages concurrency for server data.
+    It's the unique class that can directly acccess its data
  */
 
 // singleton
 public class ServerManagerWT {
-    private static volatile ServerManagerWT instance;
+    private static volatile ServerManagerWT instance = null;
 
-    private static ServerWT server;
-    private static ServerManagerRMI manager;
+    private static ServerWT server              = null;
+    private static ServerManagerRMIRmi managerRMI  = null;
 
     private ServerManagerWT( ) {
-        server = ServerWT.getInstance();
+        server      = ServerWT.getInstance();
+        try {
+            managerRMI  = ServerManagerRMIRmi.getInstance();
+        }
+        catch (RemoteException e)   { e.printStackTrace(); }
     }
 
     public static synchronized ServerManagerWT getInstance() {
@@ -45,110 +53,101 @@ public class ServerManagerWT {
 /*
 RMI
  */
-    public static void setRMIManager(ServerManagerRMI man) {
-        manager = man;
-    }
-
-    public static String register(String username, String psw)
+    public static synchronized String register(String username, String psw)
             throws RemoteException, InvalidKeySpecException, NoSuchAlgorithmException
     {
-        CSReturnValues ret = this.server.register(username, psw);
+        CSReturnValues ret = server.register(username, psw);
         if(CSReturnValues.REGISTRATION_OK == ret)
-            this.manager.newUserCallbacks(username);
+            managerRMI.newUserCallbacks(username);
 
         return ret.toString();
     }
 
-    public static Map<String, Boolean> getStateUsers() {
-        return this.server.getStateUsers();
+    public static synchronized Map<String, Boolean> getStateUsers() {
+        return server.getStateUsers();
     }
 /*
 TCP
  */
-    public static String login(String username, String psw) throws RemoteException, InvalidKeySpecException, NoSuchAlgorithmException {
-        CSReturnValues ret = this.server.login(username, psw);
+    public static synchronized String login(String username, String psw)
+            throws RemoteException, InvalidKeySpecException, NoSuchAlgorithmException
+    {
+        CSReturnValues ret = server.login(username, psw);
         if(CSReturnValues.LOGIN_OK == ret)
-            this.manager.userIsOnlineCallbacks(username);
+            managerRMI.userIsOnlineCallbacks(username);
 
         return ret.toString();
     }
 
     public static synchronized String createProject(String username, String projectName) {
-        return this.server.createProject(username, projectName).toString();
+        return server.createProject(username, projectName).toString();
     }
 
     public static synchronized List<ListProjectEntry> listProjects(String username)
             throws IllegalUsernameException
     {
-        return this.server.listProjects(username);
+        return server.listProjects(username);
     }
 
     public static synchronized Project showProject(String username, String projectName)
             throws IllegalProjectException, IllegalUsernameException
     {
-        return this.server.showProject(username, projectName);
+        return server.showProject(username, projectName);
     }
 
     public static synchronized String moveCard(String username, String projectName,
                                         String cardName, CardStatus from, CardStatus to)
     {
         try {
-            return this.server.moveCard(username, projectName, cardName, from ,to).toString();
+            return server.moveCard(username, projectName, cardName, from ,to).toString();
         }
-        catch (IllegalOperation ill) {
-            return ill.retval.toString();
-        }
+        catch (IllegalOperation ill)    { return ill.retval.toString(); }
     }
 
     public static synchronized String addCard(String username, String projectName,
                                        String cardName, String description)
     {
-        return this.server.addCard(username, projectName, cardName, description).toString();
+        return server.addCard(username, projectName, cardName, description).toString();
     }
 
     public static synchronized String deleteProject(String username, String projectName) {
-        return this.server.deleteProject(username, projectName).toString();
+        return server.deleteProject(username, projectName).toString();
     }
 
     public static synchronized List<String> showMembers(String username, String projName)
             throws IllegalProjectException, IllegalUsernameException
     {
-        return this.server.showMembers(username, projName);
+        return server.showMembers(username, projName);
     }
 
     public static synchronized String addMember(String username, String projectName, String newMember) throws IOException {
-        return this.server.addMember(username, projectName, newMember).toString();
+        return server.addMember(username, projectName, newMember).toString();
     }
 
 /*
  ******************************************** EXIT OPERATIONS
  */
     public static String logout(String username) throws RemoteException {
-        CSReturnValues ret = this.server.logout(username);
+        CSReturnValues ret = server.logout(username);
         if(CSReturnValues.LOGOUT_OK == ret)
-            this.manager.userIsOfflineCallbacks(username);
+            managerRMI.userIsOfflineCallbacks(username);
 
         return ret.toString();
     }
 
+/*
+    utils
+ */
     public static String getProjectMulticasIp(String projectName) {
-        return this.server.getProjectMulticasIp(projectName);
+        return server.getProjectMulticasIp(projectName);
     }
 
     public static int getProjectMulticastPort(String projectName) {
-        return this.server.getProjectMulticastPort(projectName);
+        return server.getProjectMulticastPort(projectName);
     }
 
 /*
     SERIALIZATION
  */
-    public static WorthData getWorthData() { return this.server.getWorthData(); }
+    public static WorthData getWorthData() { return server.getWorthData(); }
 }
-
-/*
-public static Map<String, Project> getProjects() {
-    return this.server.getProjects();
-}
-
-public static Map<String, UserInfo> getUsers() { return this.server.getUsers(); }
- */

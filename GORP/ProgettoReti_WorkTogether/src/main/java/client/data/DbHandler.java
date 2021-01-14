@@ -1,5 +1,11 @@
 package client.data;
 
+/**
+ * @author      LUDOVICO VENTURI (UniPi)
+ * @date        2021/01/14
+ * @versione    1.0
+ */
+
 import javafx.collections.ObservableList;
 import protocol.classes.ChatMsg;
 import utils.StringUtils;
@@ -8,9 +14,16 @@ import java.sql.*;
 import java.util.ArrayList;
 import java.util.List;
 
+/*
+    used: Apache DerbyDB
+
+    this class will create multiple connections for one user (more object with same username)
+    the two static variables will be shared
+ */
+
 public class DbHandler {
 
-    private String dbUrl = null;
+    private String dbUrl    = null;
     private Connection conn = null;
     private String username = null;
     // static variables => they need to be accessed in synchronized methods
@@ -27,7 +40,7 @@ public class DbHandler {
         conn = DriverManager.getConnection(dbUrl);
     }
 
-    public synchronized void setObservableChatList(ObservableList<ChatMsgObservable> list){
+    public synchronized void setObservableChatList(ObservableList<ChatMsgObservable> list) {
         if(this.currentChatMsgList == null)
             this.currentChatMsgList = list;
     }
@@ -37,7 +50,6 @@ public class DbHandler {
     }
 
     public void createDB() throws SQLException {
-        // create
         Statement stmt = conn.createStatement();
         stmt.executeUpdate(
                 "CREATE TABLE Chats (" +
@@ -49,6 +61,7 @@ public class DbHandler {
 
         System.out.println("[DB-HANDLER] tabella creata");
 
+        // create index for efficiency
         stmt.executeUpdate("CREATE INDEX projIndex ON Chats (Project)");
     }
 
@@ -66,15 +79,22 @@ public class DbHandler {
 
             pstmnt.executeUpdate();
 
+            /*
+            in order to update the chat as soon as a message arrives:
+                - check if currentChat (shown on client screen) is the same
+                    as received message's chat
+             */
             if(this.currentChat.equals(projectName)){
                 this.currentChatMsgList.add(new ChatMsgObservable(
                         username,
                         msg,
-                        StringUtils.getTimeFormatted(time)
+                        StringUtils.getTimeFormattedHHmm(time)
                 ));
             }
     }
 
+    // delete chat from DB when a project is closed in order to avoid problems with projects
+        // having same name
     public synchronized void deleteChat(String projectName) throws SQLException {
         PreparedStatement pstmnt = conn.prepareStatement(
                 "DELETE FROM Chats WHERE Project = ?");
@@ -112,6 +132,8 @@ public class DbHandler {
             messages.add(msg);
 
         }
+
+        // set current chat
         this.currentChat = projectName;
         this.currentChatMsgList.clear();
         addMsgToObservableList(messages);
@@ -119,6 +141,7 @@ public class DbHandler {
         return messages;
     }
 
+    // util
     private void addMsgToObservableList(List<ChatMsg> messages) {
         this.currentChatMsgList.clear();
 

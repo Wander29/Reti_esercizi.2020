@@ -6,50 +6,59 @@ import protocol.classes.Card;
 import server.data.ServerProject;
 import server.data.UserInfo;
 import server.data.WorthData;
+import utils.StringUtils;
 
 import java.io.*;
 import java.lang.reflect.Type;
 import java.nio.file.Files;
 import java.nio.file.Paths;
+import java.util.List;
 import java.util.Map;
 
 public abstract class SerializeHelper {
-    /*
-    1 dir per ogni progetto
-    1 file per ogni card
-        con dentro anche la lista movimenti
-     */
-
     private final static String MAIN_DIR = "./.dataBaseSurrogate/";
     private final static String PROJ_DIR = MAIN_DIR + "projects/";
     private final static String USER_DIR = MAIN_DIR + "users/";
     private final static String USER_DB = "users.json";
 
-    public static void saveData(WorthData data) throws IOException {
-
+    public static void saveData(WorthData data)
+    {
         Map<String, ServerProject> projectsMap = data.getProjects();
         Map<String, UserInfo> usersMap = data.getUsers();
+
         // create directory to act as database
         File dirMain = new File(MAIN_DIR);
-        dirMain.mkdir(); // returns true iff it creates the dir
+        dirMain.mkdir(); // returns true iff creates the dir
 
         /**
          * PROJECTS
          */
-        File dirProj = new File(PROJ_DIR);
-        dirProj.mkdir();
+        File dirProjects = new File(PROJ_DIR);
+        dirProjects.mkdir();
+            /*
+            - projects
+                - project1
+                    . card1
+                    . card2
+                    .
+                    . cardn
+                - project2
+                    . ...
+                - .....
+             */
+        File projectDir;
 
         for(Map.Entry<String, ServerProject> projectEntry: projectsMap.entrySet()) {
-
             ServerProject project = projectEntry.getValue();
 
-            // creo una directory
-            Map<String, Card> map = project.getToDoCards();
+            String projectDirName = PROJ_DIR + project.getProjectName();
+            projectDir = new File(projectDirName);
+            projectDir.mkdir();
 
-            for(Map.Entry<String, Card> entry : map.entrySet()) {
-                // serialize card
-                Card c = entry.getValue();
-            }
+            saveListCard(project.getToDoCards(), projectDirName);
+            saveListCard(project.getInProgressCards(), projectDirName);
+            saveListCard(project.getToBeRevisedCards(), projectDirName);
+            saveListCard(project.getDoneCards(), projectDirName);
         }
 
         /**
@@ -62,12 +71,31 @@ public abstract class SerializeHelper {
         Gson gson = new Gson();
         String json = gson.toJson(usersMap);
 
-        BufferedWriter writer = new BufferedWriter(new
-                FileWriter(USER_DIR + USER_DB));
+        try (BufferedWriter writer =
+                    new BufferedWriter(new FileWriter(USER_DIR + USER_DB))
+        ){
+            writer.write(json);
+            writer.flush();
+        }
+        catch (IOException e) { e.printStackTrace(); }
+    }
 
-        writer.write(json);
-        writer.flush();
+    private static void saveListCard(Map<String, Card> map, String projectDir) {
 
+        Gson gson = new Gson();
+        for(Map.Entry<String, Card> cardEntry : map.entrySet())
+        {
+            Card c = cardEntry.getValue();
+            String json = gson.toJson(c);
+
+            try (BufferedWriter writer = new BufferedWriter(
+                    new FileWriter(projectDir + c.getCardName() + ".json"))
+            ){
+                writer.write(json);
+                writer.flush();
+            }
+            catch (IOException e) { e.printStackTrace(); }
+        }
     }
 
     public static WorthData recoverData() throws IOException {
@@ -79,16 +107,12 @@ public abstract class SerializeHelper {
         }
 
         Gson gson = new Gson();
-        String json = readFileAsString(USER_DIR + USER_DB);
+        String json = StringUtils.readFileAsString(USER_DIR + USER_DB);
 
         WorthData data = new WorthData();
         Type usersMapType = new TypeToken<Map<String, UserInfo>>() {}.getType();
         data.setUsers(gson.fromJson(json, usersMapType));
 
         return data;
-    }
-
-    public static String readFileAsString(String file) throws IOException {
-        return new String(Files.readAllBytes(Paths.get(file)));
     }
 }

@@ -1,9 +1,18 @@
 package utils;
 
+/**
+ * @author      LUDOVICO VENTURI (UniPi)
+ * @date        2021/01/14
+ * @versione    1.0
+ */
+
 import protocol.CSProtocol;
 
+import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
+import java.nio.file.Paths;
 import java.sql.Time;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
@@ -26,27 +35,14 @@ public abstract class StringUtils {
         return s.getBytes(CSProtocol.CHARSET());
     }
 
-    /*
-    public static String byteToString(ByteBuffer buf) {
-        StringBuilder sbuilder = new StringBuilder();
-
-        while(buf.hasRemaining()) {
-            char charRead = (char) buf.get();
-            sbuilder.append(charRead);
-        }
-        return sbuilder.toString();
-    }
-     */
-
     public static List<String> tokenizeRequest(ByteBuffer buf) {
         String received = byteBufferToString(buf);
 
         ArrayList<String> tokens = new ArrayList<>();
         StringTokenizer tokenizer = new StringTokenizer(received, ";");
 
-        while(tokenizer.hasMoreTokens()) {
+        while(tokenizer.hasMoreTokens())
             tokens.add(tokenizer.nextToken());
-        }
 
         return tokens;
     }
@@ -72,8 +68,12 @@ public abstract class StringUtils {
     }
 
     private static final DateFormat df = new SimpleDateFormat("HH:mm");
-    public static String getTimeFormatted(Time time) {
+    public static String getTimeFormattedHHmm(Time time) {
 
         return df.format(time);
+    }
+
+    public static String readFileAsString(String file) throws IOException {
+        return new String(Files.readAllBytes(Paths.get(file)));
     }
 }

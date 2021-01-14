@@ -1,5 +1,11 @@
 package server.logic;
 
+/**
+ * @author      LUDOVICO VENTURI (UniPi)
+ * @date        2021/01/14
+ * @versione    1.0
+ */
+
 import server.logic.SerializeHelper;
 import server.logic.ServerManagerWT;
 
@@ -19,7 +25,9 @@ public class DaemonSaver extends Thread {
     public void run() {
         // every "updateInterval" milliseconds
         while(true) {
-            try { Thread.sleep(updateInterval); }
+            try {
+                Thread.sleep(updateInterval);
+            }
             catch (InterruptedException e) {
                 if(Thread.interrupted())
                     return;
@@ -28,9 +36,8 @@ public class DaemonSaver extends Thread {
             try {
                 System.out.println("[DAEMON] going to save");
                 SerializeHelper.saveData(manager.getWorthData());
-            } catch (IOException e) {
-                e.printStackTrace();
             }
+            catch (IOException e) { e.printStackTrace(); }
         }
     }
 }

@@ -16,7 +16,7 @@ import protocol.classes.Project;
 import protocol.exceptions.IllegalProtocolMessageException;
 import protocol.classes.ChatMsg;
 import protocol.classes.ListProjectEntry;
-import server.logic.rmi.ServerInterface;
+import server.logic.rmi.ServerInterfaceRmi;
 import protocol.exceptions.IllegalProjectException;
 import protocol.exceptions.IllegalUsernameException;
 import utils.StringUtils;
@@ -42,7 +42,7 @@ public class ClientWT {
     // RMI
     private static ClientNotify clientStub;
     private static Registry r = null;
-    private static ServerInterface serverStub = null;
+    private static ServerInterfaceRmi serverStub = null;
     private static String user;
     // TCP
     private static ConnectionThread connThread = new ConnectionThread();
@@ -93,7 +93,7 @@ RMI
  */
     private static void startRMI() throws RemoteException, NotBoundException {
         r = LocateRegistry.getRegistry(CSProtocol.RMI_SERVICE_PORT());
-        serverStub = (ServerInterface) r.lookup(CSProtocol.RMI_SERVICE_NAME());
+        serverStub = (ServerInterfaceRmi) r.lookup(CSProtocol.RMI_SERVICE_NAME());
     }
 
     public static CSReturnValues register(String username, String password)

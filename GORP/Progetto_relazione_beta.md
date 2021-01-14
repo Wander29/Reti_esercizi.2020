@@ -6,23 +6,6 @@ Indice
 
 # Struttura classi
 
-```mermaid
-classDiagram
-	class ServerWT{ }
-	
-	class MainServer{
-		<<WelcomingSocket>>
-	}
-	
-	ServerWT<--ServerManagerWT
-	ServerManagerWT<--ServerWorker
-	ServerManagerRMI<--MainServer
-	ServerManagerWT<..>ServerManagerRMI
-	MainServer-->ServerWorker
-	
-	
-```
-
 uso `ConcurrentHashMap` per le registrazioni in quanto tutte le operazioni sono garantite essere *thread-safe*. 
 Non vi sono sovrapposizioni fra inserimenti e rimozioni in quanto un utente non può registrarsi ed effettuare il login contemporaneamente, pertanto reputo tale scelta la più efficiente garantendo l'accesso concorrente alla struttura dati. 
 Di conseguenza non ho bisogno di gestire la concorrenza server-side riguardo l'RMI.
@@ -123,7 +106,7 @@ CONCORRENZA
 
 Server: utenti con concurrentHashMap e ordine delle operazioni, prima users poi usersOnline
 
-## Client Threads
+## Threads
 
 ```mermaid
 
@@ -150,4 +133,54 @@ classDiagram
 	LauncherThread-->ApplicationThread
 	ApplicationThread..>ChatManager
 	
+	class WorthServerMain{
+		<< Launcher >>
+		waitForExitString
+	}
+	
+	class WelcomingServer {
+		TCP welcome socket
+		RMI
+	}
+	
+	class DaemonSaver {
+		Serializzazione
+	}
+	
+	WorthServerMain-->WelcomingServer
+	WorthServerMain..>DaemonSaver
 ```
+
+## Oggetti Server
+
+```mermaid
+classDiagram
+	class ManagerWT { }
+	
+	class ManagerRMI {
+    	<<concorrenza>>
+    }
+	
+	class ServerWT { 
+		<<data>>
+	}
+	
+	WelcomingServer..|>ManagerWT
+	WelcomingServer..|>ManagerRMI
+	
+	
+	ManagerWT..|>ServerWT
+	ManagerWT<..>ManagerRMI
+```
+
+
+
+# Comandi
+
+- mvn -Pserver, aspettare che parta
+- mvn -Pclient
+
+settare JAVA_HOME e consiglio JAVA_TOOL_OPTIONS='file.encoding="UTF-8"'
+
+La guida ufficiale per scaricare ed installare Maven è disponibile [qui](https://maven.apache.org/install.html).
+

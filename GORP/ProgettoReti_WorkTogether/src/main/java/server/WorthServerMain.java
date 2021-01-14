@@ -44,12 +44,15 @@ public class WorthServerMain {
         try {
             while( !(lineRead = input.readLine()).equals(EXIT_STRING) ) { }
 
+            welcomeServer.interrupt();
             daemonSaver.interrupt();
-            SerializeHelper.saveData(server.getWorthData());
-        } catch (IOException e) { e.printStackTrace(); }
+
+            welcomeServer.join();
+        }
+        catch (IOException e)               { e.printStackTrace(); }
+        catch (InterruptedException e)      { e.printStackTrace(); }
 
         System.out.println("[MAIN SERVER] closing");
-        System.exit(0);
     }
 
 }

@@ -1,7 +1,7 @@
 package server.logic;
 
 import protocol.CSProtocol;
-import server.logic.rmi.ServerManagerRMI;
+import server.logic.rmi.ServerManagerRMIRmi;
 import protocol.classes.TCPBuffersNIO;
 
 import java.io.IOException;
@@ -21,24 +21,26 @@ import java.util.concurrent.TimeUnit;
 
 public class WelcomingServer implements Runnable {
 
-    private ServerManagerWT server = null;
-    private SerializeHelper saveHelp;
+    private static ServerManagerWT     managerWT   = null;
+    private static ServerManagerRMIRmi managerRMI  = null;
+    private static SerializeHelper     saveHelp;
 
-    private final static int MAX_CONNECTIONS_PER_THREAD = 4;
+    private final static int MAX_CONNECTIONS_PER_THREAD = 2;
 
     public WelcomingServer() {
-        this.server = ServerManagerWT.getInstance();
+        this.managerWT  = ServerManagerWT.getInstance();
+        try {
+            this.managerRMI = ServerManagerRMIRmi.getInstance();
+        } catch (RemoteException e)     { e.printStackTrace(); }
     }
 
     public void run() {
-        ServerManagerRMI serverRMI = null;
+        ServerManagerRMIRmi serverRMI = null;
         ThreadPoolExecutor tpe = null;
 
         // RMI
         try {
             // service start
-            serverRMI = new ServerManagerRMI(server); // è gia uno stub
-            server.setRMIManager(serverRMI);
 
             // RMI service publication
             LocateRegistry.createRegistry(CSProtocol.RMI_SERVICE_PORT());

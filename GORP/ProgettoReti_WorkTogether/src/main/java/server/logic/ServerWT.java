@@ -35,7 +35,7 @@ import java.util.concurrent.ConcurrentHashMap;
 
 // singleton, only one instance
 public class ServerWT {
-    private volatile static ServerWT instance;
+    private volatile static ServerWT instance = null;
 
     private static Map<String, Boolean> onlineStateUsers;      // users online state
                                                 // when you start server every user is offline
