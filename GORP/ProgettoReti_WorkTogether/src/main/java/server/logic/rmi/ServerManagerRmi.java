@@ -19,8 +19,7 @@ public class ServerManagerRmi {
 
     private static ServerInterfaceRmiImpl stub;
     private static ServerManagerWT server = null;
-        // concurrentHashMap to enhance (little) performance, since operations
-            // are simple
+        // concurrentHashMap to enhance (a little) performance, since operations are simple
     private static ConcurrentMap<NotifyInterface, Boolean> clients;
 
     private ServerManagerRmi() throws RemoteException {

@@ -76,7 +76,7 @@ Se il client aveva effettuato l'accesso in aggiunta viene inviato una richiesta 
 
 Comunicazione TCP stateful, lo stato di utente loggato è registrato durante la comunicazione, infatti non si ha bisogno di passare nuovamente il proprio username.
 
-``
+serializzo anche i campi statici del progetto, altrimenti perderei informazioni importanti quali la lista degli `ipFree`.
 
 ? é importante che threadChatManager e ClientWT usino dbHandler che non è sincronizzato
 
@@ -147,6 +147,10 @@ classDiagram
 		Serializzazione
 	}
 	
+	WelcomingServer..>ServerWorker1
+	WelcomingServer..>ServerWorker2
+	WelcomingServer..>ServerWorkerN
+	
 	WorthServerMain-->WelcomingServer
 	WorthServerMain..>DaemonSaver
 ```
@@ -171,6 +175,7 @@ classDiagram
 	
 	ManagerWT..|>ServerWT
 	ManagerWT<..>ManagerRMI
+	ManagerRMI..|>ServerInterface
 ```
 
 
@@ -184,3 +189,4 @@ settare JAVA_HOME e consiglio JAVA_TOOL_OPTIONS='file.encoding="UTF-8"'
 
 La guida ufficiale per scaricare ed installare Maven è disponibile [qui](https://maven.apache.org/install.html).
 
+es: mvn -Pserver -e per lo stacktrace delle eccezioni

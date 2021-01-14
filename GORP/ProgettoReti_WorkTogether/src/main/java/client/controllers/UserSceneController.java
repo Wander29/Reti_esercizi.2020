@@ -507,6 +507,8 @@ public class UserSceneController extends ClientController {
     }
 
     private void replaceCardList(Map<String, Card> map, ObservableList<String> list) {
+        if(map == null)
+            return;
 
         List<String> tmp = new ArrayList<>();
         list.clear();

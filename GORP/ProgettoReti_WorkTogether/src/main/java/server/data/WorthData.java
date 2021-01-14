@@ -12,8 +12,8 @@ import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
 public class WorthData {
-    private Map<String, UserInfo> users;    // users login info
-    private Map<String, ServerProject> projects;  // project data
+    private Map<String, UserInfo> users;            // users login info
+    private Map<String, ServerProject> projects;    // project data
 
     public WorthData() {
         this.users      = new HashMap<>();

@@ -6,6 +6,7 @@ server/logic/ServerWorker$1.class
 client/data/DbHandler.class
 server/logic/rmi/ServerManagerRmi.class
 client/model/ClientWT$2.class
+server/logic/SerializeHelper$4.class
 server/data/ServerProject$1.class
 server/data/UserInfo.class
 server/logic/WelcomingServer.class
@@ -26,6 +27,7 @@ protocol/ChatUtils.class
 client/controllers/UserSceneController.class
 client/controllers/LoginController.class
 utils/StringUtils.class
+server/logic/SerializeHelper$3.class
 protocol/classes/CardStatus.class
 client/model/ClientWT.class
 server/logic/ServerWorker.class

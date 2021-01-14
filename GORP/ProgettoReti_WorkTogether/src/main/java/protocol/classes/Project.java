@@ -29,11 +29,11 @@ public class Project implements Serializable {
         return doneCards;
     }
 
-    protected String projectName;
-    protected Map<String,Card> toDoCards;
-    protected Map<String,Card> inProgressCards;
-    protected Map<String,Card> toBeRevisedCards;
-    protected Map<String,Card> doneCards;
+    private String projectName;
+    private Map<String,Card> toDoCards;
+    private Map<String,Card> inProgressCards;
+    private Map<String,Card> toBeRevisedCards;
+    private Map<String,Card> doneCards;
 
     public Project(
             String name,

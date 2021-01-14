@@ -1,5 +1,11 @@
 package server.data;
 
+/**
+ * @author      LUDOVICO VENTURI (UniPi)
+ * @date        2021/01/14
+ * @versione    1.0
+ */
+
 import protocol.CSProtocol;
 import protocol.classes.Card;
 import protocol.classes.CardStatus;
@@ -13,18 +19,26 @@ import java.net.Socket;
 import java.net.UnknownHostException;
 import java.util.*;
 
-public class ServerProject extends Project implements Serializable {
+public class ServerProject implements Serializable {
 
-    private final static int FIRST_FREE_PORT = 1024;
-    private final static int MAX_PORT_NUM = 65535;
-    private final static int START_MULTICAST_FIRST_OCTET = 239;
-    private final static int END_MULTICAST_FIRST_OCTET = 239;
+    private final transient int FIRST_FREE_PORT = 1024;
+    // also transient because i serialize static fields for ServerProject
+    private final transient static int MAX_PORT_NUM = 65535;
+    private final transient static int START_MULTICAST_FIRST_OCTET = 239;
+    private final transient static int END_MULTICAST_FIRST_OCTET = 239;
+
+    private String projectName;
+        // they are transient because of project specifics
+    private transient Map<String,Card> toDoCards;
+    private transient Map<String,Card> inProgressCards;
+    private transient Map<String,Card> toBeRevisedCards;
+    private transient Map<String,Card> doneCards;
 
     private List<String> members;
 
     private InetAddress chatMulticastIP;
     private int chatMulticastPort;
-    private static List<InetAddress> ipFree = new ArrayList<>();
+    private static List<InetAddress> ipFree = new ArrayList<>(); // it will be serialized too
 
     public ServerProject(String s, String creator) throws UnknownHostException, NoSuchElementException {
         this.projectName = s;
@@ -52,6 +66,12 @@ public class ServerProject extends Project implements Serializable {
         this.toDoCards.put(cardName, new Card(cardName, descr, username));
     }
 
+    /**
+     * checks if the status passed as argument is the same as the card one
+     * @param cardName
+     * @param fromStatus
+     * @return
+     */
     public boolean isCardInFromStatus(String cardName, CardStatus fromStatus) {
 
         switch(fromStatus) {
@@ -76,6 +96,17 @@ public class ServerProject extends Project implements Serializable {
         return false;
     }
 
+    /**
+     * allows moving card
+     *
+     * @REQUIRES    from status of request and from status of card are the same status
+     *
+     * @param name  cardName
+     * @param from  from status of card
+     * @param to    to status, where user wants to move card
+     * @param username  username who asked operation
+     * @throws IllegalOperation if status
+     */
     public void moveCard(String name, CardStatus from, CardStatus to, String username)
             throws IllegalOperation
     {
@@ -149,7 +180,7 @@ public class ServerProject extends Project implements Serializable {
 
                 break;
 
-            // if is from: done -> illegal operation
+            // if it's from: done -> illegal operation
             default:
                 throw new IllegalOperation();
         }
@@ -213,6 +244,7 @@ public class ServerProject extends Project implements Serializable {
 
     private int portScannerFindFreePort(InetAddress ip) {
         Socket s;
+        // try first default port
         try {
             s = new Socket(ip, CSProtocol.WORTH_DEFAULT_CHAT_SERVICE_PORT());
         } catch (IOException e) {
@@ -243,6 +275,23 @@ public class ServerProject extends Project implements Serializable {
         return members;
     }
 
+    public Card getCardFromAnyList(String name) {
+        if(this.toDoCards.containsKey(name)) {
+            return this.toDoCards.get(name);
+        }
+        else if(this.inProgressCards.containsKey(name)) {
+            return this.inProgressCards.get(name);
+        }
+        else if(this.toBeRevisedCards.containsKey(name)) {
+            return this.toBeRevisedCards.get(name);
+        }
+        else if(this.doneCards.containsKey(name)) {
+            return this.doneCards.get(name);
+        }
+
+        return null;
+    }
+
 
     public Map<String, Card> getToDoCards() {
         return toDoCards;
@@ -266,5 +315,24 @@ public class ServerProject extends Project implements Serializable {
 
     public int getChatMulticastPort() {
         return chatMulticastPort;
+    }
+
+/*
+    SETTERs
+ */
+    public void setToDoCards(Map<String, Card> toDoCards) {
+        this.toDoCards = toDoCards;
+    }
+
+    public void setInProgressCards(Map<String, Card> inProgressCards) {
+        this.inProgressCards = inProgressCards;
+    }
+
+    public void setToBeRevisedCards(Map<String, Card> toBeRevisedCards) {
+        this.toBeRevisedCards = toBeRevisedCards;
+    }
+
+    public void setDoneCards(Map<String, Card> doneCards) {
+        this.doneCards = doneCards;
     }
 }
