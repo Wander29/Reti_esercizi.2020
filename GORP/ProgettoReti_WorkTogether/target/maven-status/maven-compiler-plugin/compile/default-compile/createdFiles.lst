@@ -15,7 +15,6 @@ client/controllers/UserSceneController$2.class
 client/WorthClientMain.class
 client/controllers/ClientController.class
 protocol/exceptions/IllegalOperation.class
-server/DaemonSaver.class
 client/controllers/UserSceneController$5.class
 server/logic/rmi/ServerInterface.class
 server/data/ServerProject.class
@@ -54,5 +53,6 @@ client/model/ClientWT$1.class
 protocol/CSOperations.class
 protocol/exceptions/TerminationException.class
 protocol/classes/CardMovement.class
+server/logic/DaemonSaver.class
 server/logic/rmi/ServerManagerRMI.class
 client/controllers/UserSceneController$3.class

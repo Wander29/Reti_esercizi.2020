@@ -55,8 +55,23 @@ public class ChatManager extends Thread {
 
         try {
             while(true) {
-                if(this.selector.select() == 0)
-                    continue;
+                this.selector.select();
+
+                // termination control
+                if(Thread.interrupted()) {
+                    try {
+                        for(SelectionKey key : this.selector.keys()) {
+                            Channel ch = (Channel) key.channel();
+                            ch.close();
+                        }
+                        dbHandler.closeConnection();
+
+                        System.out.println("[CHAT_MANAGER] in chiusura");
+                        return;
+                    }
+                    catch (SQLException t) { t.printStackTrace(); }
+
+                }
 
                 Set<SelectionKey> selectedKeys = this.selector.selectedKeys();
                 Iterator<SelectionKey> it = selectedKeys.iterator();
@@ -92,16 +107,15 @@ public class ChatManager extends Thread {
                     }
                 }
             }
-        } catch (IOException e) {
-            e.printStackTrace();
         }
+        catch (IOException e)               { e.printStackTrace(); }
     }
 
     /*
     read from messages of this form:
         IP;port, for example 239.21.21.21:9999
 
-    then calls function to register as new Multicas connection
+    then calls function to register as new Multicast connection
      */
     private void readFromPipeNewMulticast(SelectionKey key) throws IOException {
         Pipe.SourceChannel pipeReadEnd = (Pipe.SourceChannel) key.channel();
@@ -116,7 +130,7 @@ public class ChatManager extends Thread {
         }
         String ret = builder.toString();
 
-        // if ClientWT wrote more than one connection
+        // if ClientWT wrote more than one new connection
         StringTokenizer tokenizerMultipleRequests = new StringTokenizer(ret, ",");
         while(tokenizerMultipleRequests.hasMoreTokens()) {
 

@@ -126,16 +126,17 @@ RMI
 /*
 UDP
  */
-    private Pipe pipe;
-    private Pipe.SinkChannel pipe_writeChannel;
-    private DbHandler dbHandler;
+    private static Pipe pipe;
+    private static Pipe.SinkChannel pipe_writeChannel;
+    private static DbHandler   dbHandler   = null;
+    private static ChatManager chatManager = null;
 
-    private ObservableList<ChatMsgObservable> chatCurrentMsgs = FXCollections.observableArrayList();
-    public  ObservableList<ChatMsgObservable> getChatCurrentMsgs() {
-        return this.chatCurrentMsgs;
+    private static ObservableList<ChatMsgObservable> chatCurrentMsgs = FXCollections.observableArrayList();
+    public static ObservableList<ChatMsgObservable> getChatCurrentMsgs() {
+        return chatCurrentMsgs;
     }
 
-    public void startChatManager() throws IOException, SQLException {
+    public static void startChatManager() throws IOException, SQLException {
 
         // opens an unnamed pipe
         pipe = Pipe.open();
@@ -143,19 +144,18 @@ UDP
         pipe_writeChannel.configureBlocking(false);
 
         // link to dbHandler
-        dbHandler = new DbHandler(this.user);
-        dbHandler.setObservableChatList(this.chatCurrentMsgs);
+        dbHandler = new DbHandler(user);
+        dbHandler.setObservableChatList(chatCurrentMsgs);
         dbHandler.createDB();
 
         // starts a daemon thread: chatManager
-        ChatManager chatManager = new ChatManager(pipe, this.user);
+        chatManager = new ChatManager(pipe, user);
         chatManager.setDaemon(true);
         chatManager.start();
     }
 
     // used to send chat messages, it has to know ip and port
-    Map<String, ListProjectEntry> projectsInfo = new HashMap<>();
-
+    private static Map<String, ListProjectEntry> projectsInfo = new HashMap<>();
     private ByteBuffer bbPipe = ByteBuffer.allocate(CSProtocol.BUF_SIZE_CLIENT());
     public void startChatConnection(ListProjectEntry project) throws IOException {
 
@@ -174,7 +174,7 @@ UDP
         this.projectsInfo.put(project.project, project);
     }
 
-    public List<ChatMsg> readChat(String projectName) throws SQLException {
+    public static List<ChatMsg> readChat(String projectName) throws SQLException {
         return dbHandler.readChat(projectName);
     }
 
@@ -185,15 +185,15 @@ UDP
                 (timeSent : LONG as String)
                 (msg : max 2048 chars)
      */
-    public void sendChatMsg(String projectName, String text) throws IOException {
-        ListProjectEntry project = this.projectsInfo.get(projectName);
+    public static void sendChatMsg(String projectName, String text) throws IOException {
+        ListProjectEntry project = projectsInfo.get(projectName);
         InetAddress multicastAddress = InetAddress.getByName(project.ip);
 
         ChatUtils.sendChatMsg(user, projectName, text, multicastAddress, project.port);
     }
 
-    public void removeProject(String projectName) {
-        this.projectsInfo.remove(projectName);
+    public static void removeProject(String projectName) {
+        projectsInfo.remove(projectName);
     }
 /*
 TCP
@@ -478,6 +478,24 @@ TCP
         return CSProtocol.WORTH_TCP_PORT();
     }
 
+    public static void closeLogic() throws IOException, SQLException, InterruptedException {
+        // tcp close
+        if(connThread != null) {
+            connThread.socket.close();
+            connThread.interrupt();
+            connThread.join();
+        }
+
+        // udp chat close
+        if(dbHandler != null)
+            dbHandler.closeConnection();
+
+        if(chatManager != null){
+            chatManager.interrupt();
+            chatManager.join();
+        }
+    }
+
     public static void startConnection() throws IOException {
         connThread.start();
     }
@@ -518,9 +536,11 @@ TCP
                     this.wait();
                 }
             }
-            catch(UnknownHostException ue) { ue.printStackTrace(); }
-            catch(IOException e) { e.printStackTrace(); }
-            catch(InterruptedException e) { e.printStackTrace(); }
+            catch(UnknownHostException ue)  { ue.printStackTrace(); }
+            catch(IOException e)            { e.printStackTrace(); }
+            catch(InterruptedException e) {
+                return;
+            }
         }
     }
 }

@@ -349,8 +349,13 @@ public class ServerWorker implements Runnable {
             return;
 
         // write into project chat: CHAT_STOP
-        if(chatIp != null && chatPort != -1)
+        if(chatIp != null && chatPort != -1) {
+            CSProtocol.printResponse(CSOperations.CHAT_STOP.toString() + " (* 3)");
+            // 3 times in order to reach as many hosts as possible, since it's UDP
             ChatUtils.sendChatStop("SERVER", projectName, chatIp, chatPort);
+            ChatUtils.sendChatStop("SERVER", projectName, chatIp, chatPort);
+            ChatUtils.sendChatStop("SERVER", projectName, chatIp, chatPort);
+        }
 
     }
 

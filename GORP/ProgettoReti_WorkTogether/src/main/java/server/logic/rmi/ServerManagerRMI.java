@@ -12,16 +12,18 @@ import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ConcurrentMap;
 
 public class ServerManagerRMI extends UnicastRemoteObject implements ServerInterface {
 
-    private List<NotifyInterface> clients;
+    private ConcurrentMap<NotifyInterface, Boolean> clients;
     private ServerManagerWT server;
 
     public ServerManagerRMI(ServerManagerWT serverManager) throws RemoteException {
         super();
         this.server = serverManager;
-        this.clients = new ArrayList<>();
+        this.clients = new ConcurrentHashMap<>();
     }
 
     @Override
@@ -34,49 +36,42 @@ public class ServerManagerRMI extends UnicastRemoteObject implements ServerInter
 
     @Override
     public Map<String, Boolean> registerForCallback(NotifyInterface cli) throws RemoteException {
-        if(!this.clients.contains(cli)) {
-            this.clients.add(cli);
+        this.clients.putIfAbsent(cli, Boolean.TRUE);
 
-            return this.server.getStateUsers();
-        }
-
-        return null;
+        return this.server.getStateUsers();
     }
 
     @Override
-    public int unregisterForCallback(NotifyInterface cli) throws RemoteException {
-        if(!this.clients.contains(cli)) {
-            return -1;
-        }
-
+    public void unregisterForCallback(NotifyInterface cli) throws RemoteException {
+        // Removes the key (and its corresponding value) from this map.
+        // This method does nothing if the key is not in the map.
         this.clients.remove(cli);
-        return 0;
     }
 
-    public void userIsOfflineCallbacks(String username) throws RemoteException {
-        Iterator i = clients.iterator();
-
-        while(i.hasNext()) {
-            NotifyInterface cli = (NotifyInterface) i.next();
-            cli.userIsOffline(username);
-        }
+    public void userIsOfflineCallbacks(String username) {
+        this.clients.forEach( (notifyInterface, aBoolean) -> {
+                try {
+                    notifyInterface.userIsOffline(username);
+                }
+                catch (RemoteException e) { e.printStackTrace(); }
+            });
     }
 
-    public void userIsOnlineCallbacks(String username) throws RemoteException {
-        Iterator i = clients.iterator();
-
-        while(i.hasNext()) {
-            NotifyInterface cli = (NotifyInterface) i.next();
-            cli.userIsOnline(username);
-        }
+    public void userIsOnlineCallbacks(String username) {
+        this.clients.forEach( (notifyInterface, aBoolean) -> {
+            try {
+                notifyInterface.userIsOnline(username);
+            }
+            catch (RemoteException e) { e.printStackTrace(); }
+        });
     }
 
-    public void newUserCallbacks(String username) throws RemoteException {
-        Iterator i = clients.iterator();
-
-        while(i.hasNext()) {
-            NotifyInterface cli = (NotifyInterface) i.next();
-            cli.newUser(username);
-        }
+    public void newUserCallbacks(String username) {
+        this.clients.forEach( (notifyInterface, aBoolean) -> {
+            try {
+                notifyInterface.newUser(username);
+            }
+            catch (RemoteException e) { e.printStackTrace(); }
+        });
     }
 }

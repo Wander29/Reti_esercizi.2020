@@ -42,10 +42,11 @@ RMI
     public String register(String username, String psw)
             throws RemoteException, InvalidKeySpecException, NoSuchAlgorithmException
     {
-        String ret = this.server.register(username, psw).toString();
-        this.manager.newUserCallbacks(username);
+        CSReturnValues ret = this.server.register(username, psw);
+        if(CSReturnValues.REGISTRATION_OK == ret)
+            this.manager.newUserCallbacks(username);
 
-        return ret;
+        return ret.toString();
     }
 
     public Map<String, Boolean> getStateUsers() {
@@ -55,9 +56,11 @@ RMI
 TCP
  */
     public String login(String username, String psw) throws RemoteException, InvalidKeySpecException, NoSuchAlgorithmException {
-        String ret = this.server.login(username, psw).toString();
-        this.manager.userIsOnlineCallbacks(username);
-        return ret;
+        CSReturnValues ret = this.server.login(username, psw);
+        if(CSReturnValues.LOGIN_OK == ret)
+            this.manager.userIsOnlineCallbacks(username);
+
+        return ret.toString();
     }
 
     public synchronized String createProject(String username, String projectName) {
@@ -111,9 +114,11 @@ TCP
  ******************************************** EXIT OPERATIONS
  */
     public String logout(String username) throws RemoteException {
-        String ret = this.server.logout(username).toString();
-        this.manager.userIsOfflineCallbacks(username);
-        return ret;
+        CSReturnValues ret = this.server.logout(username);
+        if(CSReturnValues.LOGOUT_OK == ret)
+            this.manager.userIsOfflineCallbacks(username);
+
+        return ret.toString();
     }
 
     public String getProjectMulticasIp(String projectName) {

@@ -34,7 +34,11 @@ public abstract class ClientController {
         username = null;
 
         clientLogic.exit();
-        clientLogic.closeConnection();
+        try {
+            clientLogic.closeLogic();
+        }
+        catch (SQLException t)          { t.printStackTrace(); }
+        catch (InterruptedException e)  { e.printStackTrace(); }
     }
 
     public ClientController() {
@@ -96,8 +100,8 @@ public abstract class ClientController {
 
     protected void showDialogProjectNotPresent() {
         Alert info = new Alert(Alert.AlertType.INFORMATION);
-        info.setHeaderText("Progetto NON presente, un membro del gruppo potrebbe averlo cancellato da poco");
-        info.setContentText("L'operazione richiesta non è stata completata");
+        info.setContentText("Progetto NON presente, un membro del gruppo potrebbe averlo cancellato da poco");
+        info.setHeaderText(null);
         info.showAndWait();
     }
 

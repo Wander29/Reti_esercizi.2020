@@ -1,4 +1,4 @@
-package server;
+package server.logic;
 
 import server.logic.SerializeHelper;
 import server.logic.ServerManagerWT;

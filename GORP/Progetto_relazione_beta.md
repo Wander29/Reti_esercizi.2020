@@ -116,3 +116,38 @@ different Connections»
 Per l'aggiornamento automatico della Chat:
 
 - nel `ClientLogic`, al momento dell'istanziamento di un'istanza di `DbHandler`, setto  la variabile statica `currentChatMsgList` passando una  `ObservableList <ChatMsgObservable>` .
+
+
+
+CONCORRENZA
+
+Server: utenti con concurrentHashMap e ordine delle operazioni, prima users poi usersOnline
+
+## Client Threads
+
+```mermaid
+
+classDiagram
+	class LauncherThread{ 
+	<< main >> }
+	
+	class ApplicationThread {
+    	- Logincontroller
+    	- UserSceneController
+    	- CardShowController
+    	
+    	- dbHandler
+    	
+    	<< GUI >>
+    }
+    
+    class ChatManager {
+    	- dbHandler	
+    }
+		
+	
+	
+	LauncherThread-->ApplicationThread
+	ApplicationThread..>ChatManager
+	
+```

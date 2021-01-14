@@ -166,6 +166,7 @@ public class UserSceneController extends ClientController {
             super.handleCloseRequest();
         } catch (IOException e) {
             e.printStackTrace();
+            System.exit(1);
         }
     }
 

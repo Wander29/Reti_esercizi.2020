@@ -13,6 +13,6 @@ public interface ServerInterface extends Remote {
 
     public Map<String, Boolean> registerForCallback(NotifyInterface cli)     throws RemoteException;
 
-    public int unregisterForCallback(NotifyInterface cli)   throws RemoteException;
+    public void unregisterForCallback(NotifyInterface cli)   throws RemoteException;
 
 }
