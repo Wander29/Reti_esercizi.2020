@@ -12,7 +12,7 @@ import protocol.classes.ListProjectEntry;
 import protocol.classes.Project;
 import protocol.exceptions.IllegalOperation;
 import server.data.WorthData;
-import server.logic.rmi.ServerManagerRMIRmi;
+import server.logic.rmi.ServerManagerRmi;
 import protocol.exceptions.IllegalProjectException;
 import protocol.exceptions.IllegalUsernameException;
 
@@ -33,12 +33,12 @@ public class ServerManagerWT {
     private static volatile ServerManagerWT instance = null;
 
     private static ServerWT server              = null;
-    private static ServerManagerRMIRmi managerRMI  = null;
+    private static ServerManagerRmi managerRMI  = null;
 
     private ServerManagerWT( ) {
         server      = ServerWT.getInstance();
         try {
-            managerRMI  = ServerManagerRMIRmi.getInstance();
+            managerRMI  = ServerManagerRmi.getInstance();
         }
         catch (RemoteException e)   { e.printStackTrace(); }
     }

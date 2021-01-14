@@ -1,5 +1,12 @@
 package server.logic;
 
+/**
+ * @author      LUDOVICO VENTURI (UniPi)
+ * @date        2021/01/14
+ * @versione    1.0
+ */
+
+
 import com.google.gson.Gson;
 import com.google.gson.reflect.TypeToken;
 import protocol.classes.Card;
@@ -12,13 +19,14 @@ import java.io.*;
 import java.lang.reflect.Type;
 import java.nio.file.Files;
 import java.nio.file.Paths;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
 public abstract class SerializeHelper {
-    private final static String MAIN_DIR = "./.dataBaseSurrogate/";
-    private final static String PROJ_DIR = MAIN_DIR + "projects/";
-    private final static String USER_DIR = MAIN_DIR + "users/";
+    private final static String MAIN_DIR = ".dataBaseSurrogate" + File.separator;
+    private final static String PROJ_DIR = MAIN_DIR + "projects" + File.separator;
+    private final static String USER_DIR = MAIN_DIR + "users" + File.separator;
     private final static String USER_DB = "users.json";
 
     public static void saveData(WorthData data)
@@ -106,13 +114,96 @@ public abstract class SerializeHelper {
             return null;
         }
 
-        Gson gson = new Gson();
+        // get users
         String json = StringUtils.readFileAsString(USER_DIR + USER_DB);
-
         WorthData data = new WorthData();
+
+        Gson gson = new Gson();
         Type usersMapType = new TypeToken<Map<String, UserInfo>>() {}.getType();
         data.setUsers(gson.fromJson(json, usersMapType));
 
+        // get projects
+        File dirProjects = new File(PROJ_DIR);
+        if(!dirProjects.exists())
+            return data;
+
+         /*
+            - [projects] here
+                - project1
+                    . card1
+                    . card2
+                    .
+                    . cardn
+                - project2
+                    . ...
+                - .....
+             */
+
+        String[] projectDirs = dirProjects.list();
+        if(projectDirs == null)
+            return data;
+
+        for(String s : projectDirs) // iterate into projects
+        {
+            if (s.compareTo(".") == 0 || s.compareTo("..") == 0)
+                continue;
+
+            String projectDirName = PROJ_DIR + s;
+            File projectDir = new File(projectDirName);
+            if(!projectDir.isDirectory())
+                continue;
+
+             /*
+            - projects
+                - [project1]  here
+                    . card1
+                    . card2
+                    .
+                    . cardn
+                - [project2] here
+                    . ...
+                - .....
+             */
+
+            String[] cards = projectDir.list();
+            if(cards == null) {
+                continue;
+            }
+
+            for(String cardFileName : cards) // iterate into cards for one project
+            {
+                if (s.compareTo(".") == 0 || s.compareTo("..") == 0)
+                    continue;
+
+                String relativePathCardName = (projectDirName.endsWith(File.separator)) ?
+                        projectDirName + cardFileName + ".json"
+                        : projectDirName + File.separator + cardFileName + ".json";
+
+                File cardFile = new File(relativePathCardName);
+                if(!projectDir.isFile())
+                    continue;
+
+                 /*
+                 - projects
+                    - project1
+                        . [card1] here
+                        . [card2] here
+                        .
+                        . [cardn] here
+                    - project2
+                        . ...
+                    - .....
+                 */
+                json = StringUtils.readFileAsString(relativePathCardName);
+                Type cardType = new TypeToken<Card>() {}.getType();
+                Card card = gson.fromJson(json, cardType);
+
+                System.out.println(json);
+            }
+        }
+
+        //gson.fromJson(json, usersMapType);
+        //data.setProjects();
         return data;
     }
 }

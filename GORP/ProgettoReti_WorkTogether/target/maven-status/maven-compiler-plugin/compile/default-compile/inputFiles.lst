@@ -6,7 +6,7 @@
 /home/ludo/UNIVERSITY/UNI_current/___UNI_WORKSPACE/RETI/GORP/ProgettoReti_WorkTogether/src/main/java/utils/psw/PswData.java
 /home/ludo/UNIVERSITY/UNI_current/___UNI_WORKSPACE/RETI/GORP/ProgettoReti_WorkTogether/src/main/java/server/data/WorthData.java
 /home/ludo/UNIVERSITY/UNI_current/___UNI_WORKSPACE/RETI/GORP/ProgettoReti_WorkTogether/src/main/java/client/controllers/ClientController.java
-/home/ludo/UNIVERSITY/UNI_current/___UNI_WORKSPACE/RETI/GORP/ProgettoReti_WorkTogether/src/main/java/server/logic/rmi/ServerInterface.java
+/home/ludo/UNIVERSITY/UNI_current/___UNI_WORKSPACE/RETI/GORP/ProgettoReti_WorkTogether/src/main/java/server/logic/rmi/ServerManagerRmi.java
 /home/ludo/UNIVERSITY/UNI_current/___UNI_WORKSPACE/RETI/GORP/ProgettoReti_WorkTogether/src/main/java/protocol/classes/TCPBuffersNIO.java
 /home/ludo/UNIVERSITY/UNI_current/___UNI_WORKSPACE/RETI/GORP/ProgettoReti_WorkTogether/src/main/java/client/controllers/LoginController.java
 /home/ludo/UNIVERSITY/UNI_current/___UNI_WORKSPACE/RETI/GORP/ProgettoReti_WorkTogether/src/main/java/server/logic/DaemonSaver.java
@@ -22,13 +22,14 @@
 /home/ludo/UNIVERSITY/UNI_current/___UNI_WORKSPACE/RETI/GORP/ProgettoReti_WorkTogether/src/main/java/protocol/classes/Project.java
 /home/ludo/UNIVERSITY/UNI_current/___UNI_WORKSPACE/RETI/GORP/ProgettoReti_WorkTogether/src/main/java/client/data/UserObservable.java
 /home/ludo/UNIVERSITY/UNI_current/___UNI_WORKSPACE/RETI/GORP/ProgettoReti_WorkTogether/src/main/java/server/data/UserInfo.java
+/home/ludo/UNIVERSITY/UNI_current/___UNI_WORKSPACE/RETI/GORP/ProgettoReti_WorkTogether/src/main/java/server/logic/rmi/ServerInterfaceRmi.java
+/home/ludo/UNIVERSITY/UNI_current/___UNI_WORKSPACE/RETI/GORP/ProgettoReti_WorkTogether/src/main/java/server/logic/rmi/ServerInterfaceRmiImpl.java
 /home/ludo/UNIVERSITY/UNI_current/___UNI_WORKSPACE/RETI/GORP/ProgettoReti_WorkTogether/src/main/java/client/controllers/CardShowController.java
 /home/ludo/UNIVERSITY/UNI_current/___UNI_WORKSPACE/RETI/GORP/ProgettoReti_WorkTogether/src/main/java/server/logic/ServerWorker.java
 /home/ludo/UNIVERSITY/UNI_current/___UNI_WORKSPACE/RETI/GORP/ProgettoReti_WorkTogether/src/main/java/protocol/ChatUtils.java
 /home/ludo/UNIVERSITY/UNI_current/___UNI_WORKSPACE/RETI/GORP/ProgettoReti_WorkTogether/src/main/java/client/controllers/UserSceneController.java
 /home/ludo/UNIVERSITY/UNI_current/___UNI_WORKSPACE/RETI/GORP/ProgettoReti_WorkTogether/src/main/java/client/model/rmi/NotifyInterface.java
 /home/ludo/UNIVERSITY/UNI_current/___UNI_WORKSPACE/RETI/GORP/ProgettoReti_WorkTogether/src/main/java/client/model/ClientWT.java
-/home/ludo/UNIVERSITY/UNI_current/___UNI_WORKSPACE/RETI/GORP/ProgettoReti_WorkTogether/src/main/java/server/logic/rmi/ServerManagerRMI.java
 /home/ludo/UNIVERSITY/UNI_current/___UNI_WORKSPACE/RETI/GORP/ProgettoReti_WorkTogether/src/main/java/protocol/exceptions/IllegalUsernameException.java
 /home/ludo/UNIVERSITY/UNI_current/___UNI_WORKSPACE/RETI/GORP/ProgettoReti_WorkTogether/src/main/java/protocol/classes/ChatMsg.java
 /home/ludo/UNIVERSITY/UNI_current/___UNI_WORKSPACE/RETI/GORP/ProgettoReti_WorkTogether/src/main/java/protocol/CSReturnValues.java

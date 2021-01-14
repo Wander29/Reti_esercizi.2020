@@ -33,11 +33,8 @@ public class DaemonSaver extends Thread {
                     return;
             }
 
-            try {
-                System.out.println("[DAEMON] going to save");
-                SerializeHelper.saveData(manager.getWorthData());
-            }
-            catch (IOException e) { e.printStackTrace(); }
+            System.out.println("[DAEMON] going to save");
+            SerializeHelper.saveData(manager.getWorthData());
         }
     }
 }

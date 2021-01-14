@@ -14,11 +14,13 @@ import protocol.exceptions.TerminationException;
 import java.io.IOException;
 import java.net.InetAddress;
 import java.nio.ByteBuffer;
+import java.nio.channels.Channel;
 import java.nio.channels.SelectionKey;
 import java.nio.channels.Selector;
 import java.nio.channels.SocketChannel;
 import java.security.NoSuchAlgorithmException;
 import java.security.spec.InvalidKeySpecException;
+import java.sql.SQLException;
 import java.util.*;
 
 public class ServerWorker implements Runnable {
@@ -26,9 +28,9 @@ public class ServerWorker implements Runnable {
     private Selector selector;
     private ServerManagerWT server;
 
-    public ServerWorker(Selector sel, ServerManagerWT server) {
+    public ServerWorker(Selector sel) {
         this.selector = sel;
-        this.server = server;
+        this.server = ServerManagerWT.getInstance();
     }
 
     private void readMsgAndComputeRequest(SelectionKey key)
@@ -117,9 +119,19 @@ public class ServerWorker implements Runnable {
         //while(!this.selector.keys().isEmpty()) {
          while(true) {
             try {
-                // @todo change timeuout to constant
-                if(this.selector.select(5000) == 0)
-                    continue;
+                this.selector.select();
+
+                // termination control
+                if(Thread.interrupted())
+                {
+                    for(SelectionKey key : this.selector.keys())
+                    {
+                        Channel ch = (Channel) key.channel();
+                        ch.close();
+                    }
+                    System.out.println("[SERVER-WORKER] chiusura");
+                    return;
+                }
 
                 // check selected keys
                 Set<SelectionKey> selectedSet = this.selector.selectedKeys();

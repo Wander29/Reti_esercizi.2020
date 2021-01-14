@@ -7,20 +7,15 @@ package server.logic.rmi;
  */
 
 import client.model.rmi.NotifyInterface;
-import protocol.CSReturnValues;
 import server.logic.ServerManagerWT;
 
 import java.rmi.RemoteException;
-import java.rmi.server.UnicastRemoteObject;
-import java.security.NoSuchAlgorithmException;
-import java.security.spec.InvalidKeySpecException;
-import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 
 // singleton
-public class ServerManagerRMIRmi {
-    private static volatile ServerManagerRMIRmi instance;
+public class ServerManagerRmi {
+    private static volatile ServerManagerRmi instance;
 
     private static ServerInterfaceRmiImpl stub;
     private static ServerManagerWT server = null;
@@ -28,19 +23,23 @@ public class ServerManagerRMIRmi {
             // are simple
     private static ConcurrentMap<NotifyInterface, Boolean> clients;
 
-    private ServerManagerRMIRmi() throws RemoteException {
+    private ServerManagerRmi() throws RemoteException {
         super();
         this.clients    = new ConcurrentHashMap<>();
-        this.server     = ServerManagerWT.getInstance();
         this.stub       = new ServerInterfaceRmiImpl(clients, server);
     }
 
-    public static synchronized ServerManagerRMIRmi getInstance() throws RemoteException {
+    public static synchronized ServerManagerRmi getInstance() throws RemoteException {
         if(instance == null) {
-            instance = new ServerManagerRMIRmi();
+            instance = new ServerManagerRmi();
         }
 
         return instance;
+    }
+
+    // to avoid dependency cycle
+    public static synchronized void setManagerWT() {
+        server = ServerManagerWT.getInstance();
     }
 
     public static ServerInterfaceRmi getStub() {

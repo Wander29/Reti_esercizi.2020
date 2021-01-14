@@ -74,6 +74,10 @@ public abstract class StringUtils {
     }
 
     public static String readFileAsString(String file) throws IOException {
-        return new String(Files.readAllBytes(Paths.get(file)));
+        return byteBufferToString(
+                ByteBuffer.wrap(
+                        Files.readAllBytes(Paths.get(file))
+                )
+        );
     }
 }

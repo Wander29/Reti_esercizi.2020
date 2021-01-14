@@ -1,16 +1,19 @@
 package server.logic;
 
+/**
+ * @author      LUDOVICO VENTURI (UniPi)
+ * @date        2021/01/14
+ * @versione    1.0
+ */
+
 import protocol.CSProtocol;
-import server.logic.rmi.ServerManagerRMIRmi;
+import server.logic.rmi.ServerManagerRmi;
 import protocol.classes.TCPBuffersNIO;
 
 import java.io.IOException;
 import java.net.InetSocketAddress;
 import java.net.ServerSocket;
-import java.nio.channels.SelectionKey;
-import java.nio.channels.Selector;
-import java.nio.channels.ServerSocketChannel;
-import java.nio.channels.SocketChannel;
+import java.nio.channels.*;
 import java.rmi.AlreadyBoundException;
 import java.rmi.RemoteException;
 import java.rmi.registry.LocateRegistry;
@@ -21,32 +24,30 @@ import java.util.concurrent.TimeUnit;
 
 public class WelcomingServer implements Runnable {
 
-    private static ServerManagerWT     managerWT   = null;
-    private static ServerManagerRMIRmi managerRMI  = null;
-    private static SerializeHelper     saveHelp;
+    private ServerManagerWT     managerWT   = null;
+    private ServerManagerRmi managerRMI  = null;
+    private SerializeHelper     saveHelp;
 
     private final static int MAX_CONNECTIONS_PER_THREAD = 2;
 
     public WelcomingServer() {
-        this.managerWT  = ServerManagerWT.getInstance();
         try {
-            this.managerRMI = ServerManagerRMIRmi.getInstance();
+            this.managerRMI = ServerManagerRmi.getInstance();
         } catch (RemoteException e)     { e.printStackTrace(); }
+        this.managerWT  = ServerManagerWT.getInstance();
+        this.managerRMI.setManagerWT();
     }
 
     public void run() {
-        ServerManagerRMIRmi serverRMI = null;
+        ServerManagerRmi serverRMI = null;
         ThreadPoolExecutor tpe = null;
 
         // RMI
         try {
-            // service start
-
             // RMI service publication
             LocateRegistry.createRegistry(CSProtocol.RMI_SERVICE_PORT());
             Registry r = LocateRegistry.getRegistry(CSProtocol.RMI_SERVICE_PORT());
-            r.bind(CSProtocol.RMI_SERVICE_NAME(), serverRMI);
-
+            r.bind(CSProtocol.RMI_SERVICE_NAME(), serverRMI.getStub());
         }
         catch (AlreadyBoundException abe)   { System.out.println("Nome serivzio RMI già in uso"); }
         catch (RemoteException re)          { re.printStackTrace(); }
@@ -71,7 +72,7 @@ public class WelcomingServer implements Runnable {
                     sel = Selector.open(); // open new Selector (each MAX_CONNECTIONS_PER_THREAD socket opened)
                     client.register(sel, SelectionKey.OP_READ, bufs);
 
-                    tpe.submit(new ServerWorker(sel, server));
+                    tpe.submit(new ServerWorker(sel));
                 } else {
                     client.register(sel, SelectionKey.OP_READ, bufs);
                 }
@@ -81,11 +82,17 @@ public class WelcomingServer implements Runnable {
                 }
             }
         }
+        catch (ClosedByInterruptException ie) {
+            if(Thread.interrupted()) {
+                System.out.println("[WELCOME SERVER] chiusura");
+            }
+        }
         catch (IOException e) {
             e.printStackTrace();
         }
 
-        for(tpe.shutdown(); !tpe.isTerminated(); tpe.shutdown()) {
+
+        for(tpe.shutdown(); !tpe.isTerminated(); tpe.shutdownNow()) {
             try {
                 tpe.awaitTermination(1, TimeUnit.SECONDS);
             } catch (InterruptedException e) {

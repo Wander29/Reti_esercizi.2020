@@ -4,10 +4,12 @@ protocol/classes/Project.class
 protocol/classes/ListProjectEntry.class
 server/logic/ServerWorker$1.class
 client/data/DbHandler.class
+server/logic/rmi/ServerManagerRmi.class
 client/model/ClientWT$2.class
 server/data/ServerProject$1.class
 server/data/UserInfo.class
 server/logic/WelcomingServer.class
+server/logic/rmi/ServerInterfaceRmi.class
 protocol/classes/Card.class
 utils/psw/PswData.class
 client/model/ClientWT$ConnectionThread.class
@@ -16,7 +18,6 @@ client/WorthClientMain.class
 client/controllers/ClientController.class
 protocol/exceptions/IllegalOperation.class
 client/controllers/UserSceneController$5.class
-server/logic/rmi/ServerInterface.class
 server/data/ServerProject.class
 client/model/rmi/ClientNotify.class
 server/logic/ServerWT.class
@@ -41,6 +42,7 @@ utils/psw/PasswordManager.class
 protocol/exceptions/IllegalProtocolMessageException.class
 protocol/exceptions/IllegalProjectException.class
 server/data/WorthData.class
+server/logic/SerializeHelper$2.class
 client/data/ChatMsgObservable.class
 server/WorthServerMain.class
 protocol/CSReturnValues.class
@@ -54,5 +56,5 @@ protocol/CSOperations.class
 protocol/exceptions/TerminationException.class
 protocol/classes/CardMovement.class
 server/logic/DaemonSaver.class
-server/logic/rmi/ServerManagerRMI.class
+server/logic/rmi/ServerInterfaceRmiImpl.class
 client/controllers/UserSceneController$3.class
