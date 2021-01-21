@@ -1,10 +1,10 @@
 package server.logic;
 
 /**
- * @author      LUDOVICO VENTURI (UniPi)
- * @date        2021/01/14
- * @versione    1.0
- */
+* @author      LUDOVICO VENTURI (UniPi)
+* @date        2021/01/14
+* @versione    1.0
+*/
 
 import protocol.CSProtocol;
 import server.logic.rmi.ServerManagerRmi;
@@ -25,7 +25,7 @@ import java.util.concurrent.TimeUnit;
 public class WelcomingServer implements Runnable {
 
     private ServerManagerWT     managerWT   = null;
-    private ServerManagerRmi managerRMI  = null;
+    private ServerManagerRmi    managerRMI  = null;
     private SerializeHelper     saveHelp;
 
     private final static int MAX_CONNECTIONS_PER_THREAD = 2;

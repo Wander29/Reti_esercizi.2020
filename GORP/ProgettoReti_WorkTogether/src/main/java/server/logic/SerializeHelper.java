@@ -6,23 +6,24 @@ package server.logic;
  * @versione    1.0
  */
 
+
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.google.gson.reflect.TypeToken;
+import org.apache.commons.io.FileUtils;
 import protocol.classes.Card;
 import server.data.ServerProject;
 import server.data.UserInfo;
 import server.data.WorthData;
 import utils.StringUtils;
 
-import java.io.*;
+import java.io.BufferedWriter;
+import java.io.File;
+import java.io.FileWriter;
+import java.io.IOException;
 import java.lang.reflect.Modifier;
 import java.lang.reflect.Type;
-import java.nio.file.Files;
-import java.nio.file.Paths;
-import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 
 public abstract class SerializeHelper {
@@ -140,14 +141,19 @@ public abstract class SerializeHelper {
         String json = StringUtils.readFileAsString(USER_DIR + USER_DB);
         WorthData data = new WorthData();
 
-        Gson gson = new Gson();
+        Gson gsonUsers = new Gson();
         Type usersMapType = new TypeToken<Map<String, UserInfo>>() {}.getType();
-        data.setUsers(gson.fromJson(json, usersMapType));
+        data.setUsers(gsonUsers.fromJson(json, usersMapType));
 
         // get projects
         File dirProjects = new File(PROJ_DIR);
         if(!dirProjects.exists())
             return data;
+
+        // serialize also static fields (default gson excludes TRANSIENT && STATIC, this way only the former)
+        Gson gsonProjectInfo = new GsonBuilder()
+                .excludeFieldsWithModifiers(Modifier.TRANSIENT)
+                .create();
 
         Map<String, ServerProject> projectsMap  = new HashMap<>();
         /*
@@ -221,7 +227,7 @@ public abstract class SerializeHelper {
                     json = StringUtils.readFileAsString(relativePathCardName);
                     Type serverProjectType = new TypeToken<ServerProject>() {}.getType();
 
-                    serverProject = gson.fromJson(json, serverProjectType);
+                    serverProject = gsonProjectInfo.fromJson(json, serverProjectType);
                     continue;
                 }
 
@@ -239,7 +245,7 @@ public abstract class SerializeHelper {
                  */
                 json = StringUtils.readFileAsString(relativePathCardName);
                 Type cardType = new TypeToken<Card>() {}.getType();
-                Card card = gson.fromJson(json, cardType);
+                Card card = gsonProjectInfo.fromJson(json, cardType);
 
                 // i have json of card
                 switch(card.getStatus()) {
@@ -279,5 +285,29 @@ public abstract class SerializeHelper {
 
         data.setProjects(projectsMap);
         return data;
+    }
+
+    public static void deleteProject(String projectName) {
+        File projectDir = new File(PROJ_DIR);
+        String[] projectsDirs = projectDir.list();
+
+        for(String s : projectsDirs) {
+
+            if(s.equals(projectName)) {
+
+                // delete project from persistent data
+                try {
+                    File file  = new File(PROJ_DIR + projectName);
+
+                    // delete directory
+                    FileUtils.deleteDirectory(file);
+                    System.out.println("[SERVER DATA] " + projectName + " eliminato");
+                }
+                catch (IOException e) {
+                    System.out.println("[SERVER DATA] " + projectName + " NON è stato eliminato");
+                    e.printStackTrace();
+                }
+            }
+        }
     }
 }

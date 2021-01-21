@@ -191,7 +191,13 @@ public class ServerProject implements Serializable {
     }
 
     public void delete() {
-        ipFree.add(this.getChatMulticastIP());
+        InetAddress ia = this.getChatMulticastIP();
+
+        if(ipFree.contains(ia)) {
+            System.out.println("ERRORE: collisione IP");
+        }
+
+        ipFree.add(ia);
     }
 
 /*

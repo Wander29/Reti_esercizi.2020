@@ -1,0 +1,158 @@
+package server.logic;
+
+/**
+ * @author      LUDOVICO VENTURI (UniPi)
+ * @date        2021/01/14
+ * @versione    1.0
+ */
+
+import protocol.CSProtocol;
+import server.logic.rmi.ServerManagerRmi;
+import protocol.classes.TCPBuffersNIO;
+
+import java.io.IOException;
+import java.net.InetSocketAddress;
+import java.net.ServerSocket;
+import java.nio.channels.*;
+import java.rmi.AlreadyBoundException;
+import java.rmi.RemoteException;
+import java.rmi.registry.LocateRegistry;
+import java.rmi.registry.Registry;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ThreadPoolExecutor;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicInteger;
+
+public class WelcomingServer implements Runnable {
+
+    private ServerManagerWT     managerWT   = null;
+    private ServerManagerRmi managerRMI  = null;
+    private SerializeHelper     saveHelp;
+
+    private final static int MAX_CONNECTIONS_PER_THREAD = 2;
+
+    public WelcomingServer() {
+        try {
+            this.managerRMI = ServerManagerRmi.getInstance();
+        } catch (RemoteException e)     { e.printStackTrace(); }
+        this.managerWT  = ServerManagerWT.getInstance();
+        this.managerRMI.setManagerWT();
+    }
+
+    protected class ThreadEntry {
+        Thread thread;
+        Selector selector;
+        AtomicInteger cntClients;
+
+        public ThreadEntry() throws IOException {
+            cntClients = new AtomicInteger(1);
+            selector = Selector.open(); // used to pass client to handle, "communication link"
+        }
+    }
+
+    public void run() {
+        ServerManagerRmi serverRMI = null;
+        List<ThreadEntry> threadPoolList = new ArrayList<>();
+
+        // RMI
+        try {
+            // RMI service publication
+            LocateRegistry.createRegistry(CSProtocol.RMI_SERVICE_PORT());
+            Registry r = LocateRegistry.getRegistry(CSProtocol.RMI_SERVICE_PORT());
+            r.bind(CSProtocol.RMI_SERVICE_NAME(), serverRMI.getStub());
+        }
+        catch (AlreadyBoundException abe)   { System.out.println("Nome serivzio RMI già in uso"); }
+        catch (RemoteException re)          { re.printStackTrace(); }
+
+        // TCP Connection socket
+        try( ServerSocketChannel serverSockCh = ServerSocketChannel.open() ) {
+            ServerSocket serverSock = serverSockCh.socket();
+
+            serverSock.bind(new InetSocketAddress(CSProtocol.WORTH_TCP_PORT()));
+
+
+            Boolean clientHandled; // flag, indicates if client has been handled
+
+            while(true)
+            {
+                clientHandled = Boolean.FALSE;
+                SocketChannel client = serverSockCh.accept(); // single connection with client
+
+                client.configureBlocking(false);
+                TCPBuffersNIO bufs = new TCPBuffersNIO();
+
+                // check if there are available thread to handle this new client
+                for(ThreadEntry entry : threadPoolList)
+                {
+                    if(entry.cntClients.get() < MAX_CONNECTIONS_PER_THREAD) {
+                        // this one can handle it
+                        System.out.println("lo gestisco io");
+
+                        client.register(entry.selector, SelectionKey.OP_READ, bufs);
+                        entry.cntClients.incrementAndGet();
+                        clientHandled = Boolean.TRUE;
+                        break;
+                    }
+                    if(entry.cntClients.get() == -1) {
+                        // thread worker closed, due to inactivity
+                        threadPoolList.remove(entry);
+                    }
+                }
+
+                if(clientHandled) {
+                    continue;
+                }
+
+                // if we are here: no thread is available, start new one
+                try {
+                    ThreadEntry newThreadEntry = new ThreadEntry();
+                    client.register(newThreadEntry.selector, SelectionKey.OP_READ, bufs);
+
+                    newThreadEntry.thread = new ServerWorker(
+                            newThreadEntry.selector, newThreadEntry.cntClients);
+
+                    threadPoolList.add(newThreadEntry);
+                    newThreadEntry.thread.start();
+                }
+                catch(IOException e) { e.printStackTrace(); }
+            }
+        }
+        catch (ClosedByInterruptException ie) {
+            if(Thread.interrupted()) {
+                System.out.println("[WELCOME SERVER] chiusura");
+            }
+        }
+        catch (IOException e) {
+            e.printStackTrace();
+        }
+
+        // handle termination
+        try {
+            for (ThreadEntry entry : threadPoolList) {
+                entry.selector.close();
+                entry.thread.interrupt();
+                entry.thread.join();
+            }
+        }
+        catch (InterruptedException e)      { e.printStackTrace(); }
+        catch (IOException e)               { e.printStackTrace(); }
+
+
+        System.out.println("[WELCOME SERVER] closing");
+    }
+
+}
+
+/*
+    old solution with ThreadPool
+
+        for(tpe.shutdown(); !tpe.isTerminated(); tpe.shutdownNow()) {
+            try {
+                tpe.awaitTermination(1, TimeUnit.SECONDS);
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
+        }
+        */

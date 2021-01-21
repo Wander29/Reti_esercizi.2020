@@ -274,6 +274,9 @@ TCP
         //  remove from map and add project ip to ipFree list
         projects.remove(projectName).delete();
 
+        // remove from persisten data
+        SerializeHelper.deleteProject(projectName);
+
         return CSReturnValues.DELETE_PROJECT_OK;
     }
 

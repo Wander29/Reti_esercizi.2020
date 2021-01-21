@@ -65,6 +65,7 @@ public class ChatManager extends Thread {
                             ch.close();
                         }
                         dbHandler.closeConnection();
+                        this.selector.close();
 
                         System.out.println("[CHAT_MANAGER] in chiusura");
                         return;

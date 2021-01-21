@@ -22,19 +22,24 @@ import java.security.NoSuchAlgorithmException;
 import java.security.spec.InvalidKeySpecException;
 import java.sql.SQLException;
 import java.util.*;
+import java.util.concurrent.atomic.AtomicInteger;
+import java.util.concurrent.atomic.AtomicMarkableReference;
 
-public class ServerWorker implements Runnable {
+public class ServerWorker extends Thread {
 
     private Selector selector;
     private ServerManagerWT server;
 
+    private final static int TIMEOUT_SELECT = 20; // seconds
+
     public ServerWorker(Selector sel) {
-        this.selector = sel;
-        this.server = ServerManagerWT.getInstance();
+        this.selector       = sel;
+        this.server         = ServerManagerWT.getInstance();
     }
 
     private void readMsgAndComputeRequest(SelectionKey key)
-            throws IOException, TerminationException, InvalidKeySpecException, NoSuchAlgorithmException {
+            throws IOException, TerminationException, InvalidKeySpecException, NoSuchAlgorithmException
+    {
         SocketChannel cliCh     = (SocketChannel)   key.channel();
         TCPBuffersNIO bufs      = (TCPBuffersNIO)   key.attachment();
 
@@ -112,25 +117,26 @@ public class ServerWorker implements Runnable {
 
     public void run() {
 
-        if(CSProtocol.DEBUG()) {
-            System.out.println("Worker creato: " + Thread.currentThread().getName());
-        }
+        System.err.println("[SERVER_WORKER] avviato: " + Thread.currentThread().getName());
 
-        //while(!this.selector.keys().isEmpty()) {
-         while(true) {
+        while(true) {
             try {
-                this.selector.select();
+                int ret = this.selector.select(TIMEOUT_SELECT * 1000);
 
-                // termination control
-                if(Thread.interrupted())
-                {
-                    for(SelectionKey key : this.selector.keys())
+                if(ret == 0) {
+                    // termination control
+                    if(Thread.interrupted())
                     {
-                        Channel ch = (Channel) key.channel();
-                        ch.close();
+                        for(SelectionKey key : this.selector.keys())
+                        {
+                            Channel ch = (Channel) key.channel();
+                            ch.close();
+                        }
+                        this.selector.close();
+
+                        System.out.println("[SERVER-WORKER] chiusura");
+                        return;
                     }
-                    System.out.println("[SERVER-WORKER] chiusura");
-                    return;
                 }
 
                 // check selected keys
@@ -149,8 +155,6 @@ public class ServerWorker implements Runnable {
                         catch (TerminationException e) {
                             key.cancel();
                             System.err.println("Connessione con 1 client terminata");
-                                // break outer_loop;
-                                // per avere un comportamento while(true) usare «break;»
                             break;
                         }
                         catch (IOException e) {

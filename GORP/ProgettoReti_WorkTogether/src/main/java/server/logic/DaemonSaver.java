@@ -29,8 +29,15 @@ public class DaemonSaver extends Thread {
                 Thread.sleep(updateInterval);
             }
             catch (InterruptedException e) {
-                if(Thread.interrupted())
-                    return;
+
+                System.out.println("[DAEMON] saving current state and exiting");
+                SerializeHelper.saveData(manager.getWorthData());
+
+                return;
+            }
+            if(Thread.interrupted()) {
+                System.out.println("[DAEMON] saving current state and exiting");
+                SerializeHelper.saveData(manager.getWorthData());
             }
 
             System.out.println("[DAEMON] going to save");

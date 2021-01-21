@@ -44,9 +44,11 @@ public class WorthServerMain {
         try {
             while( !(lineRead = input.readLine()).equals(EXIT_STRING) ) { }
 
-            welcomeServer.interrupt();
+            // first stop daemonSaver in order to save state of server
             daemonSaver.interrupt();
+            daemonSaver.join();
 
+            welcomeServer.interrupt();
             welcomeServer.join();
         }
         catch (IOException e)               { e.printStackTrace(); }
